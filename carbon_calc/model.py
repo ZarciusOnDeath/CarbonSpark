@@ -79,6 +79,9 @@ INDIA_GRID_MIX: Dict[str, float] = {
 #: Blended factor the workbook used to back-derive each row's kWh intensity.
 REFERENCE_GRID_FACTOR = 0.77
 
+#: Default split of material movement between rail and road (p, with q = 1 - p).
+DEFAULT_TRAIN_SHARE = 0.5
+
 
 @dataclass(frozen=True)
 class Process:
@@ -89,6 +92,7 @@ class Process:
     process: str
     variation: str
     notes: str
+    transport: bool = False
     _compiled: Dict[str, object] = field(repr=False, compare=False, default_factory=dict)
     formulas: Dict[str, str] = field(default_factory=dict)
 
@@ -143,6 +147,7 @@ def load_dataset(path: str | Path = DATA_PATH) -> Dataset:
             process=item["process"],
             variation=item["variation"],
             notes=item.get("notes", ""),
+            transport=bool(item.get("transport", False)),
             formulas={k: item["formulas"][k] for k in METRICS},
             _compiled={k: compile_formula(item["formulas"][k]) for k in METRICS},
         )
@@ -155,10 +160,20 @@ def load_dataset(path: str | Path = DATA_PATH) -> Dataset:
     return Dataset(processes, grid_sources, tuple(raw.get("downstream", ())))
 
 
-def build_variables(scrap_ratio: float, mix: Mapping[str, float]) -> Dict[str, float]:
-    """Assemble the nine-variable binding from a scrap ratio and a grid mix."""
+def build_variables(
+    scrap_ratio: float,
+    mix: Mapping[str, float],
+    train_share: float = DEFAULT_TRAIN_SHARE,
+) -> Dict[str, float]:
+    """Assemble the eleven-variable binding the workbook formulas expect.
+
+    ``train_share`` is ``p``; road is the remainder ``q = 1 - p``, the same
+    convention the workbook uses for ``y = 1 - x``.
+    """
     variables = {"y": float(scrap_ratio), "x": 1.0 - float(scrap_ratio)}
     variables.update({var: float(mix.get(var, 0.0)) for var in MIX_VARIABLES})
+    variables["p"] = float(train_share)
+    variables["q"] = 1.0 - float(train_share)
     missing = set(VARIABLES) - set(variables)
     if missing:
         raise ValueError(f"missing model variables: {sorted(missing)}")
@@ -177,6 +192,7 @@ class Result:
 
     scrap_ratio: float
     mix: Dict[str, float]
+    train_share: float
     per_process: Tuple[Dict[str, float], ...]
     totals: Dict[str, float]
     by_department: Dict[str, Dict[str, float]]
@@ -208,31 +224,36 @@ def calculate(
     scrap_ratio: float,
     mix: Mapping[str, float],
     dataset: Dataset | None = None,
-    process_ids: Sequence[int] | None = None,
+    weights: Mapping[int, float] | None = None,
+    train_share: float = DEFAULT_TRAIN_SHARE,
 ) -> Result:
-    """Evaluate every selected process step and aggregate the results.
+    """Evaluate the selected process steps and aggregate the results.
 
-    ``process_ids`` restricts the route to a subset of the 71 steps (used by the
-    department filter); ``None`` means the full route.
+    ``weights`` maps a process id to the share of the tonne routed through it.
+    A stage where two technologies are both selected splits its tonne between
+    them (0.6 EAF + 0.4 IF), so the result stays a true per-tonne figure instead
+    of double-counting the stage. ``None`` runs every row at full weight.
     """
     dataset = dataset or load_dataset()
-    variables = build_variables(scrap_ratio, mix)
-    selected = dataset.processes
-    if process_ids is not None:
-        wanted = set(process_ids)
-        selected = tuple(p for p in dataset.processes if p.id in wanted)
+    variables = build_variables(scrap_ratio, mix, train_share)
+    if weights is None:
+        weights = {proc.id: 1.0 for proc in dataset.processes}
 
     per_process: List[Dict[str, float]] = []
     totals = {metric: 0.0 for metric in METRICS}
     by_department: Dict[str, Dict[str, float]] = {}
 
-    for proc in selected:
-        values = proc.evaluate(variables)
+    for proc in dataset.processes:
+        weight = float(weights.get(proc.id, 0.0))
+        if weight <= 0:
+            continue
+        values = {key: value * weight for key, value in proc.evaluate(variables).items()}
         row = {
             "id": proc.id,
             "Department": proc.department,
             "Process": proc.process,
             "Variation": proc.variation,
+            "Share": weight,
             **values,
         }
         row["total_co2e"] = sum(values[scope] for scope in SCOPES)
@@ -248,6 +269,7 @@ def calculate(
     return Result(
         scrap_ratio=float(scrap_ratio),
         mix={var: float(mix.get(var, 0.0)) for var in MIX_VARIABLES},
+        train_share=float(train_share),
         per_process=tuple(per_process),
         totals=totals,
         by_department=by_department,

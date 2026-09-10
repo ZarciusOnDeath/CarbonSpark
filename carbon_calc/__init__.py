@@ -2,7 +2,7 @@
 
 from .model import calculate, load_dataset  # noqa: F401
 from .optimize import Constraints, optimise  # noqa: F401
-from .route import build_stages, default_selection, selection_to_ids  # noqa: F401
+from .route import build_stages, default_route, route_weights  # noqa: F401
 
 __all__ = [
     "calculate",
@@ -10,6 +10,6 @@ __all__ = [
     "Constraints",
     "optimise",
     "build_stages",
-    "default_selection",
-    "selection_to_ids",
+    "default_route",
+    "route_weights",
 ]

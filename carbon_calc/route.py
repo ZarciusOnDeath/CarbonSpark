@@ -1,18 +1,26 @@
-"""Route construction: which of the 71 process steps make up one production path.
+"""Route construction: which process steps make up one production path, and in
+what proportion.
 
-Several stages in the grid list mutually exclusive *variations* of the same
-step — inbound unloading by train / road / ocean, primary melting by EAF / IF /
-BF-converter / VIM / VAR / ESR, and so on. Summing all 71 rows would
-double-count those alternatives, so a route selects exactly one variation per
-stage. Stages with a single "General (all types)" row have nothing to choose.
+Several stages in the grid list interchangeable *variations* of the same step —
+melting by EAF / IF / BF-converter / VIM / VAR / ESR, decarburisation by
+AOD / VOD / K-OBM-S / CLU, and so on. A plant may genuinely run more than one,
+so a stage selects one or more variations and splits its tonne between them by
+share. Shares within a stage always sum to 1, which keeps every result a true
+per-tonne figure rather than a sum that grows with each extra selection.
 """
 
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Dict, List, Mapping, Sequence, Tuple
+from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
 from .model import Dataset, Process
+
+#: A stage's selection: variation id -> share of that stage's tonne.
+StageMix = Dict[int, float]
+#: A whole route: stage key -> StageMix. An absent or empty entry means the
+#: stage is excluded.
+RouteMix = Dict[str, StageMix]
 
 
 @dataclass(frozen=True)
@@ -32,6 +40,10 @@ class Stage:
     def default_id(self) -> int:
         """The workbook's first-listed variation, used as the baseline choice."""
         return self.options[0].id
+
+    @property
+    def option_ids(self) -> Tuple[int, ...]:
+        return tuple(option.id for option in self.options)
 
     def option_by_id(self, process_id: int) -> Process:
         for option in self.options:
@@ -61,20 +73,42 @@ def build_stages(dataset: Dataset) -> Tuple[Stage, ...]:
     )
 
 
-def default_selection(stages: Sequence[Stage]) -> Dict[str, int]:
+def even_mix(option_ids: Iterable[int]) -> StageMix:
+    """Split a stage's tonne evenly across the given variations."""
+    ids = list(option_ids)
+    if not ids:
+        return {}
+    share = 1.0 / len(ids)
+    return {int(pid): share for pid in ids}
+
+
+def normalise_mix(mix: Mapping[int, float]) -> StageMix:
+    """Rescale a stage's shares to sum to 1, dropping non-positive entries."""
+    positive = {int(pid): float(share) for pid, share in mix.items() if share > 0}
+    total = sum(positive.values())
+    if total <= 0:
+        return {}
+    return {pid: share / total for pid, share in positive.items()}
+
+
+def default_route(stages: Sequence[Stage]) -> RouteMix:
     """Baseline route: the workbook's first-listed variation at every stage."""
-    return {stage.key: stage.default_id for stage in stages}
+    return {stage.key: {stage.default_id: 1.0} for stage in stages}
 
 
-def selection_to_ids(
-    stages: Sequence[Stage],
-    selection: Mapping[str, int],
-    enabled: Mapping[str, bool] | None = None,
-) -> List[int]:
-    """Resolve a stage selection into the list of process ids to evaluate."""
-    ids: List[int] = []
-    for stage in stages:
-        if enabled is not None and not enabled.get(stage.key, True):
-            continue
-        ids.append(int(selection.get(stage.key, stage.default_id)))
-    return ids
+def route_weights(route: Mapping[str, Mapping[int, float]]) -> Dict[int, float]:
+    """Flatten a route into the process-id -> weight map the model evaluates.
+
+    Each stage is normalised independently, so a stage's shares always sum to 1
+    however the user left the sliders.
+    """
+    weights: Dict[int, float] = {}
+    for stage_mix in route.values():
+        for process_id, share in normalise_mix(stage_mix).items():
+            weights[process_id] = weights.get(process_id, 0.0) + share
+    return weights
+
+
+def active_stages(route: Mapping[str, Mapping[int, float]]) -> int:
+    """How many stages the route actually runs through."""
+    return sum(1 for stage_mix in route.values() if normalise_mix(stage_mix))

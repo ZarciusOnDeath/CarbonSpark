@@ -7,6 +7,7 @@ from carbon_calc.model import (
     INDIA_GRID_MIX,
     METRICS,
     MIX_VARIABLES,
+    DEFAULT_TRAIN_SHARE,
     REFERENCE_GRID_FACTOR,
     SCOPES,
     build_variables,
@@ -15,7 +16,14 @@ from carbon_calc.model import (
     mix_factor,
 )
 from carbon_calc.optimize import Constraints, InfeasibleError, optimise, optimise_mix
-from carbon_calc.route import build_stages, default_selection, selection_to_ids
+from carbon_calc.route import (
+    active_stages,
+    build_stages,
+    default_route,
+    even_mix,
+    normalise_mix,
+    route_weights,
+)
 
 
 @pytest.fixture(scope="module")
@@ -23,8 +31,8 @@ def dataset():
     return load_dataset()
 
 
-def test_dataset_has_71_processes_and_seven_sources(dataset):
-    assert len(dataset.processes) == 71
+def test_dataset_has_67_processes_and_seven_sources(dataset):
+    assert len(dataset.processes) == 67
     assert {src.variable for src in dataset.grid_sources} == set(MIX_VARIABLES)
 
 
@@ -49,6 +57,29 @@ def test_formula_evaluator_matches_hand_calculation():
 def test_scrap_ratio_defines_virgin_ratio():
     variables = build_variables(0.35, INDIA_GRID_MIX)
     assert variables["x"] + variables["y"] == pytest.approx(1.0)
+
+
+def test_train_share_defines_road_share():
+    variables = build_variables(0.4, INDIA_GRID_MIX, train_share=0.7)
+    assert variables["p"] == pytest.approx(0.7)
+    assert variables["p"] + variables["q"] == pytest.approx(1.0)
+
+
+def test_only_the_two_transport_rows_depend_on_the_rail_split(dataset):
+    transport = [proc for proc in dataset.processes if proc.transport]
+    assert len(transport) == 2
+    assert {proc.department for proc in transport} == {"RMHS", "Outbound"}
+    all_rail = calculate(0.4, INDIA_GRID_MIX, dataset, train_share=1.0)
+    all_road = calculate(0.4, INDIA_GRID_MIX, dataset, train_share=0.0)
+    # Rail is the lower-carbon mode in the workbook's coefficients.
+    assert all_rail.total_co2e < all_road.total_co2e
+    moved = {
+        row["Process"]
+        for rail, road in zip(all_rail.per_process, all_road.per_process)
+        for row in [rail]
+        if abs(rail["total_co2e"] - road["total_co2e"]) > 1e-12
+    }
+    assert moved == {"Unloading / Inbound", "Transport"}
 
 
 def test_india_reference_mix_is_close_to_workbook_blended_factor():
@@ -97,30 +128,71 @@ def test_electricity_kwh_round_trips_through_scope2(dataset):
     assert math.isnan(calculate(0.5, {}, dataset).electricity_kwh)
 
 
-def test_route_selects_one_variation_per_stage(dataset):
+def test_default_route_runs_one_variation_per_stage(dataset):
     stages = build_stages(dataset)
-    ids = selection_to_ids(stages, default_selection(stages))
+    route = default_route(stages)
+    weights = route_weights(route)
     assert len(stages) == 48
-    assert len(ids) == len(stages) == len(set(ids))
+    assert active_stages(route) == 48
+    assert len(weights) == 48
+    assert all(share == pytest.approx(1.0) for share in weights.values())
+
+
+def test_stage_shares_are_normalised_per_stage(dataset):
+    stages = build_stages(dataset)
+    melting = next(stage for stage in stages if stage.process == "Primary Melting")
+    route = default_route(stages)
+    # Deliberately un-normalised: 3 + 1 should become 75% / 25%.
+    route[melting.key] = {melting.options[0].id: 3.0, melting.options[1].id: 1.0}
+    weights = route_weights(route)
+    assert weights[melting.options[0].id] == pytest.approx(0.75)
+    assert weights[melting.options[1].id] == pytest.approx(0.25)
+
+
+def test_even_mix_and_normalise_mix():
+    assert even_mix([1, 2, 3])[1] == pytest.approx(1 / 3)
+    assert even_mix([]) == {}
+    assert normalise_mix({1: 2.0, 2: 2.0}) == {1: 0.5, 2: 0.5}
+    assert normalise_mix({1: 0.0}) == {}
+
+
+def test_splitting_a_stage_lands_between_its_options(dataset):
+    stages = build_stages(dataset)
+    melting = next(stage for stage in stages if stage.process == "Primary Melting")
+    route = default_route(stages)
+    first, second = melting.options[0].id, melting.options[1].id
+
+    def total(stage_mix):
+        route[melting.key] = stage_mix
+        return calculate(0.4, INDIA_GRID_MIX, dataset, route_weights(route)).total_co2e
+
+    only_first = total({first: 1.0})
+    only_second = total({second: 1.0})
+    split = total({first: 0.6, second: 0.4})
+    assert min(only_first, only_second) < split < max(only_first, only_second)
+    # A 60/40 split is exactly the weighted average, never a sum.
+    assert split == pytest.approx(0.6 * only_first + 0.4 * only_second)
+    assert split < only_first + only_second
 
 
 def test_route_total_is_below_summing_every_alternative(dataset):
     stages = build_stages(dataset)
-    route = calculate(0.4, INDIA_GRID_MIX, dataset, selection_to_ids(stages, default_selection(stages)))
+    route = calculate(0.4, INDIA_GRID_MIX, dataset, route_weights(default_route(stages)))
     everything = calculate(0.4, INDIA_GRID_MIX, dataset)
     assert route.total_co2e < everything.total_co2e
 
 
-def test_disabled_stages_are_excluded(dataset):
+def test_excluded_stages_drop_out_of_the_route(dataset):
     stages = build_stages(dataset)
-    selection = default_selection(stages)
-    enabled = {stage.key: stage.department != "Outbound" for stage in stages}
-    full = calculate(0.4, INDIA_GRID_MIX, dataset, selection_to_ids(stages, selection))
-    trimmed = calculate(
-        0.4, INDIA_GRID_MIX, dataset, selection_to_ids(stages, selection, enabled)
-    )
+    route = default_route(stages)
+    full = calculate(0.4, INDIA_GRID_MIX, dataset, route_weights(route))
+    for stage in stages:
+        if stage.department == "Outbound":
+            route[stage.key] = {}
+    trimmed = calculate(0.4, INDIA_GRID_MIX, dataset, route_weights(route))
     assert "Outbound" not in trimmed.by_department
     assert trimmed.total_co2e < full.total_co2e
+    assert active_stages(route) == len(stages) - 4
 
 
 def test_optimise_mix_is_all_wind_when_unconstrained(dataset):
@@ -173,29 +245,52 @@ def test_infeasible_constraints_are_reported(dataset):
 
 def test_optimum_never_exceeds_the_baseline(dataset):
     stages = build_stages(dataset)
-    baseline_selection = default_selection(stages)
-    baseline = calculate(
-        0.4, INDIA_GRID_MIX, dataset, selection_to_ids(stages, baseline_selection)
-    )
-    optimum = optimise(dataset, stages, Constraints(), baseline_selection)
+    baseline_route = default_route(stages)
+    baseline = calculate(0.4, INDIA_GRID_MIX, dataset, route_weights(baseline_route))
+    optimum = optimise(dataset, stages, Constraints(), baseline_route)
     assert optimum.result.total_co2e < baseline.total_co2e
     assert sum(optimum.mix.values()) == pytest.approx(1.0)
+    # Every stage still routes a whole tonne.
+    assert all(
+        sum(stage_mix.values()) == pytest.approx(1.0) for stage_mix in optimum.route.values()
+    )
+
+
+def test_optimum_prefers_rail_and_respects_its_bounds(dataset):
+    stages = build_stages(dataset)
+    baseline_route = default_route(stages)
+    assert optimise(dataset, stages, Constraints(), baseline_route).train_share == 1.0
+    capped = optimise(
+        dataset, stages, Constraints(train_max=0.25), baseline_route
+    )
+    assert capped.train_share == pytest.approx(0.25)
 
 
 def test_optimum_honours_locked_stages_and_scrap_bounds(dataset):
     stages = build_stages(dataset)
-    baseline_selection = default_selection(stages)
+    baseline_route = default_route(stages)
     melting = "Melt Shop :: Primary Melting"
     constraints = Constraints(scrap_min=0.25, scrap_max=0.55, locked_stages=(melting,))
-    optimum = optimise(dataset, stages, constraints, baseline_selection)
+    optimum = optimise(dataset, stages, constraints, baseline_route)
     assert 0.25 - 1e-9 <= optimum.scrap_ratio <= 0.55 + 1e-9
-    assert optimum.selection[melting] == baseline_selection[melting]
+    assert optimum.route[melting] == baseline_route[melting]
     assert melting not in {change[0] for change in optimum.stage_changes}
+
+
+def test_optimum_keeps_a_locked_stage_split(dataset):
+    stages = build_stages(dataset)
+    melting = next(stage for stage in stages if stage.process == "Primary Melting")
+    baseline_route = default_route(stages)
+    baseline_route[melting.key] = {melting.options[0].id: 0.6, melting.options[1].id: 0.4}
+    optimum = optimise(
+        dataset, stages, Constraints(locked_stages=(melting.key,)), baseline_route
+    )
+    assert optimum.route[melting.key] == baseline_route[melting.key]
 
 
 def test_route_optimisation_can_be_switched_off(dataset):
     stages = build_stages(dataset)
-    baseline_selection = default_selection(stages)
-    optimum = optimise(dataset, stages, Constraints(), baseline_selection, optimise_route=False)
-    assert optimum.selection == baseline_selection
+    baseline_route = default_route(stages)
+    optimum = optimise(dataset, stages, Constraints(), baseline_route, optimise_route=False)
+    assert optimum.route == baseline_route
     assert optimum.stage_changes == ()

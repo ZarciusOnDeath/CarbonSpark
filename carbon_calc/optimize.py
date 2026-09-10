@@ -22,6 +22,7 @@ from dataclasses import dataclass
 from typing import Dict, List, Mapping, Sequence, Tuple
 
 from .model import (
+    DEFAULT_TRAIN_SHARE,
     FOSSIL_VARS,
     MIX_VARIABLES,
     RENEWABLE_VARS,
@@ -32,7 +33,7 @@ from .model import (
     calculate,
     mix_factor,
 )
-from .route import Stage, selection_to_ids
+from .route import RouteMix, Stage, route_weights
 
 
 class InfeasibleError(ValueError):
@@ -49,6 +50,8 @@ class Constraints:
     min_renewable: float = 0.0
     min_non_fossil: float = 0.0
     locked_stages: Tuple[str, ...] = ()
+    train_min: float = 0.0
+    train_max: float = 1.0
 
     def bounds_for(self, var: str) -> Tuple[float, float]:
         if not self.mix_bounds:
@@ -122,20 +125,26 @@ def optimise_mix(constraints: Constraints, dataset: Dataset) -> Dict[str, float]
 def _best_route(
     stages: Sequence[Stage],
     variables: Mapping[str, float],
-    locked: Mapping[str, int],
+    locked: Mapping[str, Mapping[int, float]],
     enabled: Mapping[str, bool] | None,
-) -> Tuple[Dict[str, int], float]:
-    """Pick the lowest-total-CO2e variation at every stage (locked stages kept)."""
-    selection: Dict[str, int] = {}
+) -> Tuple[RouteMix, float]:
+    """Pick the lowest-total-CO2e variation at every unlocked stage.
+
+    Splitting a stage between technologies can only land between their two
+    totals, so an unconstrained optimum always puts the whole stage on its
+    single best option. Locked stages keep the user's own split.
+    """
+    route: RouteMix = {}
     total = 0.0
     for stage in stages:
         if enabled is not None and not enabled.get(stage.key, True):
             continue
         if stage.key in locked:
-            chosen = stage.option_by_id(locked[stage.key])
-            values = chosen.evaluate(variables)
-            selection[stage.key] = chosen.id
-            total += sum(values[scope] for scope in SCOPES)
+            stage_mix = {int(pid): float(share) for pid, share in locked[stage.key].items()}
+            for process_id, share in stage_mix.items():
+                values = stage.option_by_id(process_id).evaluate(variables)
+                total += share * sum(values[scope] for scope in SCOPES)
+            route[stage.key] = stage_mix
             continue
         best_id, best_value = None, float("inf")
         for option in stage.options:
@@ -143,9 +152,9 @@ def _best_route(
             value = sum(values[scope] for scope in SCOPES)
             if value < best_value:
                 best_id, best_value = option.id, value
-        selection[stage.key] = int(best_id)
+        route[stage.key] = {int(best_id): 1.0}
         total += best_value
-    return selection, total
+    return route, total
 
 
 @dataclass(frozen=True)
@@ -154,7 +163,8 @@ class Optimum:
 
     scrap_ratio: float
     mix: Dict[str, float]
-    selection: Dict[str, int]
+    train_share: float
+    route: RouteMix
     result: Result
     grid_factor: float
     sweep: Tuple[Tuple[float, float], ...]
@@ -165,7 +175,7 @@ def optimise(
     dataset: Dataset,
     stages: Sequence[Stage],
     constraints: Constraints,
-    baseline_selection: Mapping[str, int],
+    baseline_route: Mapping[str, Mapping[int, float]],
     enabled: Mapping[str, bool] | None = None,
     steps: int = 201,
     optimise_route: bool = True,
@@ -175,49 +185,70 @@ def optimise(
     scrap_max = max(0.0, min(1.0, constraints.scrap_max))
     if scrap_max < scrap_min:
         raise InfeasibleError("The maximum scrap ratio is below the minimum scrap ratio.")
+    train_min = max(0.0, min(1.0, constraints.train_min))
+    train_max = max(0.0, min(1.0, constraints.train_max))
+    if train_max < train_min:
+        raise InfeasibleError("The maximum rail share is below the minimum rail share.")
 
     mix = optimise_mix(constraints, dataset)
-    locked: Dict[str, int] = {}
     if optimise_route:
-        locked = {key: int(baseline_selection[key]) for key in constraints.locked_stages if key in baseline_selection}
+        locked = {
+            key: baseline_route[key]
+            for key in constraints.locked_stages
+            if key in baseline_route
+        }
     else:
-        locked = {stage.key: int(baseline_selection.get(stage.key, stage.default_id)) for stage in stages}
+        locked = dict(baseline_route)
 
     span = scrap_max - scrap_min
     grid = [scrap_min] if span <= 0 else [
         scrap_min + span * i / (steps - 1) for i in range(steps)
     ]
+    # Only two rows depend on the rail/road split and both are linear in p, so
+    # the best share is always one of the two bounds.
+    train_options = sorted({train_min, train_max})
 
     sweep: List[Tuple[float, float]] = []
-    best: Tuple[float, Dict[str, int], float] | None = None
+    best: Tuple[float, RouteMix, float, float] | None = None
     for scrap in grid:
-        variables = build_variables(scrap, mix)
-        selection, total = _best_route(stages, variables, locked, enabled)
-        sweep.append((scrap, total))
-        if best is None or total < best[0] - 1e-15:
-            best = (total, selection, scrap)
+        scrap_best: Tuple[float, RouteMix, float] | None = None
+        for train_share in train_options:
+            variables = build_variables(scrap, mix, train_share)
+            route, total = _best_route(stages, variables, locked, enabled)
+            if scrap_best is None or total < scrap_best[0] - 1e-15:
+                scrap_best = (total, route, train_share)
+        assert scrap_best is not None
+        sweep.append((scrap, scrap_best[0]))
+        if best is None or scrap_best[0] < best[0] - 1e-15:
+            best = (scrap_best[0], scrap_best[1], scrap, scrap_best[2])
 
     assert best is not None
-    _, selection, scrap_ratio = best
-    result = calculate(scrap_ratio, mix, dataset, selection_to_ids(stages, selection, enabled))
+    _, route, scrap_ratio, train_share = best
+    result = calculate(scrap_ratio, mix, dataset, route_weights(route), train_share)
 
     changes: List[Tuple[str, str, str]] = []
     by_key = {stage.key: stage for stage in stages}
-    for key, chosen_id in selection.items():
-        base_id = int(baseline_selection.get(key, by_key[key].default_id))
-        if base_id != chosen_id:
-            changes.append(
-                (
-                    key,
-                    by_key[key].option_by_id(base_id).variation,
-                    by_key[key].option_by_id(chosen_id).variation,
-                )
-            )
+
+    def describe(stage: Stage, stage_mix: Mapping[int, float]) -> str:
+        parts = [
+            f"{stage.option_by_id(int(pid)).variation} {share:.0%}"
+            for pid, share in sorted(stage_mix.items(), key=lambda item: -item[1])
+            if share > 0
+        ]
+        return " + ".join(parts) if parts else "excluded"
+
+    for key, stage_mix in route.items():
+        stage = by_key[key]
+        before = describe(stage, baseline_route.get(key, {}))
+        after = describe(stage, stage_mix)
+        if before != after:
+            changes.append((key, before, after))
 
     return Optimum(
         scrap_ratio=scrap_ratio,
         mix=mix,
-        selection=selection,
+        train_share=train_share,
+        route=route,
         result=result,
         grid_factor=mix_factor(mix, dataset),
         sweep=tuple(sweep),

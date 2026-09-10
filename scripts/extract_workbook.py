@@ -16,7 +16,7 @@ from pathlib import Path
 import openpyxl
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_WORKBOOK = ROOT / "data" / "source" / "Stainless_Steel_Carbon_Accounting_Grid_3.xlsx"
+DEFAULT_WORKBOOK = ROOT / "data" / "source" / "Stainless_Steel_Carbon_Accounting_Grid_4.xlsx"
 OUTPUT = ROOT / "data" / "carbon_grid.json"
 
 GRID_SHEET = "Carbon Accounting Grid"
@@ -37,8 +37,9 @@ METRIC_KEYS = (
     "nf3",
     "sec",
 )
-FIRST_METRIC_COLUMN = 12  # zero-based index of column M
-NOTES_COLUMN = 23  # column X
+FIRST_METRIC_COLUMN = 14  # zero-based index of column O
+NOTES_COLUMN = 25  # column Z
+TRANSPORT_COLUMN = 12  # column M, "p" where the row is transport-mode dependent
 HEADER_ROWS = 4  # title, description, blank, header
 
 
@@ -62,6 +63,9 @@ def extract(workbook_path: Path) -> dict:
                     for offset, key in enumerate(METRIC_KEYS)
                 },
                 "notes": values[NOTES_COLUMN] or "",
+                # Only the two transport rows vary by train/road share; the rest
+                # carry "N/A" in the p/q columns.
+                "transport": str(values[TRANSPORT_COLUMN]).strip() == "p",
             }
         )
 
@@ -89,9 +93,14 @@ def extract(workbook_path: Path) -> dict:
 def main() -> int:
     workbook_path = Path(sys.argv[1]) if len(sys.argv) > 1 else DEFAULT_WORKBOOK
     data = extract(workbook_path)
-    if len(data["processes"]) != 71:
+    if len(data["processes"]) != 67:
         raise SystemExit(
-            f"Expected 71 process steps, found {len(data['processes'])} — check the sheet layout."
+            f"Expected 67 process steps, found {len(data['processes'])} — check the sheet layout."
+        )
+    transport = [item for item in data["processes"] if item["transport"]]
+    if len(transport) != 2:
+        raise SystemExit(
+            f"Expected 2 transport-mode rows (inbound + outbound), found {len(transport)}."
         )
     if len(data["grid_factors"]) != 7:
         raise SystemExit(

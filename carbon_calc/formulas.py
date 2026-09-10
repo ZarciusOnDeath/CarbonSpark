@@ -5,7 +5,8 @@ nine model variables (x, y, a-g), e.g.::
 
     (x*7.792208+y*10.38961)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000
 
-They are stored as text rather than live Excel formulas, so the calculator parses
+``p``/``q`` are the train/road shares carried by the two transport rows. They are
+stored as text rather than live Excel formulas, so the calculator parses
 them itself. ``eval`` is never used: expressions are compiled to an AST once and
 only numeric literals, the model variables and the four arithmetic operators are
 accepted.
@@ -17,7 +18,7 @@ import ast
 import operator
 from typing import Callable, Dict, Mapping
 
-VARIABLES = ("x", "y", "a", "b", "c", "d", "e", "f", "g")
+VARIABLES = ("x", "y", "a", "b", "c", "d", "e", "f", "g", "p", "q")
 
 _BIN_OPS: Dict[type, Callable[[float, float], float]] = {
     ast.Add: operator.add,

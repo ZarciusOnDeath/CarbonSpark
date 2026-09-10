@@ -4,64 +4,25 @@
    "id": 1,
    "department": "RMHS",
    "process": "Unloading / Inbound",
-   "variation": "Trains",
+   "variation": "Train + Road Mix (p/q)",
    "formulas": {
-    "scope1": "x*0.015+y*0.02",
-    "scope2": "(x*7.792208+y*10.38961)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
-    "scope3": "x*0.045+y*0.02",
-    "co2": "x*0.012+y*0.015",
-    "ch4": "(x*0.00002+y*0.00003)*28",
-    "n2o": "(x*0.000001+y*0.0000015)*265",
-    "hfc": "x*0.00005+y*0.00005",
-    "pfc": "x*0.00001+y*0.00001",
-    "sf6": "(x*0.0000001+y*0.0000001)*23500",
-    "nf3": "(x*0.00000001+y*0.00000001)*16100",
-    "sec": "x*0.35+y*0.45"
+    "scope1": "x*(p*0.015+q*0.022)+y*(p*0.02+q*0.028)",
+    "scope2": "(x*(p*7.792208+q*5.194805)+y*(p*10.38961+q*6.493506))*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
+    "scope3": "x*(p*0.045+q*0.065)+y*(p*0.02+q*0.035)",
+    "co2": "x*(p*0.012+q*0.018)+y*(p*0.015+q*0.022)",
+    "ch4": "(x*(p*0.00002+q*0.00003)+y*(p*0.00003+q*0.00004))*28",
+    "n2o": "(x*(p*0.000001+q*0.0000015)+y*(p*0.0000015+q*0.000002))*265",
+    "hfc": "x*(p*0.00005+q*0.00005)+y*(p*0.00005+q*0.00005)",
+    "pfc": "x*(p*0.00001+q*0.00001)+y*(p*0.00001+q*0.00001)",
+    "sf6": "(x*(p*0.0000001+q*0.00000005)+y*(p*0.0000001+q*0.00000005))*23500",
+    "nf3": "(x*(p*0.00000001+q*0.00000001)+y*(p*0.00000001+q*0.00000001))*16100",
+    "sec": "x*(p*0.35+q*0.42)+y*(p*0.45+q*0.55)"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.015, EF_S1_scrap=0.02 tCO2e/t | EF_S2_virgin=0.006, EF_S2_scrap=0.008 tCO2e/t | EF_S3_virgin=0.045, EF_S3_scrap=0.02 tCO2e/t\nCO2_v=0.012, CO2_s=0.015 t/t | CH4_v=2e-05, CH4_s=3e-05 t/t (x28) | N2O_v=1e-06, N2O_s=1.5e-06 t/t (x265)\nHFC_v=5e-05, HFC_s=5e-05 tCO2e/t | PFC_v=1e-05, PFC_s=1e-05 tCO2e/t | SF6_v=1e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.35 GJ/t, SEC_scrap=0.45 GJ/t.\nBasis: Rail wagon tippler/unloading (diesel shunting + electric conveyors); rail freight ~22-30 gCO2/tkm, assumed domestic inland haul for virgin ore/ferroalloy and shorter haul for scrap. GWP: IPCC AR5 100-yr. Illustrative literature-typical logistics/handling values — NOT plant-measured. Independent of the Melting Shop/EAF row above.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 7.792208 kWh/t (virgin), 10.38961 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Combined route: blends the previously-separate Trains and Road rows using p = train share, q = road share (= 1-p), same convention as y = 1-x. Ocean removed per user request.\nUnderlying per-mode coefficients (tCO2e/t unless noted) — Train: EF_S1_v=0.015,EF_S1_s=0.02 | EF_S2(kWh/t at 0.77kg/kWh ref)_v=7.792208,_s=10.38961 | EF_S3_v=0.045,EF_S3_s=0.02 | CO2_v=0.012,CO2_s=0.015 | CH4_v=2e-05,CH4_s=3e-05(x28) | N2O_v=1e-06,N2O_s=1.5e-06(x265) | HFC=5e-05/5e-05 | PFC=1e-05/1e-05 | SF6_v=1e-07,SF6_s=1e-07(x23500) | NF3=1e-08/1e-08(x16100) | SEC_v=0.35,SEC_s=0.45 GJ/t.\nRoad: EF_S1_v=0.022,EF_S1_s=0.028 | EF_S2(kWh/t)_v=5.194805,_s=6.493506 | EF_S3_v=0.065,EF_S3_s=0.035 | CO2_v=0.018,CO2_s=0.022 | CH4_v=3e-05,CH4_s=4e-05(x28) | N2O_v=1.5e-06,N2O_s=2e-06(x265) | HFC=5e-05/5e-05 | PFC=1e-05/1e-05 | SF6_v=5e-08,SF6_s=5e-08(x23500) | NF3=1e-08/1e-08(x16100) | SEC_v=0.42,SEC_s=0.55 GJ/t.\nScope 2 uses the same energy-mix formula structure as every other row; the p/q blend only changes which kWh/t intensity feeds into it. Illustrative literature-typical values — NOT plant-measured.",
+   "transport": true
   },
   {
    "id": 2,
-   "department": "RMHS",
-   "process": "Unloading / Inbound",
-   "variation": "Road",
-   "formulas": {
-    "scope1": "x*0.022+y*0.028",
-    "scope2": "(x*5.194805+y*6.493506)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
-    "scope3": "x*0.065+y*0.035",
-    "co2": "x*0.018+y*0.022",
-    "ch4": "(x*0.00003+y*0.00004)*28",
-    "n2o": "(x*0.0000015+y*0.000002)*265",
-    "hfc": "x*0.00005+y*0.00005",
-    "pfc": "x*0.00001+y*0.00001",
-    "sf6": "(x*0.00000005+y*0.00000005)*23500",
-    "nf3": "(x*0.00000001+y*0.00000001)*16100",
-    "sec": "x*0.42+y*0.55"
-   },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.022, EF_S1_scrap=0.028 tCO2e/t | EF_S2_virgin=0.004, EF_S2_scrap=0.005 tCO2e/t | EF_S3_virgin=0.065, EF_S3_scrap=0.035 tCO2e/t\nCO2_v=0.018, CO2_s=0.022 t/t | CH4_v=3e-05, CH4_s=4e-05 t/t (x28) | N2O_v=1.5e-06, N2O_s=2e-06 t/t (x265)\nHFC_v=5e-05, HFC_s=5e-05 tCO2e/t | PFC_v=1e-05, PFC_s=1e-05 tCO2e/t | SF6_v=5e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.42 GJ/t, SEC_scrap=0.55 GJ/t.\nBasis: Truck tipping/hydraulic dumpers, higher diesel intensity per tonne than rail; road freight ~62-105 gCO2/tkm, typically shorter domestic hauls for both material types. GWP: IPCC AR5 100-yr. Illustrative literature-typical logistics/handling values — NOT plant-measured. Independent of the Melting Shop/EAF row above.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 5.194805 kWh/t (virgin), 6.493506 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
-  },
-  {
-   "id": 3,
-   "department": "RMHS",
-   "process": "Unloading / Inbound",
-   "variation": "Ocean",
-   "formulas": {
-    "scope1": "x*0.01+y*0.014",
-    "scope2": "(x*15.584416+y*18.181818)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
-    "scope3": "x*0.15+y*0.06",
-    "co2": "x*0.008+y*0.011",
-    "ch4": "(x*0.00001+y*0.000015)*28",
-    "n2o": "(x*0.0000008+y*0.000001)*265",
-    "hfc": "x*0.00004+y*0.00004",
-    "pfc": "x*0.00001+y*0.00001",
-    "sf6": "(x*0.0000001+y*0.0000001)*23500",
-    "nf3": "(x*0.00000001+y*0.00000001)*16100",
-    "sec": "x*0.3+y*0.38"
-   },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.01, EF_S1_scrap=0.014 tCO2e/t | EF_S2_virgin=0.012, EF_S2_scrap=0.014 tCO2e/t | EF_S3_virgin=0.15, EF_S3_scrap=0.06 tCO2e/t\nCO2_v=0.008, CO2_s=0.011 t/t | CH4_v=1e-05, CH4_s=1.5e-05 t/t (x28) | N2O_v=8e-07, N2O_s=1e-06 t/t (x265)\nHFC_v=4e-05, HFC_s=4e-05 tCO2e/t | PFC_v=1e-05, PFC_s=1e-05 tCO2e/t | SF6_v=1e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.3 GJ/t, SEC_scrap=0.38 GJ/t.\nBasis: Electric ship-unloaders/grab cranes at port (efficient per tonne at scale, hence lower Scope 1 but higher Scope 2); ocean freight is low per tonne-km (~4-8 gCO2/tkm) but virgin ore/ferroalloy is typically imported over long intercontinental routes (e.g. South Africa/Turkey chrome ore, Indonesia/Philippines nickel ore), giving it a materially higher Scope 3 than shorter-haul scrap imports. GWP: IPCC AR5 100-yr. Illustrative literature-typical logistics/handling values — NOT plant-measured. Independent of the Melting Shop/EAF row above.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 15.584416 kWh/t (virgin), 18.181818 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
-  },
-  {
-   "id": 4,
    "department": "RMHS",
    "process": "Inspection",
    "variation": "Ferroalloy",
@@ -78,10 +39,11 @@
     "nf3": "(x*0.00000001+y*0.00000001)*16100",
     "sec": "x*0.015+y*0.015"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.001 tCO2e/t | EF_S2_virgin=0.0009, EF_S2_scrap=0.0009 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.0005 tCO2e/t\nCO2_v=0.0006, CO2_s=0.0006 t/t | CH4_v=1e-06, CH4_s=1e-06 t/t (x28) | N2O_v=5e-08, N2O_s=5e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=5e-06, PFC_s=5e-06 tCO2e/t | SF6_v=2e-08, SF6_s=2e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.015 GJ/t, SEC_scrap=0.015 GJ/t.\nBasis: Non-destructive QC: XRF/spectrometer chemistry check, small sample-prep crusher, lab HVAC. No bulk material transformation, so all factors are near-negligible versus the handling/melting rows. GWP: IPCC AR5 100-yr. Illustrative literature-typical logistics/handling values — NOT plant-measured. Independent of the Melting Shop/EAF row above.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 1.168831 kWh/t (virgin), 1.168831 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.001 tCO2e/t | EF_S2_virgin=0.0009, EF_S2_scrap=0.0009 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.0005 tCO2e/t\nCO2_v=0.0006, CO2_s=0.0006 t/t | CH4_v=1e-06, CH4_s=1e-06 t/t (x28) | N2O_v=5e-08, N2O_s=5e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=5e-06, PFC_s=5e-06 tCO2e/t | SF6_v=2e-08, SF6_s=2e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.015 GJ/t, SEC_scrap=0.015 GJ/t.\nBasis: Non-destructive QC: XRF/spectrometer chemistry check, small sample-prep crusher, lab HVAC. No bulk material transformation, so all factors are near-negligible versus the handling/melting rows. GWP: IPCC AR5 100-yr. Illustrative literature-typical logistics/handling values — NOT plant-measured. Independent of the Melting Shop/EAF row above.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 1.168831 kWh/t (virgin), 1.168831 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 5,
+   "id": 3,
    "department": "RMHS",
    "process": "Inspection",
    "variation": "Scrap",
@@ -98,10 +60,11 @@
     "nf3": "(x*0.00000001+y*0.00000001)*16100",
     "sec": "x*0.015+y*0.02"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0015 tCO2e/t | EF_S2_virgin=0.0009, EF_S2_scrap=0.0012 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.0006 tCO2e/t\nCO2_v=0.0006, CO2_s=0.0009 t/t | CH4_v=1e-06, CH4_s=1.5e-06 t/t (x28) | N2O_v=5e-08, N2O_s=7e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=5e-06, PFC_s=5e-06 tCO2e/t | SF6_v=2e-08, SF6_s=2e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.015 GJ/t, SEC_scrap=0.02 GJ/t.\nBasis: Includes mandatory radiation portal monitoring and visual/magnetic/XRF alloy sorting of incoming scrap (per India import-scrap norms), slightly more handling-intensive than ferroalloy QC due to material heterogeneity. GWP: IPCC AR5 100-yr. Illustrative literature-typical logistics/handling values — NOT plant-measured. Independent of the Melting Shop/EAF row above.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 1.168831 kWh/t (virgin), 1.558442 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0015 tCO2e/t | EF_S2_virgin=0.0009, EF_S2_scrap=0.0012 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.0006 tCO2e/t\nCO2_v=0.0006, CO2_s=0.0009 t/t | CH4_v=1e-06, CH4_s=1.5e-06 t/t (x28) | N2O_v=5e-08, N2O_s=7e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=5e-06, PFC_s=5e-06 tCO2e/t | SF6_v=2e-08, SF6_s=2e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.015 GJ/t, SEC_scrap=0.02 GJ/t.\nBasis: Includes mandatory radiation portal monitoring and visual/magnetic/XRF alloy sorting of incoming scrap (per India import-scrap norms), slightly more handling-intensive than ferroalloy QC due to material heterogeneity. GWP: IPCC AR5 100-yr. Illustrative literature-typical logistics/handling values — NOT plant-measured. Independent of the Melting Shop/EAF row above.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 1.168831 kWh/t (virgin), 1.558442 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 6,
+   "id": 4,
    "department": "RMHS",
    "process": "Scrap Sorting / Processing / Preparation",
    "variation": "General (all types)",
@@ -118,10 +81,11 @@
     "nf3": "(x*0.00000001+y*0.00000001)*16100",
     "sec": "x*0.02+y*0.65"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.035 tCO2e/t | EF_S2_virgin=0.001, EF_S2_scrap=0.028 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.002 tCO2e/t\nCO2_v=0.0015, CO2_s=0.028 t/t | CH4_v=1e-06, CH4_s=4e-05 t/t (x28) | N2O_v=5e-08, N2O_s=2e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=3e-05 tCO2e/t | PFC_v=5e-06, PFC_s=1e-05 tCO2e/t | SF6_v=2e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.02 GJ/t, SEC_scrap=0.65 GJ/t.\nBasis: Hydraulic shears/balers, oxy-fuel/propane cutting torches for oversize scrap, magnetic separation. Virgin ferroalloys rarely need this stage, hence near-zero virgin-side factors; scrap side is by far the most energy/emission-intensive process in RMHS due to shearing and thermal cutting. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 1.298701 kWh/t (virgin), 36.363636 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.035 tCO2e/t | EF_S2_virgin=0.001, EF_S2_scrap=0.028 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.002 tCO2e/t\nCO2_v=0.0015, CO2_s=0.028 t/t | CH4_v=1e-06, CH4_s=4e-05 t/t (x28) | N2O_v=5e-08, N2O_s=2e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=3e-05 tCO2e/t | PFC_v=5e-06, PFC_s=1e-05 tCO2e/t | SF6_v=2e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.02 GJ/t, SEC_scrap=0.65 GJ/t.\nBasis: Hydraulic shears/balers, oxy-fuel/propane cutting torches for oversize scrap, magnetic separation. Virgin ferroalloys rarely need this stage, hence near-zero virgin-side factors; scrap side is by far the most energy/emission-intensive process in RMHS due to shearing and thermal cutting. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 1.298701 kWh/t (virgin), 36.363636 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 7,
+   "id": 5,
    "department": "RMHS",
    "process": "Sizing / Cutting / Screening",
    "variation": "General (all types)",
@@ -138,10 +102,11 @@
     "nf3": "(x*0.00000001+y*0.00000001)*16100",
     "sec": "x*0.28+y*0.4"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.008, EF_S1_scrap=0.02 tCO2e/t | EF_S2_virgin=0.01, EF_S2_scrap=0.015 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.0008 tCO2e/t\nCO2_v=0.005, CO2_s=0.016 t/t | CH4_v=5e-06, CH4_s=2e-05 t/t (x28) | N2O_v=2e-07, N2O_s=1e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=5e-06, PFC_s=8e-06 tCO2e/t | SF6_v=3e-08, SF6_s=3e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.28 GJ/t, SEC_scrap=0.4 GJ/t.\nBasis: Vibrating screens/crushers for lump-ore and ferroalloy sizing (electric-driven); torch/shear cutting for oversize scrap to furnace-charge dimensions. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 12.987013 kWh/t (virgin), 19.480519 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.008, EF_S1_scrap=0.02 tCO2e/t | EF_S2_virgin=0.01, EF_S2_scrap=0.015 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.0008 tCO2e/t\nCO2_v=0.005, CO2_s=0.016 t/t | CH4_v=5e-06, CH4_s=2e-05 t/t (x28) | N2O_v=2e-07, N2O_s=1e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=5e-06, PFC_s=8e-06 tCO2e/t | SF6_v=3e-08, SF6_s=3e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.28 GJ/t, SEC_scrap=0.4 GJ/t.\nBasis: Vibrating screens/crushers for lump-ore and ferroalloy sizing (electric-driven); torch/shear cutting for oversize scrap to furnace-charge dimensions. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 12.987013 kWh/t (virgin), 19.480519 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 8,
+   "id": 6,
    "department": "RMHS",
    "process": "Bedding / Stacking / Stockyard",
    "variation": "General (all types)",
@@ -158,10 +123,11 @@
     "nf3": "(x*0.00000001+y*0.00000001)*16100",
     "sec": "x*0.22+y*0.15"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.01, EF_S1_scrap=0.008 tCO2e/t | EF_S2_virgin=0.012, EF_S2_scrap=0.005 tCO2e/t | EF_S3_virgin=0.0003, EF_S3_scrap=0.0003 tCO2e/t\nCO2_v=0.009, CO2_s=0.007 t/t | CH4_v=1.5e-05, CH4_s=1e-05 t/t (x28) | N2O_v=7e-07, N2O_s=5e-07 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=5e-06, PFC_s=5e-06 tCO2e/t | SF6_v=5e-08, SF6_s=3e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.22 GJ/t, SEC_scrap=0.15 GJ/t.\nBasis: Stacker-reclaimers and diesel dozers/loaders for stockpile bedding/homogenization of bulk ore & ferroalloy; scrap is typically bay-stored (less mechanized bedding), hence lower Scope 2 on the scrap side. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 15.584416 kWh/t (virgin), 6.493506 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.01, EF_S1_scrap=0.008 tCO2e/t | EF_S2_virgin=0.012, EF_S2_scrap=0.005 tCO2e/t | EF_S3_virgin=0.0003, EF_S3_scrap=0.0003 tCO2e/t\nCO2_v=0.009, CO2_s=0.007 t/t | CH4_v=1.5e-05, CH4_s=1e-05 t/t (x28) | N2O_v=7e-07, N2O_s=5e-07 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=5e-06, PFC_s=5e-06 tCO2e/t | SF6_v=5e-08, SF6_s=3e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.22 GJ/t, SEC_scrap=0.15 GJ/t.\nBasis: Stacker-reclaimers and diesel dozers/loaders for stockpile bedding/homogenization of bulk ore & ferroalloy; scrap is typically bay-stored (less mechanized bedding), hence lower Scope 2 on the scrap side. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 15.584416 kWh/t (virgin), 6.493506 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 9,
+   "id": 7,
    "department": "RMHS",
    "process": "Proportioning / Charge Basket",
    "variation": "General (all types)",
@@ -178,10 +144,11 @@
     "nf3": "(x*0.00000001+y*0.00000001)*16100",
     "sec": "x*0.1+y*0.18"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.002 tCO2e/t | EF_S2_virgin=0.006, EF_S2_scrap=0.012 tCO2e/t | EF_S3_virgin=0.0002, EF_S3_scrap=0.0002 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0015 t/t | CH4_v=1e-06, CH4_s=2e-06 t/t (x28) | N2O_v=5e-08, N2O_s=1e-07 t/t (x265)\nHFC_v=1e-05, HFC_s=1e-05 tCO2e/t | PFC_v=3e-06, PFC_s=3e-06 tCO2e/t | SF6_v=5e-08, SF6_s=8e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.1 GJ/t, SEC_scrap=0.18 GJ/t.\nBasis: Weigh-feeders/batching hoppers for ferroalloys; overhead crane with electromagnet for scrap charge-basket loading — higher electricity draw on the scrap side due to lifting loads. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 7.792208 kWh/t (virgin), 15.584416 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.002 tCO2e/t | EF_S2_virgin=0.006, EF_S2_scrap=0.012 tCO2e/t | EF_S3_virgin=0.0002, EF_S3_scrap=0.0002 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0015 t/t | CH4_v=1e-06, CH4_s=2e-06 t/t (x28) | N2O_v=5e-08, N2O_s=1e-07 t/t (x265)\nHFC_v=1e-05, HFC_s=1e-05 tCO2e/t | PFC_v=3e-06, PFC_s=3e-06 tCO2e/t | SF6_v=5e-08, SF6_s=8e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.1 GJ/t, SEC_scrap=0.18 GJ/t.\nBasis: Weigh-feeders/batching hoppers for ferroalloys; overhead crane with electromagnet for scrap charge-basket loading — higher electricity draw on the scrap side due to lifting loads. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 7.792208 kWh/t (virgin), 15.584416 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 10,
+   "id": 8,
    "department": "RMHS",
    "process": "Internal Conveying / Furnace Feeding",
    "variation": "General (all types)",
@@ -198,10 +165,11 @@
     "nf3": "(x*0.00000001+y*0.00000001)*16100",
     "sec": "x*0.12+y*0.15"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0008 tCO2e/t | EF_S2_virgin=0.015, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.0001, EF_S3_scrap=0.0001 tCO2e/t\nCO2_v=0.0004, CO2_s=0.0006 t/t | CH4_v=5e-07, CH4_s=8e-07 t/t (x28) | N2O_v=2e-08, N2O_s=3e-08 t/t (x265)\nHFC_v=1e-05, HFC_s=1e-05 tCO2e/t | PFC_v=2e-06, PFC_s=2e-06 tCO2e/t | SF6_v=4e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.12 GJ/t, SEC_scrap=0.15 GJ/t.\nBasis: Belt conveyors, vibrating feeders, charge chutes to furnace/charge bucket, plus dust-collection electricity; almost entirely electric (Scope 2), negligible Scope 1. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 19.480519 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, RMHS materials-handling — replace with verified plant data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0008 tCO2e/t | EF_S2_virgin=0.015, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.0001, EF_S3_scrap=0.0001 tCO2e/t\nCO2_v=0.0004, CO2_s=0.0006 t/t | CH4_v=5e-07, CH4_s=8e-07 t/t (x28) | N2O_v=2e-08, N2O_s=3e-08 t/t (x265)\nHFC_v=1e-05, HFC_s=1e-05 tCO2e/t | PFC_v=2e-06, PFC_s=2e-06 tCO2e/t | SF6_v=4e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.12 GJ/t, SEC_scrap=0.15 GJ/t.\nBasis: Belt conveyors, vibrating feeders, charge chutes to furnace/charge bucket, plus dust-collection electricity; almost entirely electric (Scope 2), negligible Scope 1. Generalized across all sub-variations of this process (none specified yet) — illustrative literature-typical values, NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 19.480519 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 11,
+   "id": 9,
    "department": "Melt Shop",
    "process": "Scrap Prep / Charging",
    "variation": "General (all types)",
@@ -218,10 +186,11 @@
     "nf3": "(x*0.00000001+y*0.00000001)*16100",
     "sec": "x*0.15+y*0.25"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.005, EF_S1_scrap=0.01 tCO2e/t | EF_S2_virgin=0.01, EF_S2_scrap=0.025 tCO2e/t | EF_S3_virgin=0.001, EF_S3_scrap=0.001 tCO2e/t\nCO2_v=0.003, CO2_s=0.006 t/t | CH4_v=2e-06, CH4_s=5e-06 t/t (x28) | N2O_v=1e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=3e-06, PFC_s=3e-06 tCO2e/t | SF6_v=5e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.15 GJ/t, SEC_scrap=0.25 GJ/t.\nBasis: Melt-shop-side charging operation (as distinct from RMHS's yard proportioning) — charge-crane/basket handling and scrap preheating (waste-heat/electric) prior to furnace charging. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 12.987013 kWh/t (virgin), 32.467532 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.005, EF_S1_scrap=0.01 tCO2e/t | EF_S2_virgin=0.01, EF_S2_scrap=0.025 tCO2e/t | EF_S3_virgin=0.001, EF_S3_scrap=0.001 tCO2e/t\nCO2_v=0.003, CO2_s=0.006 t/t | CH4_v=2e-06, CH4_s=5e-06 t/t (x28) | N2O_v=1e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=2e-05, HFC_s=2e-05 tCO2e/t | PFC_v=3e-06, PFC_s=3e-06 tCO2e/t | SF6_v=5e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.15 GJ/t, SEC_scrap=0.25 GJ/t.\nBasis: Melt-shop-side charging operation (as distinct from RMHS's yard proportioning) — charge-crane/basket handling and scrap preheating (waste-heat/electric) prior to furnace charging. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 12.987013 kWh/t (virgin), 32.467532 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 12,
+   "id": 10,
    "department": "Melt Shop",
    "process": "Primary Melting",
    "variation": "Electric Arc Furnace (EAF)",
@@ -238,10 +207,11 @@
     "nf3": "(x*0.00000004+y*0.00000002)*16100",
     "sec": "x*23+y*5.8"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.42, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=1.75, EF_S2_scrap=0.42 tCO2e/t | EF_S3_virgin=1.1, EF_S3_scrap=0.12 tCO2e/t\nCO2_v=0.38, CO2_s=0.04 t/t | CH4_v=0.0007, CH4_s=4e-05 t/t (x28) | N2O_v=2.5e-05, N2O_s=4e-06 t/t (x265)\nHFC_v=0.0004, HFC_s=0.0002 tCO2e/t | PFC_v=0.0001, PFC_s=5e-05 tCO2e/t | SF6_v=4e-07, SF6_s=2e-07 t/t (x23500) | NF3_v=4e-08, NF3_s=2e-08 t/t (x16100)\nSEC_virgin=23.0 GJ/t, SEC_scrap=5.8 GJ/t.\nBasis: Standard scrap-EAF; virgin-side reflects ferrochrome/ferronickel/DRI charge requiring more melt energy and reduction-related Scope 1 than pure scrap remelt. CEA grid basis for Scope 2. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 2272.727273 kWh/t (virgin), 545.454545 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.42, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=1.75, EF_S2_scrap=0.42 tCO2e/t | EF_S3_virgin=1.1, EF_S3_scrap=0.12 tCO2e/t\nCO2_v=0.38, CO2_s=0.04 t/t | CH4_v=0.0007, CH4_s=4e-05 t/t (x28) | N2O_v=2.5e-05, N2O_s=4e-06 t/t (x265)\nHFC_v=0.0004, HFC_s=0.0002 tCO2e/t | PFC_v=0.0001, PFC_s=5e-05 tCO2e/t | SF6_v=4e-07, SF6_s=2e-07 t/t (x23500) | NF3_v=4e-08, NF3_s=2e-08 t/t (x16100)\nSEC_virgin=23.0 GJ/t, SEC_scrap=5.8 GJ/t.\nBasis: Standard scrap-EAF; virgin-side reflects ferrochrome/ferronickel/DRI charge requiring more melt energy and reduction-related Scope 1 than pure scrap remelt. CEA grid basis for Scope 2. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 2272.727273 kWh/t (virgin), 545.454545 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 13,
+   "id": 11,
    "department": "Melt Shop",
    "process": "Primary Melting",
    "variation": "Induction Furnace (IF)",
@@ -258,10 +228,11 @@
     "nf3": "(x*0.00000002+y*0.00000001)*16100",
     "sec": "x*18+y*4.5"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.02, EF_S1_scrap=0.01 tCO2e/t | EF_S2_virgin=1.1, EF_S2_scrap=0.35 tCO2e/t | EF_S3_virgin=0.9, EF_S3_scrap=0.1 tCO2e/t\nCO2_v=0.015, CO2_s=0.008 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=0.0002, HFC_s=0.0001 tCO2e/t | PFC_v=3e-05, PFC_s=2e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=18.0 GJ/t, SEC_scrap=4.5 GJ/t.\nBasis: Coreless induction melting — no electrode/arc combustion, hence much lower Scope 1 than EAF; widely used for scrap-based secondary steel in India. Slightly more electrically efficient per tonne than EAF. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 1428.571429 kWh/t (virgin), 454.545455 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.02, EF_S1_scrap=0.01 tCO2e/t | EF_S2_virgin=1.1, EF_S2_scrap=0.35 tCO2e/t | EF_S3_virgin=0.9, EF_S3_scrap=0.1 tCO2e/t\nCO2_v=0.015, CO2_s=0.008 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=0.0002, HFC_s=0.0001 tCO2e/t | PFC_v=3e-05, PFC_s=2e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=18.0 GJ/t, SEC_scrap=4.5 GJ/t.\nBasis: Coreless induction melting — no electrode/arc combustion, hence much lower Scope 1 than EAF; widely used for scrap-based secondary steel in India. Slightly more electrically efficient per tonne than EAF. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 1428.571429 kWh/t (virgin), 454.545455 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 14,
+   "id": 12,
    "department": "Melt Shop",
    "process": "Primary Melting",
    "variation": "Integrated BF/Converter",
@@ -278,10 +249,11 @@
     "nf3": "(x*0.00000003+y*0.00000001)*16100",
     "sec": "x*32+y*5"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=1.8, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=0.35, EF_S2_scrap=0.05 tCO2e/t | EF_S3_virgin=1.5, EF_S3_scrap=0.15 tCO2e/t\nCO2_v=1.65, CO2_s=0.04 t/t | CH4_v=0.003, CH4_s=3e-05 t/t (x28) | N2O_v=6e-05, N2O_s=4e-06 t/t (x265)\nHFC_v=0.0002, HFC_s=0.0001 tCO2e/t | PFC_v=5e-05, PFC_s=2e-05 tCO2e/t | SF6_v=3e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=3e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=32.0 GJ/t, SEC_scrap=5.0 GJ/t.\nBasis: Blast-furnace hot metal fed into a converter (scrap used mainly as a coolant addition). Coke/coal reduction chemistry gives by far the highest Scope 1/CO2 intensity of any Primary Melting route — consistent with globally reported BF-BOF carbon intensity being 3-4x EAF. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 454.545455 kWh/t (virgin), 64.935065 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=1.8, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=0.35, EF_S2_scrap=0.05 tCO2e/t | EF_S3_virgin=1.5, EF_S3_scrap=0.15 tCO2e/t\nCO2_v=1.65, CO2_s=0.04 t/t | CH4_v=0.003, CH4_s=3e-05 t/t (x28) | N2O_v=6e-05, N2O_s=4e-06 t/t (x265)\nHFC_v=0.0002, HFC_s=0.0001 tCO2e/t | PFC_v=5e-05, PFC_s=2e-05 tCO2e/t | SF6_v=3e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=3e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=32.0 GJ/t, SEC_scrap=5.0 GJ/t.\nBasis: Blast-furnace hot metal fed into a converter (scrap used mainly as a coolant addition). Coke/coal reduction chemistry gives by far the highest Scope 1/CO2 intensity of any Primary Melting route — consistent with globally reported BF-BOF carbon intensity being 3-4x EAF. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 454.545455 kWh/t (virgin), 64.935065 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 15,
+   "id": 13,
    "department": "Melt Shop",
    "process": "Primary Melting",
    "variation": "Vacuum / Special Induction (VIM)",
@@ -298,10 +270,11 @@
     "nf3": "(x*0.00000003+y*0.00000001)*16100",
     "sec": "x*45+y*15"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.02, EF_S1_scrap=0.015 tCO2e/t | EF_S2_virgin=2.2, EF_S2_scrap=0.55 tCO2e/t | EF_S3_virgin=1.3, EF_S3_scrap=0.12 tCO2e/t\nCO2_v=0.015, CO2_s=0.01 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=0.0003, HFC_s=0.0002 tCO2e/t | PFC_v=4e-05, PFC_s=2e-05 tCO2e/t | SF6_v=3e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=3e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=45.0 GJ/t, SEC_scrap=15.0 GJ/t.\nBasis: Vacuum induction melting for high-purity/specialty alloys — small-batch, long-cycle, vacuum-pump power makes this far more energy-intensive per tonne than atmospheric induction; virgin-heavy Scope 3 reflects high-value imported alloy inputs (Ni, Co, specialty ferroalloys). Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 2857.142857 kWh/t (virgin), 714.285714 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.02, EF_S1_scrap=0.015 tCO2e/t | EF_S2_virgin=2.2, EF_S2_scrap=0.55 tCO2e/t | EF_S3_virgin=1.3, EF_S3_scrap=0.12 tCO2e/t\nCO2_v=0.015, CO2_s=0.01 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=0.0003, HFC_s=0.0002 tCO2e/t | PFC_v=4e-05, PFC_s=2e-05 tCO2e/t | SF6_v=3e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=3e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=45.0 GJ/t, SEC_scrap=15.0 GJ/t.\nBasis: Vacuum induction melting for high-purity/specialty alloys — small-batch, long-cycle, vacuum-pump power makes this far more energy-intensive per tonne than atmospheric induction; virgin-heavy Scope 3 reflects high-value imported alloy inputs (Ni, Co, specialty ferroalloys). Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 2857.142857 kWh/t (virgin), 714.285714 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 16,
+   "id": 14,
    "department": "Melt Shop",
    "process": "Primary Melting",
    "variation": "Vacuum Arc Remelting (VAR)",
@@ -318,10 +291,11 @@
     "nf3": "(x*0.00000004+y*0.00000002)*16100",
     "sec": "x*55+y*18"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.03, EF_S1_scrap=0.02 tCO2e/t | EF_S2_virgin=2.8, EF_S2_scrap=0.7 tCO2e/t | EF_S3_virgin=1.4, EF_S3_scrap=0.15 tCO2e/t\nCO2_v=0.02, CO2_s=0.012 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=0.0003, HFC_s=0.0002 tCO2e/t | PFC_v=4e-05, PFC_s=2e-05 tCO2e/t | SF6_v=4e-07, SF6_s=2e-07 t/t (x23500) | NF3_v=4e-08, NF3_s=2e-08 t/t (x16100)\nSEC_virgin=55.0 GJ/t, SEC_scrap=18.0 GJ/t.\nBasis: DC arc remelting of a consumable electrode under vacuum — very slow melt rate makes this the most energy-intensive route per tonne in the list; applied almost exclusively to virgin/high-purity electrodes. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 3636.363636 kWh/t (virgin), 909.090909 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.03, EF_S1_scrap=0.02 tCO2e/t | EF_S2_virgin=2.8, EF_S2_scrap=0.7 tCO2e/t | EF_S3_virgin=1.4, EF_S3_scrap=0.15 tCO2e/t\nCO2_v=0.02, CO2_s=0.012 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=0.0003, HFC_s=0.0002 tCO2e/t | PFC_v=4e-05, PFC_s=2e-05 tCO2e/t | SF6_v=4e-07, SF6_s=2e-07 t/t (x23500) | NF3_v=4e-08, NF3_s=2e-08 t/t (x16100)\nSEC_virgin=55.0 GJ/t, SEC_scrap=18.0 GJ/t.\nBasis: DC arc remelting of a consumable electrode under vacuum — very slow melt rate makes this the most energy-intensive route per tonne in the list; applied almost exclusively to virgin/high-purity electrodes. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 3636.363636 kWh/t (virgin), 909.090909 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 17,
+   "id": 15,
    "department": "Melt Shop",
    "process": "Primary Melting",
    "variation": "ESR Remelting",
@@ -338,10 +312,11 @@
     "nf3": "(x*0.00000003+y*0.00000001)*16100",
     "sec": "x*48+y*16"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.02, EF_S1_scrap=0.015 tCO2e/t | EF_S2_virgin=2.5, EF_S2_scrap=0.65 tCO2e/t | EF_S3_virgin=1.35, EF_S3_scrap=0.14 tCO2e/t\nCO2_v=0.018, CO2_s=0.011 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=0.0003, HFC_s=0.0002 tCO2e/t | PFC_v=4e-05, PFC_s=2e-05 tCO2e/t | SF6_v=3e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=3e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=48.0 GJ/t, SEC_scrap=16.0 GJ/t.\nBasis: Electroslag remelting — resistive slag heating; Scope 3 also carries flux/slag production (CaF2/CaO/Al2O3) on top of the alloy input. Used for premium bar/ingot quality, virgin-electrode heavy. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 3246.753247 kWh/t (virgin), 844.155844 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.02, EF_S1_scrap=0.015 tCO2e/t | EF_S2_virgin=2.5, EF_S2_scrap=0.65 tCO2e/t | EF_S3_virgin=1.35, EF_S3_scrap=0.14 tCO2e/t\nCO2_v=0.018, CO2_s=0.011 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=0.0003, HFC_s=0.0002 tCO2e/t | PFC_v=4e-05, PFC_s=2e-05 tCO2e/t | SF6_v=3e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=3e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=48.0 GJ/t, SEC_scrap=16.0 GJ/t.\nBasis: Electroslag remelting — resistive slag heating; Scope 3 also carries flux/slag production (CaF2/CaO/Al2O3) on top of the alloy input. Used for premium bar/ingot quality, virgin-electrode heavy. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 3246.753247 kWh/t (virgin), 844.155844 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 18,
+   "id": 16,
    "department": "Melt Shop",
    "process": "Decarburization / Alloying",
    "variation": "AOD",
@@ -358,10 +333,11 @@
     "nf3": "(x*0.00000002+y*0.00000001)*16100",
     "sec": "x*3.5+y*2"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.04 tCO2e/t | EF_S2_virgin=0.15, EF_S2_scrap=0.1 tCO2e/t | EF_S3_virgin=0.2, EF_S3_scrap=0.08 tCO2e/t\nCO2_v=0.09, CO2_s=0.03 t/t | CH4_v=2e-05, CH4_s=1e-05 t/t (x28) | N2O_v=1e-06, N2O_s=5e-07 t/t (x265)\nHFC_v=0.0001, HFC_s=5e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=3.5 GJ/t, SEC_scrap=2.0 GJ/t.\nBasis: Argon-Oxygen Decarburization — most common global stainless decarb route; CO2 is dominated by actual process decarburization (carbon oxidized out of the melt), not fuel combustion. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 194.805195 kWh/t (virgin), 129.87013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.04 tCO2e/t | EF_S2_virgin=0.15, EF_S2_scrap=0.1 tCO2e/t | EF_S3_virgin=0.2, EF_S3_scrap=0.08 tCO2e/t\nCO2_v=0.09, CO2_s=0.03 t/t | CH4_v=2e-05, CH4_s=1e-05 t/t (x28) | N2O_v=1e-06, N2O_s=5e-07 t/t (x265)\nHFC_v=0.0001, HFC_s=5e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=3.5 GJ/t, SEC_scrap=2.0 GJ/t.\nBasis: Argon-Oxygen Decarburization — most common global stainless decarb route; CO2 is dominated by actual process decarburization (carbon oxidized out of the melt), not fuel combustion. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 194.805195 kWh/t (virgin), 129.87013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 19,
+   "id": 17,
    "department": "Melt Shop",
    "process": "Decarburization / Alloying",
    "variation": "VOD",
@@ -378,10 +354,11 @@
     "nf3": "(x*0.00000002+y*0.00000001)*16100",
     "sec": "x*6+y*3"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.05, EF_S1_scrap=0.035 tCO2e/t | EF_S2_virgin=0.35, EF_S2_scrap=0.2 tCO2e/t | EF_S3_virgin=0.22, EF_S3_scrap=0.09 tCO2e/t\nCO2_v=0.1, CO2_s=0.035 t/t | CH4_v=2e-05, CH4_s=1e-05 t/t (x28) | N2O_v=1e-06, N2O_s=5e-07 t/t (x265)\nHFC_v=0.00012, HFC_s=6e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=6.0 GJ/t, SEC_scrap=3.0 GJ/t.\nBasis: Vacuum Oxygen Decarburization — used for ultra-low-carbon grades; vacuum pump power roughly doubles Scope 2/SEC versus AOD for a similar decarb duty. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 454.545455 kWh/t (virgin), 259.74026 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.05, EF_S1_scrap=0.035 tCO2e/t | EF_S2_virgin=0.35, EF_S2_scrap=0.2 tCO2e/t | EF_S3_virgin=0.22, EF_S3_scrap=0.09 tCO2e/t\nCO2_v=0.1, CO2_s=0.035 t/t | CH4_v=2e-05, CH4_s=1e-05 t/t (x28) | N2O_v=1e-06, N2O_s=5e-07 t/t (x265)\nHFC_v=0.00012, HFC_s=6e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=6.0 GJ/t, SEC_scrap=3.0 GJ/t.\nBasis: Vacuum Oxygen Decarburization — used for ultra-low-carbon grades; vacuum pump power roughly doubles Scope 2/SEC versus AOD for a similar decarb duty. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 454.545455 kWh/t (virgin), 259.74026 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 20,
+   "id": 18,
    "department": "Melt Shop",
    "process": "Decarburization / Alloying",
    "variation": "K-OBM-S",
@@ -398,10 +375,11 @@
     "nf3": "(x*0.00000002+y*0.00000001)*16100",
     "sec": "x*3+y*1.8"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.1, EF_S1_scrap=0.06 tCO2e/t | EF_S2_virgin=0.18, EF_S2_scrap=0.1 tCO2e/t | EF_S3_virgin=0.2, EF_S3_scrap=0.08 tCO2e/t\nCO2_v=0.14, CO2_s=0.05 t/t | CH4_v=3e-05, CH4_s=1.2e-05 t/t (x28) | N2O_v=1.2e-06, N2O_s=6e-07 t/t (x265)\nHFC_v=0.0001, HFC_s=5e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=3.0 GJ/t, SEC_scrap=1.8 GJ/t.\nBasis: Combined bottom-blown converter decarb route (O2 + inert gas via bottom tuyeres) — higher blow intensity than AOD gives it a somewhat higher direct process-CO2 factor. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 233.766234 kWh/t (virgin), 129.87013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.1, EF_S1_scrap=0.06 tCO2e/t | EF_S2_virgin=0.18, EF_S2_scrap=0.1 tCO2e/t | EF_S3_virgin=0.2, EF_S3_scrap=0.08 tCO2e/t\nCO2_v=0.14, CO2_s=0.05 t/t | CH4_v=3e-05, CH4_s=1.2e-05 t/t (x28) | N2O_v=1.2e-06, N2O_s=6e-07 t/t (x265)\nHFC_v=0.0001, HFC_s=5e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=3.0 GJ/t, SEC_scrap=1.8 GJ/t.\nBasis: Combined bottom-blown converter decarb route (O2 + inert gas via bottom tuyeres) — higher blow intensity than AOD gives it a somewhat higher direct process-CO2 factor. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 233.766234 kWh/t (virgin), 129.87013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 21,
+   "id": 19,
    "department": "Melt Shop",
    "process": "Decarburization / Alloying",
    "variation": "CLU",
@@ -418,10 +396,11 @@
     "nf3": "(x*0.00000002+y*0.00000001)*16100",
     "sec": "x*3.6+y*2.1"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.04 tCO2e/t | EF_S2_virgin=0.16, EF_S2_scrap=0.1 tCO2e/t | EF_S3_virgin=0.21, EF_S3_scrap=0.085 tCO2e/t\nCO2_v=0.088, CO2_s=0.03 t/t | CH4_v=2e-05, CH4_s=1e-05 t/t (x28) | N2O_v=1e-06, N2O_s=5e-07 t/t (x265)\nHFC_v=0.0001, HFC_s=5e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=3.6 GJ/t, SEC_scrap=2.1 GJ/t.\nBasis: Creusot-Loire Uddeholm process — steam/O2/Ar/N2 blowing, similar purpose to AOD; steam generation adds a modest SEC premium over AOD. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 207.792208 kWh/t (virgin), 129.87013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.04 tCO2e/t | EF_S2_virgin=0.16, EF_S2_scrap=0.1 tCO2e/t | EF_S3_virgin=0.21, EF_S3_scrap=0.085 tCO2e/t\nCO2_v=0.088, CO2_s=0.03 t/t | CH4_v=2e-05, CH4_s=1e-05 t/t (x28) | N2O_v=1e-06, N2O_s=5e-07 t/t (x265)\nHFC_v=0.0001, HFC_s=5e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=3.6 GJ/t, SEC_scrap=2.1 GJ/t.\nBasis: Creusot-Loire Uddeholm process — steam/O2/Ar/N2 blowing, similar purpose to AOD; steam generation adds a modest SEC premium over AOD. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 207.792208 kWh/t (virgin), 129.87013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 22,
+   "id": 20,
    "department": "Melt Shop",
    "process": "Secondary Refining / Homogenization",
    "variation": "Ladle Furnace (LF)",
@@ -438,10 +417,11 @@
     "nf3": "(x*0.00000002+y*0.00000001)*16100",
     "sec": "x*1.8+y*0.7"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.03, EF_S1_scrap=0.015 tCO2e/t | EF_S2_virgin=0.35, EF_S2_scrap=0.12 tCO2e/t | EF_S3_virgin=0.25, EF_S3_scrap=0.05 tCO2e/t\nCO2_v=0.02, CO2_s=0.008 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=8e-05, HFC_s=4e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=1.8 GJ/t, SEC_scrap=0.7 GJ/t.\nBasis: Electrode arc reheating in the ladle for temperature/chemistry trim; Scope 3 driven by ferroalloy trim-addition mass, higher on the virgin-composition side. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 454.545455 kWh/t (virgin), 155.844156 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.03, EF_S1_scrap=0.015 tCO2e/t | EF_S2_virgin=0.35, EF_S2_scrap=0.12 tCO2e/t | EF_S3_virgin=0.25, EF_S3_scrap=0.05 tCO2e/t\nCO2_v=0.02, CO2_s=0.008 t/t | CH4_v=1e-05, CH4_s=5e-06 t/t (x28) | N2O_v=5e-07, N2O_s=2e-07 t/t (x265)\nHFC_v=8e-05, HFC_s=4e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=1.8 GJ/t, SEC_scrap=0.7 GJ/t.\nBasis: Electrode arc reheating in the ladle for temperature/chemistry trim; Scope 3 driven by ferroalloy trim-addition mass, higher on the virgin-composition side. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 454.545455 kWh/t (virgin), 155.844156 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 23,
+   "id": 21,
    "department": "Melt Shop",
    "process": "Secondary Refining / Homogenization",
    "variation": "Inert Gas Stirring — Argon",
@@ -458,10 +438,11 @@
     "nf3": "(x*0.000000005+y*0.000000002)*16100",
     "sec": "x*0.15+y*0.08"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.005, EF_S1_scrap=0.003 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.01 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.015 tCO2e/t\nCO2_v=0.002, CO2_s=0.001 t/t | CH4_v=1e-06, CH4_s=5e-07 t/t (x28) | N2O_v=5e-08, N2O_s=2e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=1e-05 tCO2e/t | PFC_v=5e-06, PFC_s=2e-06 tCO2e/t | SF6_v=5e-08, SF6_s=2e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=2e-09 t/t (x16100)\nSEC_virgin=0.15 GJ/t, SEC_scrap=0.08 GJ/t.\nBasis: Argon is cryogenically air-separated with lower per-unit yield than N2, giving it a higher Scope 3 upstream-production footprint than nitrogen stirring for the same gas volume. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 12.987013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.005, EF_S1_scrap=0.003 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.01 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.015 tCO2e/t\nCO2_v=0.002, CO2_s=0.001 t/t | CH4_v=1e-06, CH4_s=5e-07 t/t (x28) | N2O_v=5e-08, N2O_s=2e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=1e-05 tCO2e/t | PFC_v=5e-06, PFC_s=2e-06 tCO2e/t | SF6_v=5e-08, SF6_s=2e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=2e-09 t/t (x16100)\nSEC_virgin=0.15 GJ/t, SEC_scrap=0.08 GJ/t.\nBasis: Argon is cryogenically air-separated with lower per-unit yield than N2, giving it a higher Scope 3 upstream-production footprint than nitrogen stirring for the same gas volume. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 12.987013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 24,
+   "id": 22,
    "department": "Melt Shop",
    "process": "Secondary Refining / Homogenization",
    "variation": "Inert Gas Stirring — Nitrogen",
@@ -478,10 +459,11 @@
     "nf3": "(x*0.000000004+y*0.000000002)*16100",
     "sec": "x*0.1+y*0.05"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.004, EF_S1_scrap=0.0025 tCO2e/t | EF_S2_virgin=0.015, EF_S2_scrap=0.008 tCO2e/t | EF_S3_virgin=0.018, EF_S3_scrap=0.009 tCO2e/t\nCO2_v=0.0015, CO2_s=0.0008 t/t | CH4_v=8e-07, CH4_s=4e-07 t/t (x28) | N2O_v=4e-08, N2O_s=2e-08 t/t (x265)\nHFC_v=1.5e-05, HFC_s=8e-06 tCO2e/t | PFC_v=4e-06, PFC_s=2e-06 tCO2e/t | SF6_v=4e-08, SF6_s=2e-08 t/t (x23500) | NF3_v=4e-09, NF3_s=2e-09 t/t (x16100)\nSEC_virgin=0.1 GJ/t, SEC_scrap=0.05 GJ/t.\nBasis: N2 is cheaper/lower-carbon to produce than Ar. METALLURGICAL CAVEAT (not a carbon-accounting issue): N2 stirring cannot be used on low-nitrogen stainless grades since it would pick up nitrogen into the melt. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 19.480519 kWh/t (virgin), 10.38961 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.004, EF_S1_scrap=0.0025 tCO2e/t | EF_S2_virgin=0.015, EF_S2_scrap=0.008 tCO2e/t | EF_S3_virgin=0.018, EF_S3_scrap=0.009 tCO2e/t\nCO2_v=0.0015, CO2_s=0.0008 t/t | CH4_v=8e-07, CH4_s=4e-07 t/t (x28) | N2O_v=4e-08, N2O_s=2e-08 t/t (x265)\nHFC_v=1.5e-05, HFC_s=8e-06 tCO2e/t | PFC_v=4e-06, PFC_s=2e-06 tCO2e/t | SF6_v=4e-08, SF6_s=2e-08 t/t (x23500) | NF3_v=4e-09, NF3_s=2e-09 t/t (x16100)\nSEC_virgin=0.1 GJ/t, SEC_scrap=0.05 GJ/t.\nBasis: N2 is cheaper/lower-carbon to produce than Ar. METALLURGICAL CAVEAT (not a carbon-accounting issue): N2 stirring cannot be used on low-nitrogen stainless grades since it would pick up nitrogen into the melt. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 19.480519 kWh/t (virgin), 10.38961 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 25,
+   "id": 23,
    "department": "Melt Shop",
    "process": "Secondary Refining / Homogenization",
    "variation": "VD / RH Degasser",
@@ -498,10 +480,11 @@
     "nf3": "(x*0.00000002+y*0.00000001)*16100",
     "sec": "x*4.5+y*1.8"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.01, EF_S1_scrap=0.007 tCO2e/t | EF_S2_virgin=0.45, EF_S2_scrap=0.18 tCO2e/t | EF_S3_virgin=0.05, EF_S3_scrap=0.02 tCO2e/t\nCO2_v=0.008, CO2_s=0.004 t/t | CH4_v=3e-06, CH4_s=1.5e-06 t/t (x28) | N2O_v=1.5e-07, N2O_s=7e-08 t/t (x265)\nHFC_v=0.0001, HFC_s=5e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=4.5 GJ/t, SEC_scrap=1.8 GJ/t.\nBasis: Vacuum Degassing (static tank) / Ruhrstahl-Heraeus (circulation) — removes H2/N2 and enables ultra-low-carbon finishing; vacuum-pump and circulation-lift gas power dominate Scope 2/SEC. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 584.415584 kWh/t (virgin), 233.766234 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.01, EF_S1_scrap=0.007 tCO2e/t | EF_S2_virgin=0.45, EF_S2_scrap=0.18 tCO2e/t | EF_S3_virgin=0.05, EF_S3_scrap=0.02 tCO2e/t\nCO2_v=0.008, CO2_s=0.004 t/t | CH4_v=3e-06, CH4_s=1.5e-06 t/t (x28) | N2O_v=1.5e-07, N2O_s=7e-08 t/t (x265)\nHFC_v=0.0001, HFC_s=5e-05 tCO2e/t | PFC_v=2e-05, PFC_s=1e-05 tCO2e/t | SF6_v=2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=4.5 GJ/t, SEC_scrap=1.8 GJ/t.\nBasis: Vacuum Degassing (static tank) / Ruhrstahl-Heraeus (circulation) — removes H2/N2 and enables ultra-low-carbon finishing; vacuum-pump and circulation-lift gas power dominate Scope 2/SEC. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 584.415584 kWh/t (virgin), 233.766234 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 26,
+   "id": 24,
    "department": "Melt Shop",
    "process": "Continuous Casting (CCM)",
    "variation": "Curved Mold Caster",
@@ -518,10 +501,11 @@
     "nf3": "(x*0.00000001+y*0.000000005)*16100",
     "sec": "x*0.9+y*0.5"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.02, EF_S1_scrap=0.012 tCO2e/t | EF_S2_virgin=0.1, EF_S2_scrap=0.06 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.015 tCO2e/t\nCO2_v=0.015, CO2_s=0.009 t/t | CH4_v=1e-05, CH4_s=6e-06 t/t (x28) | N2O_v=5e-07, N2O_s=3e-07 t/t (x265)\nHFC_v=3e-05, HFC_s=2e-05 tCO2e/t | PFC_v=8e-06, PFC_s=5e-06 tCO2e/t | SF6_v=1e-07, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.9 GJ/t, SEC_scrap=0.5 GJ/t.\nBasis: CASTER TYPE. Conventional curved/bow-type slab caster — the baseline against which the other CCM technology rows below are incremental. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 129.87013 kWh/t (virgin), 77.922078 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.02, EF_S1_scrap=0.012 tCO2e/t | EF_S2_virgin=0.1, EF_S2_scrap=0.06 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.015 tCO2e/t\nCO2_v=0.015, CO2_s=0.009 t/t | CH4_v=1e-05, CH4_s=6e-06 t/t (x28) | N2O_v=5e-07, N2O_s=3e-07 t/t (x265)\nHFC_v=3e-05, HFC_s=2e-05 tCO2e/t | PFC_v=8e-06, PFC_s=5e-06 tCO2e/t | SF6_v=1e-07, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.9 GJ/t, SEC_scrap=0.5 GJ/t.\nBasis: CASTER TYPE. Conventional curved/bow-type slab caster — the baseline against which the other CCM technology rows below are incremental. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 129.87013 kWh/t (virgin), 77.922078 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 27,
+   "id": 25,
    "department": "Melt Shop",
    "process": "Continuous Casting (CCM)",
    "variation": "Vertical Continuous Caster",
@@ -538,10 +522,11 @@
     "nf3": "(x*0.00000001+y*0.000000005)*16100",
     "sec": "x*1+y*0.55"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.022, EF_S1_scrap=0.013 tCO2e/t | EF_S2_virgin=0.12, EF_S2_scrap=0.07 tCO2e/t | EF_S3_virgin=0.032, EF_S3_scrap=0.016 tCO2e/t\nCO2_v=0.016, CO2_s=0.0095 t/t | CH4_v=1e-05, CH4_s=6e-06 t/t (x28) | N2O_v=5e-07, N2O_s=3e-07 t/t (x265)\nHFC_v=3e-05, HFC_s=2e-05 tCO2e/t | PFC_v=8e-06, PFC_s=5e-06 tCO2e/t | SF6_v=1e-07, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=1.0 GJ/t, SEC_scrap=0.55 GJ/t.\nBasis: CASTER TYPE. Fully vertical machine — used for premium billets/blooms with fewer bending-induced internal defects; taller structure needs marginally more pump head for cooling/hydraulics than curved-mold. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 155.844156 kWh/t (virgin), 90.909091 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.022, EF_S1_scrap=0.013 tCO2e/t | EF_S2_virgin=0.12, EF_S2_scrap=0.07 tCO2e/t | EF_S3_virgin=0.032, EF_S3_scrap=0.016 tCO2e/t\nCO2_v=0.016, CO2_s=0.0095 t/t | CH4_v=1e-05, CH4_s=6e-06 t/t (x28) | N2O_v=5e-07, N2O_s=3e-07 t/t (x265)\nHFC_v=3e-05, HFC_s=2e-05 tCO2e/t | PFC_v=8e-06, PFC_s=5e-06 tCO2e/t | SF6_v=1e-07, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=1.0 GJ/t, SEC_scrap=0.55 GJ/t.\nBasis: CASTER TYPE. Fully vertical machine — used for premium billets/blooms with fewer bending-induced internal defects; taller structure needs marginally more pump head for cooling/hydraulics than curved-mold. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 155.844156 kWh/t (virgin), 90.909091 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 28,
+   "id": 26,
    "department": "Melt Shop",
    "process": "Continuous Casting (CCM)",
    "variation": "Thin Slab Casting",
@@ -558,10 +543,11 @@
     "nf3": "(x*0.00000001+y*0.000000005)*16100",
     "sec": "x*0.85+y*0.48"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.018, EF_S1_scrap=0.011 tCO2e/t | EF_S2_virgin=0.14, EF_S2_scrap=0.08 tCO2e/t | EF_S3_virgin=0.028, EF_S3_scrap=0.014 tCO2e/t\nCO2_v=0.014, CO2_s=0.0085 t/t | CH4_v=9e-06, CH4_s=5.5e-06 t/t (x28) | N2O_v=4.5e-07, N2O_s=2.5e-07 t/t (x265)\nHFC_v=3e-05, HFC_s=2e-05 tCO2e/t | PFC_v=8e-06, PFC_s=5e-06 tCO2e/t | SF6_v=1e-07, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.85 GJ/t, SEC_scrap=0.48 GJ/t.\nBasis: CASTER TYPE. Near-net-shape thin-slab (e.g. CSP-style) route — higher casting speed needs more spray/EM-stirring energy at the CCM stage itself, though it saves considerable downstream reheat energy in hot rolling (out of scope for this row). Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 181.818182 kWh/t (virgin), 103.896104 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.018, EF_S1_scrap=0.011 tCO2e/t | EF_S2_virgin=0.14, EF_S2_scrap=0.08 tCO2e/t | EF_S3_virgin=0.028, EF_S3_scrap=0.014 tCO2e/t\nCO2_v=0.014, CO2_s=0.0085 t/t | CH4_v=9e-06, CH4_s=5.5e-06 t/t (x28) | N2O_v=4.5e-07, N2O_s=2.5e-07 t/t (x265)\nHFC_v=3e-05, HFC_s=2e-05 tCO2e/t | PFC_v=8e-06, PFC_s=5e-06 tCO2e/t | SF6_v=1e-07, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.85 GJ/t, SEC_scrap=0.48 GJ/t.\nBasis: CASTER TYPE. Near-net-shape thin-slab (e.g. CSP-style) route — higher casting speed needs more spray/EM-stirring energy at the CCM stage itself, though it saves considerable downstream reheat energy in hot rolling (out of scope for this row). Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 181.818182 kWh/t (virgin), 103.896104 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 29,
+   "id": 27,
    "department": "Melt Shop",
    "process": "Continuous Casting (CCM)",
    "variation": "Submerged Entry Nozzle (SEN)",
@@ -578,10 +564,11 @@
     "nf3": "(x*0.000000001+y*0.0000000005)*16100",
     "sec": "x*0.03+y*0.02"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0008 tCO2e/t | EF_S2_virgin=0.005, EF_S2_scrap=0.003 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.008 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0005 t/t | CH4_v=5e-07, CH4_s=3e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=5e-06, HFC_s=3e-06 tCO2e/t | PFC_v=1e-06, PFC_s=5e-07 tCO2e/t | SF6_v=1e-08, SF6_s=5e-09 t/t (x23500) | NF3_v=1e-09, NF3_s=5e-10 t/t (x16100)\nSEC_virgin=0.03 GJ/t, SEC_scrap=0.02 GJ/t.\nBasis: CASTER FEATURE (bolts onto any caster type above, not a standalone machine). Protected-pour refractory nozzle preventing reoxidation; footprint is almost entirely Scope 3 from zirconia/alumina-graphite nozzle manufacture, energy impact negligible. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 6.493506 kWh/t (virgin), 3.896104 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0008 tCO2e/t | EF_S2_virgin=0.005, EF_S2_scrap=0.003 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.008 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0005 t/t | CH4_v=5e-07, CH4_s=3e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=5e-06, HFC_s=3e-06 tCO2e/t | PFC_v=1e-06, PFC_s=5e-07 tCO2e/t | SF6_v=1e-08, SF6_s=5e-09 t/t (x23500) | NF3_v=1e-09, NF3_s=5e-10 t/t (x16100)\nSEC_virgin=0.03 GJ/t, SEC_scrap=0.02 GJ/t.\nBasis: CASTER FEATURE (bolts onto any caster type above, not a standalone machine). Protected-pour refractory nozzle preventing reoxidation; footprint is almost entirely Scope 3 from zirconia/alumina-graphite nozzle manufacture, energy impact negligible. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 6.493506 kWh/t (virgin), 3.896104 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 30,
+   "id": 28,
    "department": "Melt Shop",
    "process": "Continuous Casting (CCM)",
    "variation": "Argon Shrouding",
@@ -598,10 +585,11 @@
     "nf3": "(x*0.0000000008+y*0.0000000004)*16100",
     "sec": "x*0.05+y*0.025"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0003 tCO2e/t | EF_S2_virgin=0.008, EF_S2_scrap=0.004 tCO2e/t | EF_S3_virgin=0.02, EF_S3_scrap=0.01 tCO2e/t\nCO2_v=0.0006, CO2_s=0.0003 t/t | CH4_v=3e-07, CH4_s=1.5e-07 t/t (x28) | N2O_v=1e-08, N2O_s=5e-09 t/t (x265)\nHFC_v=5e-06, HFC_s=3e-06 tCO2e/t | PFC_v=8e-07, PFC_s=4e-07 tCO2e/t | SF6_v=8e-09, SF6_s=4e-09 t/t (x23500) | NF3_v=8e-10, NF3_s=4e-10 t/t (x16100)\nSEC_virgin=0.05 GJ/t, SEC_scrap=0.025 GJ/t.\nBasis: CASTER FEATURE. Inert-gas shrouding of ladle-to-tundish/tundish-to-mold streams; Scope 3 dominated by cryogenic argon production (air separation unit), energy for flow-control valves is minor. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 10.38961 kWh/t (virgin), 5.194805 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0003 tCO2e/t | EF_S2_virgin=0.008, EF_S2_scrap=0.004 tCO2e/t | EF_S3_virgin=0.02, EF_S3_scrap=0.01 tCO2e/t\nCO2_v=0.0006, CO2_s=0.0003 t/t | CH4_v=3e-07, CH4_s=1.5e-07 t/t (x28) | N2O_v=1e-08, N2O_s=5e-09 t/t (x265)\nHFC_v=5e-06, HFC_s=3e-06 tCO2e/t | PFC_v=8e-07, PFC_s=4e-07 tCO2e/t | SF6_v=8e-09, SF6_s=4e-09 t/t (x23500) | NF3_v=8e-10, NF3_s=4e-10 t/t (x16100)\nSEC_virgin=0.05 GJ/t, SEC_scrap=0.025 GJ/t.\nBasis: CASTER FEATURE. Inert-gas shrouding of ladle-to-tundish/tundish-to-mold streams; Scope 3 dominated by cryogenic argon production (air separation unit), energy for flow-control valves is minor. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 10.38961 kWh/t (virgin), 5.194805 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 31,
+   "id": 29,
    "department": "Melt Shop",
    "process": "Continuous Casting (CCM)",
    "variation": "Mold Electromagnetic Stirring (MEMS)",
@@ -618,10 +606,11 @@
     "nf3": "(x*0.00000001+y*0.000000005)*16100",
     "sec": "x*0.45+y*0.25"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0007 tCO2e/t | EF_S2_virgin=0.06, EF_S2_scrap=0.035 tCO2e/t | EF_S3_virgin=0.01, EF_S3_scrap=0.005 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0005 t/t | CH4_v=4e-07, CH4_s=2e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=1e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1e-06 tCO2e/t | SF6_v=1e-07, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.45 GJ/t, SEC_scrap=0.25 GJ/t.\nBasis: CASTER FEATURE. Electromagnetic coils around the mold to promote equiaxed grain structure — the most electricity-intensive of the CCM 'feature' rows, plus coil-power-supply switchgear driving its SF6 term. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 77.922078 kWh/t (virgin), 45.454545 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0007 tCO2e/t | EF_S2_virgin=0.06, EF_S2_scrap=0.035 tCO2e/t | EF_S3_virgin=0.01, EF_S3_scrap=0.005 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0005 t/t | CH4_v=4e-07, CH4_s=2e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=1e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1e-06 tCO2e/t | SF6_v=1e-07, SF6_s=5e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.45 GJ/t, SEC_scrap=0.25 GJ/t.\nBasis: CASTER FEATURE. Electromagnetic coils around the mold to promote equiaxed grain structure — the most electricity-intensive of the CCM 'feature' rows, plus coil-power-supply switchgear driving its SF6 term. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 77.922078 kWh/t (virgin), 45.454545 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 32,
+   "id": 30,
    "department": "Melt Shop",
    "process": "Continuous Casting (CCM)",
    "variation": "Soft Reduction",
@@ -638,10 +627,11 @@
     "nf3": "(x*0.000000002+y*0.000000001)*16100",
     "sec": "x*0.2+y*0.12"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0008, EF_S1_scrap=0.0005 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.008, EF_S3_scrap=0.004 tCO2e/t\nCO2_v=0.0006, CO2_s=0.0004 t/t | CH4_v=3e-07, CH4_s=1.5e-07 t/t (x28) | N2O_v=1e-08, N2O_s=5e-09 t/t (x265)\nHFC_v=1e-05, HFC_s=6e-06 tCO2e/t | PFC_v=1e-06, PFC_s=5e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1e-09 t/t (x16100)\nSEC_virgin=0.2 GJ/t, SEC_scrap=0.12 GJ/t.\nBasis: CASTER FEATURE. Mechanical roll reduction near final solidification to cut centerline segregation/porosity; hydraulic roll-pressure pumps are the main energy draw. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0008, EF_S1_scrap=0.0005 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.008, EF_S3_scrap=0.004 tCO2e/t\nCO2_v=0.0006, CO2_s=0.0004 t/t | CH4_v=3e-07, CH4_s=1.5e-07 t/t (x28) | N2O_v=1e-08, N2O_s=5e-09 t/t (x265)\nHFC_v=1e-05, HFC_s=6e-06 tCO2e/t | PFC_v=1e-06, PFC_s=5e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1e-09 t/t (x16100)\nSEC_virgin=0.2 GJ/t, SEC_scrap=0.12 GJ/t.\nBasis: CASTER FEATURE. Mechanical roll reduction near final solidification to cut centerline segregation/porosity; hydraulic roll-pressure pumps are the main energy draw. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 33,
+   "id": 31,
    "department": "Melt Shop",
    "process": "Continuous Casting (CCM)",
    "variation": "Dynamic Secondary / Air-Mist Cooling",
@@ -658,10 +648,11 @@
     "nf3": "(x*0.0000000005+y*0.00000000025)*16100",
     "sec": "x*0.3+y*0.18"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0003 tCO2e/t | EF_S2_virgin=0.04, EF_S2_scrap=0.024 tCO2e/t | EF_S3_virgin=0.006, EF_S3_scrap=0.003 tCO2e/t\nCO2_v=0.0004, CO2_s=0.0002 t/t | CH4_v=2e-07, CH4_s=1e-07 t/t (x28) | N2O_v=8e-09, N2O_s=4e-09 t/t (x265)\nHFC_v=3e-06, HFC_s=1.5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=2.5e-07 tCO2e/t | SF6_v=5e-09, SF6_s=2.5e-09 t/t (x23500) | NF3_v=5e-10, NF3_s=2.5e-10 t/t (x16100)\nSEC_virgin=0.3 GJ/t, SEC_scrap=0.18 GJ/t.\nBasis: CASTER FEATURE. Dynamically-controlled air-mist secondary cooling (vs plain water spray) — better temperature-profile control and lower water use, but the compressed-air generation raises Scope 2/SEC relative to a plain water-spray system. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 51.948052 kWh/t (virgin), 31.168831 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0003 tCO2e/t | EF_S2_virgin=0.04, EF_S2_scrap=0.024 tCO2e/t | EF_S3_virgin=0.006, EF_S3_scrap=0.003 tCO2e/t\nCO2_v=0.0004, CO2_s=0.0002 t/t | CH4_v=2e-07, CH4_s=1e-07 t/t (x28) | N2O_v=8e-09, N2O_s=4e-09 t/t (x265)\nHFC_v=3e-06, HFC_s=1.5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=2.5e-07 tCO2e/t | SF6_v=5e-09, SF6_s=2.5e-09 t/t (x23500) | NF3_v=5e-10, NF3_s=2.5e-10 t/t (x16100)\nSEC_virgin=0.3 GJ/t, SEC_scrap=0.18 GJ/t.\nBasis: CASTER FEATURE. Dynamically-controlled air-mist secondary cooling (vs plain water spray) — better temperature-profile control and lower water use, but the compressed-air generation raises Scope 2/SEC relative to a plain water-spray system. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 51.948052 kWh/t (virgin), 31.168831 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 34,
+   "id": 32,
    "department": "Hot Rolling",
    "process": "Slab Prep / Surface Grinding",
    "variation": "General (all types)",
@@ -678,10 +669,11 @@
     "nf3": "(x*0.000000002+y*0.0000000015)*16100",
     "sec": "x*0.35+y*0.3"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.003, EF_S1_scrap=0.0025 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.005, EF_S3_scrap=0.004 tCO2e/t\nCO2_v=0.002, CO2_s=0.0018 t/t | CH4_v=5e-07, CH4_s=4e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1.5e-08 t/t (x265)\nHFC_v=1e-05, HFC_s=1e-05 tCO2e/t | PFC_v=1e-06, PFC_s=8e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1.5e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1.5e-09 t/t (x16100)\nSEC_virgin=0.35 GJ/t, SEC_scrap=0.3 GJ/t.\nBasis: Surface grinding of slabs to remove defects before reheating; grinding wheel motors and dust-collection electricity dominate, plus Scope 3 from abrasive-wheel consumables. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.003, EF_S1_scrap=0.0025 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.005, EF_S3_scrap=0.004 tCO2e/t\nCO2_v=0.002, CO2_s=0.0018 t/t | CH4_v=5e-07, CH4_s=4e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1.5e-08 t/t (x265)\nHFC_v=1e-05, HFC_s=1e-05 tCO2e/t | PFC_v=1e-06, PFC_s=8e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1.5e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1.5e-09 t/t (x16100)\nSEC_virgin=0.35 GJ/t, SEC_scrap=0.3 GJ/t.\nBasis: Surface grinding of slabs to remove defects before reheating; grinding wheel motors and dust-collection electricity dominate, plus Scope 3 from abrasive-wheel consumables. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 35,
+   "id": 33,
    "department": "Hot Rolling",
    "process": "Reheating in Furnace",
    "variation": "General (all types)",
@@ -698,10 +690,11 @@
     "nf3": "(x*0.00000001+y*0.000000009)*16100",
     "sec": "x*2.8+y*2.5"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.095, EF_S1_scrap=0.085 tCO2e/t | EF_S2_virgin=0.015, EF_S2_scrap=0.014 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.027 tCO2e/t\nCO2_v=0.085, CO2_s=0.076 t/t | CH4_v=0.00015, CH4_s=0.00013 t/t (x28) | N2O_v=4e-06, N2O_s=3.5e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=1e-07, SF6_s=9e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=9e-09 t/t (x16100)\nSEC_virgin=2.8 GJ/t, SEC_scrap=2.5 GJ/t.\nBasis: Natural-gas-fired reheat furnace bringing slab to ~1200C before rolling — by far the largest Scope 1/CO2/SEC contributor in Hot Rolling; Scope 3 carries upstream natural-gas extraction/transport. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 19.480519 kWh/t (virgin), 18.181818 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.095, EF_S1_scrap=0.085 tCO2e/t | EF_S2_virgin=0.015, EF_S2_scrap=0.014 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.027 tCO2e/t\nCO2_v=0.085, CO2_s=0.076 t/t | CH4_v=0.00015, CH4_s=0.00013 t/t (x28) | N2O_v=4e-06, N2O_s=3.5e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=1e-07, SF6_s=9e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=9e-09 t/t (x16100)\nSEC_virgin=2.8 GJ/t, SEC_scrap=2.5 GJ/t.\nBasis: Natural-gas-fired reheat furnace bringing slab to ~1200C before rolling — by far the largest Scope 1/CO2/SEC contributor in Hot Rolling; Scope 3 carries upstream natural-gas extraction/transport. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 19.480519 kWh/t (virgin), 18.181818 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 36,
+   "id": 34,
    "department": "Hot Rolling",
    "process": "High Pressure Hydraulic Descaling",
    "variation": "General (all types)",
@@ -718,10 +711,11 @@
     "nf3": "(x*0.000000005+y*0.000000004)*16100",
     "sec": "x*0.18+y*0.16"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.001 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.001, EF_S3_scrap=0.001 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2e-07, CH4_s=2e-07 t/t (x28) | N2O_v=1e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=5e-06, HFC_s=5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=5e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.18 GJ/t, SEC_scrap=0.16 GJ/t.\nBasis: High-pressure water-jet descaling (~150-300 bar) to strip furnace scale before rolling passes; almost entirely Scope 2 from the HP pump motors. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.001 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.001, EF_S3_scrap=0.001 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2e-07, CH4_s=2e-07 t/t (x28) | N2O_v=1e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=5e-06, HFC_s=5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=5e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.18 GJ/t, SEC_scrap=0.16 GJ/t.\nBasis: High-pressure water-jet descaling (~150-300 bar) to strip furnace scale before rolling passes; almost entirely Scope 2 from the HP pump motors. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 37,
+   "id": 35,
    "department": "Hot Rolling",
    "process": "Roughing Rolling Mill",
    "variation": "General (all types)",
@@ -738,10 +732,11 @@
     "nf3": "(x*0.00000001+y*0.000000009)*16100",
     "sec": "x*0.55+y*0.48"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.0018 tCO2e/t | EF_S2_virgin=0.09, EF_S2_scrap=0.08 tCO2e/t | EF_S3_virgin=0.004, EF_S3_scrap=0.0035 tCO2e/t\nCO2_v=0.0015, CO2_s=0.0013 t/t | CH4_v=3e-07, CH4_s=2.5e-07 t/t (x28) | N2O_v=1.5e-08, N2O_s=1.2e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=1e-07, SF6_s=9e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=9e-09 t/t (x16100)\nSEC_virgin=0.55 GJ/t, SEC_scrap=0.48 GJ/t.\nBasis: Heavy initial reduction passes; large motor torque draw is the main Scope 2 source. Virgin-composition (higher-alloy) grades run marginally higher flow stress and mill load than common scrap-based grades. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 116.883117 kWh/t (virgin), 103.896104 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.0018 tCO2e/t | EF_S2_virgin=0.09, EF_S2_scrap=0.08 tCO2e/t | EF_S3_virgin=0.004, EF_S3_scrap=0.0035 tCO2e/t\nCO2_v=0.0015, CO2_s=0.0013 t/t | CH4_v=3e-07, CH4_s=2.5e-07 t/t (x28) | N2O_v=1.5e-08, N2O_s=1.2e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=1e-07, SF6_s=9e-08 t/t (x23500) | NF3_v=1e-08, NF3_s=9e-09 t/t (x16100)\nSEC_virgin=0.55 GJ/t, SEC_scrap=0.48 GJ/t.\nBasis: Heavy initial reduction passes; large motor torque draw is the main Scope 2 source. Virgin-composition (higher-alloy) grades run marginally higher flow stress and mill load than common scrap-based grades. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 116.883117 kWh/t (virgin), 103.896104 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 38,
+   "id": 36,
    "department": "Hot Rolling",
    "process": "Crop Shearing / Intermediate Heating",
    "variation": "General (all types)",
@@ -758,10 +753,11 @@
     "nf3": "(x*0.000000005+y*0.000000004)*16100",
     "sec": "x*0.65+y*0.58"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.015, EF_S1_scrap=0.013 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.004, EF_S3_scrap=0.0035 tCO2e/t\nCO2_v=0.013, CO2_s=0.0115 t/t | CH4_v=2e-05, CH4_s=1.8e-05 t/t (x28) | N2O_v=6e-07, N2O_s=5e-07 t/t (x265)\nHFC_v=5e-06, HFC_s=4.5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=4.5e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.65 GJ/t, SEC_scrap=0.58 GJ/t.\nBasis: Transfer-bar cropping (shear) plus gas-fired edge-heating/holding to maintain rolling temperature between roughing and finishing stands — second-largest fuel-combustion stage after the main reheat furnace. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.015, EF_S1_scrap=0.013 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.004, EF_S3_scrap=0.0035 tCO2e/t\nCO2_v=0.013, CO2_s=0.0115 t/t | CH4_v=2e-05, CH4_s=1.8e-05 t/t (x28) | N2O_v=6e-07, N2O_s=5e-07 t/t (x265)\nHFC_v=5e-06, HFC_s=4.5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=4.5e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.65 GJ/t, SEC_scrap=0.58 GJ/t.\nBasis: Transfer-bar cropping (shear) plus gas-fired edge-heating/holding to maintain rolling temperature between roughing and finishing stands — second-largest fuel-combustion stage after the main reheat furnace. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 39,
+   "id": 37,
    "department": "Hot Rolling",
    "process": "Finishing Rolling Train",
    "variation": "General (all types)",
@@ -778,10 +774,11 @@
     "nf3": "(x*0.000000015+y*0.000000013)*16100",
     "sec": "x*0.85+y*0.75"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.0018 tCO2e/t | EF_S2_virgin=0.14, EF_S2_scrap=0.125 tCO2e/t | EF_S3_virgin=0.006, EF_S3_scrap=0.005 tCO2e/t\nCO2_v=0.0018, CO2_s=0.0016 t/t | CH4_v=3e-07, CH4_s=2.5e-07 t/t (x28) | N2O_v=1.5e-08, N2O_s=1.2e-08 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=1.5e-07, SF6_s=1.3e-07 t/t (x23500) | NF3_v=1.5e-08, NF3_s=1.3e-08 t/t (x16100)\nSEC_virgin=0.85 GJ/t, SEC_scrap=0.75 GJ/t.\nBasis: Multi-stand finishing mill bringing strip/plate to final gauge — largest single electricity consumer after the reheat furnace; multiple stand drives also give it the highest SF6 (switchgear) term in Hot Rolling. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 181.818182 kWh/t (virgin), 162.337662 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.0018 tCO2e/t | EF_S2_virgin=0.14, EF_S2_scrap=0.125 tCO2e/t | EF_S3_virgin=0.006, EF_S3_scrap=0.005 tCO2e/t\nCO2_v=0.0018, CO2_s=0.0016 t/t | CH4_v=3e-07, CH4_s=2.5e-07 t/t (x28) | N2O_v=1.5e-08, N2O_s=1.2e-08 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=1.5e-07, SF6_s=1.3e-07 t/t (x23500) | NF3_v=1.5e-08, NF3_s=1.3e-08 t/t (x16100)\nSEC_virgin=0.85 GJ/t, SEC_scrap=0.75 GJ/t.\nBasis: Multi-stand finishing mill bringing strip/plate to final gauge — largest single electricity consumer after the reheat furnace; multiple stand drives also give it the highest SF6 (switchgear) term in Hot Rolling. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 181.818182 kWh/t (virgin), 162.337662 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 40,
+   "id": 38,
    "department": "Hot Rolling",
    "process": "Controlled Cooling",
    "variation": "General (all types)",
@@ -798,10 +795,11 @@
     "nf3": "(x*0.000000001+y*0.0000000009)*16100",
     "sec": "x*0.2+y*0.18"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0004 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.001, EF_S3_scrap=0.0009 tCO2e/t\nCO2_v=0.0004, CO2_s=0.0003 t/t | CH4_v=1e-07, CH4_s=8e-08 t/t (x28) | N2O_v=5e-09, N2O_s=4e-09 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=1e-08, SF6_s=9e-09 t/t (x23500) | NF3_v=1e-09, NF3_s=9e-10 t/t (x16100)\nSEC_virgin=0.2 GJ/t, SEC_scrap=0.18 GJ/t.\nBasis: Accelerated/laminar or air controlled-cooling after finishing rolling to set target microstructure; water-pump and fan electricity are the only material factors here. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0004 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.001, EF_S3_scrap=0.0009 tCO2e/t\nCO2_v=0.0004, CO2_s=0.0003 t/t | CH4_v=1e-07, CH4_s=8e-08 t/t (x28) | N2O_v=5e-09, N2O_s=4e-09 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=1e-08, SF6_s=9e-09 t/t (x23500) | NF3_v=1e-09, NF3_s=9e-10 t/t (x16100)\nSEC_virgin=0.2 GJ/t, SEC_scrap=0.18 GJ/t.\nBasis: Accelerated/laminar or air controlled-cooling after finishing rolling to set target microstructure; water-pump and fan electricity are the only material factors here. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 41,
+   "id": 39,
    "department": "Hot Rolling",
    "process": "Coiling or Plate Shearing",
    "variation": "General (all types)",
@@ -818,10 +816,11 @@
     "nf3": "(x*0.000000002+y*0.0000000018)*16100",
     "sec": "x*0.15+y*0.13"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.027 tCO2e/t | EF_S3_virgin=0.002, EF_S3_scrap=0.0018 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2e-07, CH4_s=1.8e-07 t/t (x28) | N2O_v=1e-08, N2O_s=9e-09 t/t (x265)\nHFC_v=3e-06, HFC_s=2.7e-06 tCO2e/t | PFC_v=3e-07, PFC_s=2.7e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1.8e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1.8e-09 t/t (x16100)\nSEC_virgin=0.15 GJ/t, SEC_scrap=0.13 GJ/t.\nBasis: Final-stage coiler motor (strip) or hydraulic shear (plate cut-to-length) — a comparatively minor electricity draw relative to the rolling stands themselves. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 35.064935 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Hot Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.027 tCO2e/t | EF_S3_virgin=0.002, EF_S3_scrap=0.0018 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2e-07, CH4_s=1.8e-07 t/t (x28) | N2O_v=1e-08, N2O_s=9e-09 t/t (x265)\nHFC_v=3e-06, HFC_s=2.7e-06 tCO2e/t | PFC_v=3e-07, PFC_s=2.7e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1.8e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1.8e-09 t/t (x16100)\nSEC_virgin=0.15 GJ/t, SEC_scrap=0.13 GJ/t.\nBasis: Final-stage coiler motor (strip) or hydraulic shear (plate cut-to-length) — a comparatively minor electricity draw relative to the rolling stands themselves. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried over from Melt Shop; downstream Hot Rolling emissions are driven mainly by fuel (reheat furnace) and electricity (mill motors), not by the mix itself.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 35.064935 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 42,
+   "id": 40,
    "department": "Annealing",
    "process": "Solution Annealing",
    "variation": "General (all types)",
@@ -838,10 +837,11 @@
     "nf3": "(x*0.000000008+y*0.000000007)*16100",
     "sec": "x*1.6+y*1.45"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.055 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.028 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.014 tCO2e/t\nCO2_v=0.055, CO2_s=0.05 t/t | CH4_v=0.0001, CH4_s=9e-05 t/t (x28) | N2O_v=3e-06, N2O_s=2.7e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=8e-08, SF6_s=7e-08 t/t (x23500) | NF3_v=8e-09, NF3_s=7e-09 t/t (x16100)\nSEC_virgin=1.6 GJ/t, SEC_scrap=1.45 GJ/t.\nBasis: High-temperature (~1000-1150C) gas-fired furnace anneal + rapid water quench, for austenitic grades (e.g. 304/316) to dissolve carbides and restore corrosion resistance. Largest fuel-driven stage after Hot Rolling's reheat furnace. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 36.363636 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.055 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.028 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.014 tCO2e/t\nCO2_v=0.055, CO2_s=0.05 t/t | CH4_v=0.0001, CH4_s=9e-05 t/t (x28) | N2O_v=3e-06, N2O_s=2.7e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=8e-08, SF6_s=7e-08 t/t (x23500) | NF3_v=8e-09, NF3_s=7e-09 t/t (x16100)\nSEC_virgin=1.6 GJ/t, SEC_scrap=1.45 GJ/t.\nBasis: High-temperature (~1000-1150C) gas-fired furnace anneal + rapid water quench, for austenitic grades (e.g. 304/316) to dissolve carbides and restore corrosion resistance. Largest fuel-driven stage after Hot Rolling's reheat furnace. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 36.363636 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 43,
+   "id": 41,
    "department": "Annealing",
    "process": "Subcritical Annealing",
    "variation": "General (all types)",
@@ -858,10 +858,11 @@
     "nf3": "(x*0.000000005+y*0.000000004)*16100",
     "sec": "x*0.95+y*0.85"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.035, EF_S1_scrap=0.032 tCO2e/t | EF_S2_virgin=0.018, EF_S2_scrap=0.016 tCO2e/t | EF_S3_virgin=0.009, EF_S3_scrap=0.008 tCO2e/t\nCO2_v=0.032, CO2_s=0.029 t/t | CH4_v=6e-05, CH4_s=5.4e-05 t/t (x28) | N2O_v=1.8e-06, N2O_s=1.6e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.95 GJ/t, SEC_scrap=0.85 GJ/t.\nBasis: Below-critical-temperature (~650-850C) anneal, mainly for ferritic/martensitic stress relief; lower peak temperature than Solution Annealing gives it a materially lower fuel/SEC footprint. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 23.376623 kWh/t (virgin), 20.779221 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.035, EF_S1_scrap=0.032 tCO2e/t | EF_S2_virgin=0.018, EF_S2_scrap=0.016 tCO2e/t | EF_S3_virgin=0.009, EF_S3_scrap=0.008 tCO2e/t\nCO2_v=0.032, CO2_s=0.029 t/t | CH4_v=6e-05, CH4_s=5.4e-05 t/t (x28) | N2O_v=1.8e-06, N2O_s=1.6e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.95 GJ/t, SEC_scrap=0.85 GJ/t.\nBasis: Below-critical-temperature (~650-850C) anneal, mainly for ferritic/martensitic stress relief; lower peak temperature than Solution Annealing gives it a materially lower fuel/SEC footprint. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 23.376623 kWh/t (virgin), 20.779221 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 44,
+   "id": 42,
    "department": "Annealing",
    "process": "Full Annealing / Tempering",
    "variation": "General (all types)",
@@ -878,10 +879,11 @@
     "nf3": "(x*0.000000006+y*0.000000005)*16100",
     "sec": "x*1.35+y*1.2"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.05, EF_S1_scrap=0.045 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.012, EF_S3_scrap=0.011 tCO2e/t\nCO2_v=0.046, CO2_s=0.041 t/t | CH4_v=8e-05, CH4_s=7.2e-05 t/t (x28) | N2O_v=2.4e-06, N2O_s=2.1e-06 t/t (x265)\nHFC_v=1.5e-05, HFC_s=1.35e-05 tCO2e/t | PFC_v=1.5e-06, PFC_s=1.35e-06 tCO2e/t | SF6_v=6e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=6e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=1.35 GJ/t, SEC_scrap=1.2 GJ/t.\nBasis: Full anneal (slow furnace-cool softening) combined with a separate temper reheat for martensitic-grade toughness; slow-cool cycles hold the furnace longer per tonne, raising fuel use versus a straight anneal. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.05, EF_S1_scrap=0.045 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.012, EF_S3_scrap=0.011 tCO2e/t\nCO2_v=0.046, CO2_s=0.041 t/t | CH4_v=8e-05, CH4_s=7.2e-05 t/t (x28) | N2O_v=2.4e-06, N2O_s=2.1e-06 t/t (x265)\nHFC_v=1.5e-05, HFC_s=1.35e-05 tCO2e/t | PFC_v=1.5e-06, PFC_s=1.35e-06 tCO2e/t | SF6_v=6e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=6e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=1.35 GJ/t, SEC_scrap=1.2 GJ/t.\nBasis: Full anneal (slow furnace-cool softening) combined with a separate temper reheat for martensitic-grade toughness; slow-cool cycles hold the furnace longer per tonne, raising fuel use versus a straight anneal. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 45,
+   "id": 43,
    "department": "Annealing",
    "process": "Bright Annealing",
    "variation": "General (all types)",
@@ -898,10 +900,11 @@
     "nf3": "(x*0.000000007+y*0.000000006)*16100",
     "sec": "x*1.9+y*1.7"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.055, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=0.045, EF_S2_scrap=0.04 tCO2e/t | EF_S3_virgin=0.025, EF_S3_scrap=0.022 tCO2e/t\nCO2_v=0.05, CO2_s=0.045 t/t | CH4_v=9e-05, CH4_s=8e-05 t/t (x28) | N2O_v=2.5e-06, N2O_s=2.2e-06 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=7e-08, SF6_s=6e-08 t/t (x23500) | NF3_v=7e-09, NF3_s=6e-09 t/t (x16100)\nSEC_virgin=1.9 GJ/t, SEC_scrap=1.7 GJ/t.\nBasis: Anneal under protective reducing atmosphere (H2/N2 or dissociated ammonia) to avoid scale formation, preserving surface finish (BA coil) with no pickling step needed. Protective-gas generation adds a meaningful Scope 3 term on top of furnace heating that Solution/Subcritical annealing don't carry. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 58.441558 kWh/t (virgin), 51.948052 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.055, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=0.045, EF_S2_scrap=0.04 tCO2e/t | EF_S3_virgin=0.025, EF_S3_scrap=0.022 tCO2e/t\nCO2_v=0.05, CO2_s=0.045 t/t | CH4_v=9e-05, CH4_s=8e-05 t/t (x28) | N2O_v=2.5e-06, N2O_s=2.2e-06 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=7e-08, SF6_s=6e-08 t/t (x23500) | NF3_v=7e-09, NF3_s=6e-09 t/t (x16100)\nSEC_virgin=1.9 GJ/t, SEC_scrap=1.7 GJ/t.\nBasis: Anneal under protective reducing atmosphere (H2/N2 or dissociated ammonia) to avoid scale formation, preserving surface finish (BA coil) with no pickling step needed. Protective-gas generation adds a meaningful Scope 3 term on top of furnace heating that Solution/Subcritical annealing don't carry. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 58.441558 kWh/t (virgin), 51.948052 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 46,
+   "id": 44,
    "department": "Annealing",
    "process": "Open Annealing / Pickling",
    "variation": "General (all types)",
@@ -918,10 +921,11 @@
     "nf3": "(x*0.000000007+y*0.000000006)*16100",
     "sec": "x*1.7+y*1.55"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.055 tCO2e/t | EF_S2_virgin=0.035, EF_S2_scrap=0.032 tCO2e/t | EF_S3_virgin=0.04, EF_S3_scrap=0.036 tCO2e/t\nCO2_v=0.055, CO2_s=0.05 t/t | CH4_v=0.0001, CH4_s=9e-05 t/t (x28) | N2O_v=4e-06, N2O_s=3.5e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=7e-08, SF6_s=6e-08 t/t (x23500) | NF3_v=7e-09, NF3_s=6e-09 t/t (x16100)\nSEC_virgin=1.7 GJ/t, SEC_scrap=1.55 GJ/t.\nBasis: Anneal & Pickle Line (APL): open-atmosphere furnace (scale forms) followed by HNO3-HF acid pickling to strip it. Highest Scope 3 of the Annealing rows — acid production plus effluent/sludge neutralization; N2O is elevated versus other rows as a byproduct of nitric-acid pickling/NOx-scrubbing. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 45.454545 kWh/t (virgin), 41.558442 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.055 tCO2e/t | EF_S2_virgin=0.035, EF_S2_scrap=0.032 tCO2e/t | EF_S3_virgin=0.04, EF_S3_scrap=0.036 tCO2e/t\nCO2_v=0.055, CO2_s=0.05 t/t | CH4_v=0.0001, CH4_s=9e-05 t/t (x28) | N2O_v=4e-06, N2O_s=3.5e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=7e-08, SF6_s=6e-08 t/t (x23500) | NF3_v=7e-09, NF3_s=6e-09 t/t (x16100)\nSEC_virgin=1.7 GJ/t, SEC_scrap=1.55 GJ/t.\nBasis: Anneal & Pickle Line (APL): open-atmosphere furnace (scale forms) followed by HNO3-HF acid pickling to strip it. Highest Scope 3 of the Annealing rows — acid production plus effluent/sludge neutralization; N2O is elevated versus other rows as a byproduct of nitric-acid pickling/NOx-scrubbing. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 45.454545 kWh/t (virgin), 41.558442 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 47,
+   "id": 45,
    "department": "Annealing",
    "process": "Continuous Strand / Tube Annealing",
    "variation": "General (all types)",
@@ -938,10 +942,11 @@
     "nf3": "(x*0.000000005+y*0.000000004)*16100",
     "sec": "x*1.1+y*1"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.04, EF_S1_scrap=0.036 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.01, EF_S3_scrap=0.009 tCO2e/t\nCO2_v=0.037, CO2_s=0.033 t/t | CH4_v=7e-05, CH4_s=6.3e-05 t/t (x28) | N2O_v=2e-06, N2O_s=1.8e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=1.1 GJ/t, SEC_scrap=1.0 GJ/t.\nBasis: ASSUMPTION: read 'Continuous Strand/Tone' as 'Continuous Strand/Tube' Annealing — a continuous-throughput furnace line for wire/tube/strand product (vs batch furnaces or strip-coil lines); steady continuous throughput is generally more fuel-efficient per tonne than batch cycling. Flag if a different process was meant. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.04, EF_S1_scrap=0.036 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.01, EF_S3_scrap=0.009 tCO2e/t\nCO2_v=0.037, CO2_s=0.033 t/t | CH4_v=7e-05, CH4_s=6.3e-05 t/t (x28) | N2O_v=2e-06, N2O_s=1.8e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=1.1 GJ/t, SEC_scrap=1.0 GJ/t.\nBasis: ASSUMPTION: read 'Continuous Strand/Tone' as 'Continuous Strand/Tube' Annealing — a continuous-throughput furnace line for wire/tube/strand product (vs batch furnaces or strip-coil lines); steady continuous throughput is generally more fuel-efficient per tonne than batch cycling. Flag if a different process was meant. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 48,
+   "id": 46,
    "department": "Annealing",
    "process": "Induction Annealing",
    "variation": "General (all types)",
@@ -958,10 +963,11 @@
     "nf3": "(x*0.00000003+y*0.000000027)*16100",
     "sec": "x*0.75+y*0.68"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.0018 tCO2e/t | EF_S2_virgin=0.55, EF_S2_scrap=0.5 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.027 tCO2e/t\nCO2_v=0.0015, CO2_s=0.0013 t/t | CH4_v=5e-07, CH4_s=4.5e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1.8e-08 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=3e-07, SF6_s=2.7e-07 t/t (x23500) | NF3_v=3e-08, NF3_s=2.7e-08 t/t (x16100)\nSEC_virgin=0.75 GJ/t, SEC_scrap=0.68 GJ/t.\nBasis: Electric induction heating (no combustion) instead of a gas-fired furnace — used for localized/fast anneal (e.g. weld-seam annealing on tube mills, in-line wire annealing). Near-zero Scope 1, but the highest Scope 2 and SF6 (heavy induction power-supply switchgear) of any Annealing row; still the lowest overall SEC due to direct/targeted heating versus full-furnace soaking. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 714.285714 kWh/t (virgin), 649.350649 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Annealing — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.0018 tCO2e/t | EF_S2_virgin=0.55, EF_S2_scrap=0.5 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.027 tCO2e/t\nCO2_v=0.0015, CO2_s=0.0013 t/t | CH4_v=5e-07, CH4_s=4.5e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1.8e-08 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=3e-07, SF6_s=2.7e-07 t/t (x23500) | NF3_v=3e-08, NF3_s=2.7e-08 t/t (x16100)\nSEC_virgin=0.75 GJ/t, SEC_scrap=0.68 GJ/t.\nBasis: Electric induction heating (no combustion) instead of a gas-fired furnace — used for localized/fast anneal (e.g. weld-seam annealing on tube mills, in-line wire annealing). Near-zero Scope 1, but the highest Scope 2 and SF6 (heavy induction power-supply switchgear) of any Annealing row; still the lowest overall SEC due to direct/targeted heating versus full-furnace soaking. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 714.285714 kWh/t (virgin), 649.350649 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 49,
+   "id": 47,
    "department": "Descaling",
    "process": "Hydraulic High Pressure Spraying",
    "variation": "General (all types)",
@@ -978,10 +984,11 @@
     "nf3": "(x*0.000000005+y*0.000000004)*16100",
     "sec": "x*0.2+y*0.18"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.001 tCO2e/t | EF_S2_virgin=0.022, EF_S2_scrap=0.02 tCO2e/t | EF_S3_virgin=0.002, EF_S3_scrap=0.0018 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2e-07, CH4_s=2e-07 t/t (x28) | N2O_v=1e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=5e-06, HFC_s=5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=5e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.2 GJ/t, SEC_scrap=0.18 GJ/t.\nBasis: High-pressure water-jet descaling (mechanical, no chemicals) — almost entirely Scope 2 from the HP pump motors, same principle as Hot Rolling's descaling stage but applied here post-anneal. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 28.571429 kWh/t (virgin), 25.974026 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.001 tCO2e/t | EF_S2_virgin=0.022, EF_S2_scrap=0.02 tCO2e/t | EF_S3_virgin=0.002, EF_S3_scrap=0.0018 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2e-07, CH4_s=2e-07 t/t (x28) | N2O_v=1e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=5e-06, HFC_s=5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=5e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.2 GJ/t, SEC_scrap=0.18 GJ/t.\nBasis: High-pressure water-jet descaling (mechanical, no chemicals) — almost entirely Scope 2 from the HP pump motors, same principle as Hot Rolling's descaling stage but applied here post-anneal. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 28.571429 kWh/t (virgin), 25.974026 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 50,
+   "id": 48,
    "department": "Descaling",
    "process": "Mechanical Impingement Shot Blasting",
    "variation": "General (all types)",
@@ -998,10 +1005,11 @@
     "nf3": "(x*0.000000006+y*0.000000005)*16100",
     "sec": "x*0.42+y*0.38"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.045, EF_S2_scrap=0.04 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.013 tCO2e/t\nCO2_v=0.001, CO2_s=0.0009 t/t | CH4_v=3e-07, CH4_s=2.7e-07 t/t (x28) | N2O_v=1.5e-08, N2O_s=1.3e-08 t/t (x265)\nHFC_v=5e-06, HFC_s=4.5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=4.5e-07 tCO2e/t | SF6_v=6e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=6e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.42 GJ/t, SEC_scrap=0.38 GJ/t.\nBasis: Wheel-blast machines propelling steel shot/grit at scale — highest Scope 2 of the mechanical descaling rows due to blast-wheel motor and dust-collection power; Scope 3 carries abrasive-media wear/replacement. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 58.441558 kWh/t (virgin), 51.948052 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.045, EF_S2_scrap=0.04 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.013 tCO2e/t\nCO2_v=0.001, CO2_s=0.0009 t/t | CH4_v=3e-07, CH4_s=2.7e-07 t/t (x28) | N2O_v=1.5e-08, N2O_s=1.3e-08 t/t (x265)\nHFC_v=5e-06, HFC_s=4.5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=4.5e-07 tCO2e/t | SF6_v=6e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=6e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.42 GJ/t, SEC_scrap=0.38 GJ/t.\nBasis: Wheel-blast machines propelling steel shot/grit at scale — highest Scope 2 of the mechanical descaling rows due to blast-wheel motor and dust-collection power; Scope 3 carries abrasive-media wear/replacement. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 58.441558 kWh/t (virgin), 51.948052 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 51,
+   "id": 49,
    "department": "Descaling",
    "process": "Flex and Stretch Mechanical Scale Breakers",
    "variation": "General (all types)",
@@ -1018,10 +1026,11 @@
     "nf3": "(x*0.000000004+y*0.0000000035)*16100",
     "sec": "x*0.22+y*0.2"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0004 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.003, EF_S3_scrap=0.0027 tCO2e/t\nCO2_v=0.0004, CO2_s=0.00035 t/t | CH4_v=1e-07, CH4_s=9e-08 t/t (x28) | N2O_v=5e-09, N2O_s=4.5e-09 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=4e-08, SF6_s=3.5e-08 t/t (x23500) | NF3_v=4e-09, NF3_s=3.5e-09 t/t (x16100)\nSEC_virgin=0.22 GJ/t, SEC_scrap=0.2 GJ/t.\nBasis: ASSUMPTION: read 'Flex and stretch mechanical makers' as strip flex/tension-leveling over small-diameter rolls to crack and flake off brittle oxide scale ahead of further cleaning. Lower Scope 2 than shot blasting since it's roll-drive/tensioner motors rather than high-velocity abrasive propulsion; flag if a different process was meant. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0005, EF_S1_scrap=0.0004 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.003, EF_S3_scrap=0.0027 tCO2e/t\nCO2_v=0.0004, CO2_s=0.00035 t/t | CH4_v=1e-07, CH4_s=9e-08 t/t (x28) | N2O_v=5e-09, N2O_s=4.5e-09 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=4e-08, SF6_s=3.5e-08 t/t (x23500) | NF3_v=4e-09, NF3_s=3.5e-09 t/t (x16100)\nSEC_virgin=0.22 GJ/t, SEC_scrap=0.2 GJ/t.\nBasis: ASSUMPTION: read 'Flex and stretch mechanical makers' as strip flex/tension-leveling over small-diameter rolls to crack and flake off brittle oxide scale ahead of further cleaning. Lower Scope 2 than shot blasting since it's roll-drive/tensioner motors rather than high-velocity abrasive propulsion; flag if a different process was meant. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 52,
+   "id": 50,
    "department": "Descaling",
    "process": "Molten Salt Conditioning",
    "variation": "General (all types)",
@@ -1038,10 +1047,11 @@
     "nf3": "(x*0.000000006+y*0.000000005)*16100",
     "sec": "x*1.1+y*1"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.025, EF_S1_scrap=0.023 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.027 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.027 tCO2e/t\nCO2_v=0.022, CO2_s=0.02 t/t | CH4_v=4e-05, CH4_s=3.6e-05 t/t (x28) | N2O_v=2e-06, N2O_s=1.8e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=6e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=6e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=1.1 GJ/t, SEC_scrap=1.0 GJ/t.\nBasis: Kolene-type oxidizing/reducing molten salt bath (maintained ~400-500C) that converts scale into an easily-removable form ahead of a rinse/light pickle. By far the most energy-intensive Descaling row — sustaining a molten bath at temperature dominates both Scope 1 (if gas-heated) and SEC — with a notable Scope 3 from salt-bath chemical (NaOH + oxidant) replenishment. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 35.064935 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.025, EF_S1_scrap=0.023 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.027 tCO2e/t | EF_S3_virgin=0.03, EF_S3_scrap=0.027 tCO2e/t\nCO2_v=0.022, CO2_s=0.02 t/t | CH4_v=4e-05, CH4_s=3.6e-05 t/t (x28) | N2O_v=2e-06, N2O_s=1.8e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=6e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=6e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=1.1 GJ/t, SEC_scrap=1.0 GJ/t.\nBasis: Kolene-type oxidizing/reducing molten salt bath (maintained ~400-500C) that converts scale into an easily-removable form ahead of a rinse/light pickle. By far the most energy-intensive Descaling row — sustaining a molten bath at temperature dominates both Scope 1 (if gas-heated) and SEC — with a notable Scope 3 from salt-bath chemical (NaOH + oxidant) replenishment. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 35.064935 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 53,
+   "id": 51,
    "department": "Descaling",
    "process": "Ultrasonic Bath Agitation",
    "variation": "General (all types)",
@@ -1058,10 +1068,11 @@
     "nf3": "(x*0.000000003+y*0.0000000025)*16100",
     "sec": "x*0.25+y*0.22"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0003, EF_S1_scrap=0.00025 tCO2e/t | EF_S2_virgin=0.028, EF_S2_scrap=0.025 tCO2e/t | EF_S3_virgin=0.002, EF_S3_scrap=0.0018 tCO2e/t\nCO2_v=0.0002, CO2_s=0.00018 t/t | CH4_v=6e-08, CH4_s=5e-08 t/t (x28) | N2O_v=3e-09, N2O_s=2.5e-09 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=3e-08, SF6_s=2.5e-08 t/t (x23500) | NF3_v=3e-09, NF3_s=2.5e-09 t/t (x16100)\nSEC_virgin=0.25 GJ/t, SEC_scrap=0.22 GJ/t.\nBasis: Ultrasonic transducers agitating a cleaning/rinse bath to enhance scale-removal efficiency — usually supplementary to a pickling/wash bath rather than a standalone route; transducer generator power is the only material Scope 2 term. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 36.363636 kWh/t (virgin), 32.467532 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Descaling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0003, EF_S1_scrap=0.00025 tCO2e/t | EF_S2_virgin=0.028, EF_S2_scrap=0.025 tCO2e/t | EF_S3_virgin=0.002, EF_S3_scrap=0.0018 tCO2e/t\nCO2_v=0.0002, CO2_s=0.00018 t/t | CH4_v=6e-08, CH4_s=5e-08 t/t (x28) | N2O_v=3e-09, N2O_s=2.5e-09 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=3e-08, SF6_s=2.5e-08 t/t (x23500) | NF3_v=3e-09, NF3_s=2.5e-09 t/t (x16100)\nSEC_virgin=0.25 GJ/t, SEC_scrap=0.22 GJ/t.\nBasis: Ultrasonic transducers agitating a cleaning/rinse bath to enhance scale-removal efficiency — usually supplementary to a pickling/wash bath rather than a standalone route; transducer generator power is the only material Scope 2 term. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 36.363636 kWh/t (virgin), 32.467532 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 54,
+   "id": 52,
    "department": "Pickling",
    "process": "Continuous Tank Pickling",
    "variation": "General (all types)",
@@ -1078,10 +1089,11 @@
     "nf3": "(x*0.000000006+y*0.000000005)*16100",
     "sec": "x*0.55+y*0.5"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Pickling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.008, EF_S1_scrap=0.007 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.027 tCO2e/t | EF_S3_virgin=0.05, EF_S3_scrap=0.045 tCO2e/t\nCO2_v=0.006, CO2_s=0.0054 t/t | CH4_v=1e-06, CH4_s=9e-07 t/t (x28) | N2O_v=4.5e-06, N2O_s=4e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=6e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=6e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.55 GJ/t, SEC_scrap=0.5 GJ/t.\nBasis: Large-scale continuous HNO3-HF mixed-acid tank line (strip passed through in-line). High-throughput acid consumption + effluent neutralization/sludge treatment give it the largest Scope 3 in this department; N2O reflects NOx byproduct of nitric-acid pickling. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 35.064935 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Pickling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.008, EF_S1_scrap=0.007 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.027 tCO2e/t | EF_S3_virgin=0.05, EF_S3_scrap=0.045 tCO2e/t\nCO2_v=0.006, CO2_s=0.0054 t/t | CH4_v=1e-06, CH4_s=9e-07 t/t (x28) | N2O_v=4.5e-06, N2O_s=4e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=6e-08, SF6_s=5e-08 t/t (x23500) | NF3_v=6e-09, NF3_s=5e-09 t/t (x16100)\nSEC_virgin=0.55 GJ/t, SEC_scrap=0.5 GJ/t.\nBasis: Large-scale continuous HNO3-HF mixed-acid tank line (strip passed through in-line). High-throughput acid consumption + effluent neutralization/sludge treatment give it the largest Scope 3 in this department; N2O reflects NOx byproduct of nitric-acid pickling. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 35.064935 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 55,
+   "id": 53,
    "department": "Pickling",
    "process": "Batch Acid Bath",
    "variation": "General (all types)",
@@ -1098,10 +1110,11 @@
     "nf3": "(x*0.000000005+y*0.000000004)*16100",
     "sec": "x*0.65+y*0.58"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Pickling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.01, EF_S1_scrap=0.009 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.055, EF_S3_scrap=0.05 tCO2e/t\nCO2_v=0.008, CO2_s=0.0072 t/t | CH4_v=1e-06, CH4_s=9e-07 t/t (x28) | N2O_v=5e-06, N2O_s=4.5e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.65 GJ/t, SEC_scrap=0.58 GJ/t.\nBasis: Immersion pickling of discrete coils/plates/bars in batch tanks. Start-stop bath reheating between batches is thermally less efficient than a continuous line, and less-optimized bath control typically means somewhat higher acid consumption per tonne than the continuous route. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Pickling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.01, EF_S1_scrap=0.009 tCO2e/t | EF_S2_virgin=0.02, EF_S2_scrap=0.018 tCO2e/t | EF_S3_virgin=0.055, EF_S3_scrap=0.05 tCO2e/t\nCO2_v=0.008, CO2_s=0.0072 t/t | CH4_v=1e-06, CH4_s=9e-07 t/t (x28) | N2O_v=5e-06, N2O_s=4.5e-06 t/t (x265)\nHFC_v=1e-05, HFC_s=9e-06 tCO2e/t | PFC_v=1e-06, PFC_s=9e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.65 GJ/t, SEC_scrap=0.58 GJ/t.\nBasis: Immersion pickling of discrete coils/plates/bars in batch tanks. Start-stop bath reheating between batches is thermally less efficient than a continuous line, and less-optimized bath control typically means somewhat higher acid consumption per tonne than the continuous route. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 25.974026 kWh/t (virgin), 23.376623 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 56,
+   "id": 54,
    "department": "Pickling",
    "process": "Pickle Paste / Gel",
    "variation": "General (all types)",
@@ -1118,10 +1131,11 @@
     "nf3": "(x*0.0000000005+y*0.0000000004)*16100",
     "sec": "x*0.08+y*0.07"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Pickling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.005, EF_S2_scrap=0.0045 tCO2e/t | EF_S3_virgin=0.035, EF_S3_scrap=0.032 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2e-07, CH4_s=1.8e-07 t/t (x28) | N2O_v=8e-07, N2O_s=7e-07 t/t (x265)\nHFC_v=3e-06, HFC_s=2.7e-06 tCO2e/t | PFC_v=3e-07, PFC_s=2.7e-07 tCO2e/t | SF6_v=5e-09, SF6_s=4e-09 t/t (x23500) | NF3_v=5e-10, NF3_s=4e-10 t/t (x16100)\nSEC_virgin=0.08 GJ/t, SEC_scrap=0.07 GJ/t.\nBasis: CAVEAT: normally applied per unit weld length/treated area (e.g. spot-treating weld seams), not uniformly across full tonnage like the other three rows — figures here are a per-tonne-equivalent for grid consistency, not a literal full-surface treatment. Concentrated acid-gel/thickener formulation gives it a notable Scope 3 per unit of acid used despite very low total volume; manual application means minimal Scope 1/2 (mainly local fume extraction). Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 6.493506 kWh/t (virgin), 5.844156 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Pickling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.005, EF_S2_scrap=0.0045 tCO2e/t | EF_S3_virgin=0.035, EF_S3_scrap=0.032 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2e-07, CH4_s=1.8e-07 t/t (x28) | N2O_v=8e-07, N2O_s=7e-07 t/t (x265)\nHFC_v=3e-06, HFC_s=2.7e-06 tCO2e/t | PFC_v=3e-07, PFC_s=2.7e-07 tCO2e/t | SF6_v=5e-09, SF6_s=4e-09 t/t (x23500) | NF3_v=5e-10, NF3_s=4e-10 t/t (x16100)\nSEC_virgin=0.08 GJ/t, SEC_scrap=0.07 GJ/t.\nBasis: CAVEAT: normally applied per unit weld length/treated area (e.g. spot-treating weld seams), not uniformly across full tonnage like the other three rows — figures here are a per-tonne-equivalent for grid consistency, not a literal full-surface treatment. Concentrated acid-gel/thickener formulation gives it a notable Scope 3 per unit of acid used despite very low total volume; manual application means minimal Scope 1/2 (mainly local fume extraction). Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 6.493506 kWh/t (virgin), 5.844156 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 57,
+   "id": 55,
    "department": "Pickling",
    "process": "Spray Pickling",
    "variation": "General (all types)",
@@ -1138,10 +1152,11 @@
     "nf3": "(x*0.000000005+y*0.000000004)*16100",
     "sec": "x*0.48+y*0.43"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Pickling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.006, EF_S1_scrap=0.0054 tCO2e/t | EF_S2_virgin=0.035, EF_S2_scrap=0.032 tCO2e/t | EF_S3_virgin=0.038, EF_S3_scrap=0.034 tCO2e/t\nCO2_v=0.0045, CO2_s=0.004 t/t | CH4_v=8e-07, CH4_s=7.2e-07 t/t (x28) | N2O_v=3.2e-06, N2O_s=2.9e-06 t/t (x265)\nHFC_v=8e-06, HFC_s=7.2e-06 tCO2e/t | PFC_v=8e-07, PFC_s=7.2e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.48 GJ/t, SEC_scrap=0.43 GJ/t.\nBasis: Acid solution sprayed onto strip surface rather than full immersion — more controlled/efficient acid use lowers Scope 3 versus tank methods, but atomizing pumps and the extra mist/fume extraction they require push Scope 2 up to the highest of the four rows. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 45.454545 kWh/t (virgin), 41.558442 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Pickling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.006, EF_S1_scrap=0.0054 tCO2e/t | EF_S2_virgin=0.035, EF_S2_scrap=0.032 tCO2e/t | EF_S3_virgin=0.038, EF_S3_scrap=0.034 tCO2e/t\nCO2_v=0.0045, CO2_s=0.004 t/t | CH4_v=8e-07, CH4_s=7.2e-07 t/t (x28) | N2O_v=3.2e-06, N2O_s=2.9e-06 t/t (x265)\nHFC_v=8e-06, HFC_s=7.2e-06 tCO2e/t | PFC_v=8e-07, PFC_s=7.2e-07 tCO2e/t | SF6_v=5e-08, SF6_s=4e-08 t/t (x23500) | NF3_v=5e-09, NF3_s=4e-09 t/t (x16100)\nSEC_virgin=0.48 GJ/t, SEC_scrap=0.43 GJ/t.\nBasis: Acid solution sprayed onto strip surface rather than full immersion — more controlled/efficient acid use lowers Scope 3 versus tank methods, but atomizing pumps and the extra mist/fume extraction they require push Scope 2 up to the highest of the four rows. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 45.454545 kWh/t (virgin), 41.558442 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 58,
+   "id": 56,
    "department": "Cold Rolling",
    "process": "20-High Cluster Mill (Z-Mill / Sendzimir)",
    "variation": "General (all types)",
@@ -1158,10 +1173,11 @@
     "nf3": "(x*0.000000012+y*0.00000001)*16100",
     "sec": "x*0.65+y*0.58"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.16, EF_S2_scrap=0.145 tCO2e/t | EF_S3_virgin=0.02, EF_S3_scrap=0.018 tCO2e/t\nCO2_v=0.0012, CO2_s=0.0011 t/t | CH4_v=3e-07, CH4_s=2.7e-07 t/t (x28) | N2O_v=1.5e-08, N2O_s=1.35e-08 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=1.2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=1.2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.65 GJ/t, SEC_scrap=0.58 GJ/t.\nBasis: Highest-precision cold reduction mill (20 small work/backup rolls in cluster) for thin, tight-tolerance stainless strip; more roll-interface friction than simple 4-high mills gives it the highest Scope 2/SEC of the Cold Rolling mill rows, plus the most frequent small-roll wear (Scope 3). Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 207.792208 kWh/t (virgin), 188.311688 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.16, EF_S2_scrap=0.145 tCO2e/t | EF_S3_virgin=0.02, EF_S3_scrap=0.018 tCO2e/t\nCO2_v=0.0012, CO2_s=0.0011 t/t | CH4_v=3e-07, CH4_s=2.7e-07 t/t (x28) | N2O_v=1.5e-08, N2O_s=1.35e-08 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=1.2e-07, SF6_s=1e-07 t/t (x23500) | NF3_v=1.2e-08, NF3_s=1e-08 t/t (x16100)\nSEC_virgin=0.65 GJ/t, SEC_scrap=0.58 GJ/t.\nBasis: Highest-precision cold reduction mill (20 small work/backup rolls in cluster) for thin, tight-tolerance stainless strip; more roll-interface friction than simple 4-high mills gives it the highest Scope 2/SEC of the Cold Rolling mill rows, plus the most frequent small-roll wear (Scope 3). Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 207.792208 kWh/t (virgin), 188.311688 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 59,
+   "id": 57,
    "department": "Cold Rolling",
    "process": "18-High Sendzimir Cluster Mill",
    "variation": "General (all types)",
@@ -1178,10 +1194,11 @@
     "nf3": "(x*0.000000011+y*0.000000009)*16100",
     "sec": "x*0.6+y*0.54"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.15, EF_S2_scrap=0.135 tCO2e/t | EF_S3_virgin=0.018, EF_S3_scrap=0.016 tCO2e/t\nCO2_v=0.0011, CO2_s=0.001 t/t | CH4_v=3e-07, CH4_s=2.7e-07 t/t (x28) | N2O_v=1.4e-08, N2O_s=1.25e-08 t/t (x265)\nHFC_v=2.8e-05, HFC_s=2.5e-05 tCO2e/t | PFC_v=2.8e-06, PFC_s=2.5e-06 tCO2e/t | SF6_v=1.1e-07, SF6_s=9e-08 t/t (x23500) | NF3_v=1.1e-08, NF3_s=9e-09 t/t (x16100)\nSEC_virgin=0.6 GJ/t, SEC_scrap=0.54 GJ/t.\nBasis: ASSUMPTION: split out from '18 HS/6 High universal(UC Mill)' as a separate mill type. Same Sendzimir cluster family as the 20-Hi row with a slightly smaller backup-roll stack — marginally lower friction/energy overhead per tonne. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 194.805195 kWh/t (virgin), 175.324675 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.001, EF_S1_scrap=0.0009 tCO2e/t | EF_S2_virgin=0.15, EF_S2_scrap=0.135 tCO2e/t | EF_S3_virgin=0.018, EF_S3_scrap=0.016 tCO2e/t\nCO2_v=0.0011, CO2_s=0.001 t/t | CH4_v=3e-07, CH4_s=2.7e-07 t/t (x28) | N2O_v=1.4e-08, N2O_s=1.25e-08 t/t (x265)\nHFC_v=2.8e-05, HFC_s=2.5e-05 tCO2e/t | PFC_v=2.8e-06, PFC_s=2.5e-06 tCO2e/t | SF6_v=1.1e-07, SF6_s=9e-08 t/t (x23500) | NF3_v=1.1e-08, NF3_s=9e-09 t/t (x16100)\nSEC_virgin=0.6 GJ/t, SEC_scrap=0.54 GJ/t.\nBasis: ASSUMPTION: split out from '18 HS/6 High universal(UC Mill)' as a separate mill type. Same Sendzimir cluster family as the 20-Hi row with a slightly smaller backup-roll stack — marginally lower friction/energy overhead per tonne. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 194.805195 kWh/t (virgin), 175.324675 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 60,
+   "id": 58,
    "department": "Cold Rolling",
    "process": "6-High Universal Crown-Control Mill (UC Mill)",
    "variation": "General (all types)",
@@ -1198,10 +1215,11 @@
     "nf3": "(x*0.000000009+y*0.000000008)*16100",
     "sec": "x*0.48+y*0.43"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0008, EF_S1_scrap=0.0007 tCO2e/t | EF_S2_virgin=0.11, EF_S2_scrap=0.1 tCO2e/t | EF_S3_virgin=0.012, EF_S3_scrap=0.011 tCO2e/t\nCO2_v=0.0009, CO2_s=0.0008 t/t | CH4_v=2.5e-07, CH4_s=2.2e-07 t/t (x28) | N2O_v=1.25e-08, N2O_s=1.1e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=9e-08, SF6_s=8e-08 t/t (x23500) | NF3_v=9e-09, NF3_s=8e-09 t/t (x16100)\nSEC_virgin=0.48 GJ/t, SEC_scrap=0.43 GJ/t.\nBasis: ASSUMPTION: the second half of '18 HS/6 High universal(UC Mill)' — conventional 6-roll mill with intermediate-roll shifting for crown/flatness control. Fewer roll interfaces than a Sendzimir cluster gives it lower friction losses and the lowest Scope 2/SEC of the three dedicated cold-mill rows, at the cost of less extreme achievable reduction than the cluster mills. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 142.857143 kWh/t (virgin), 129.87013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0008, EF_S1_scrap=0.0007 tCO2e/t | EF_S2_virgin=0.11, EF_S2_scrap=0.1 tCO2e/t | EF_S3_virgin=0.012, EF_S3_scrap=0.011 tCO2e/t\nCO2_v=0.0009, CO2_s=0.0008 t/t | CH4_v=2.5e-07, CH4_s=2.2e-07 t/t (x28) | N2O_v=1.25e-08, N2O_s=1.1e-08 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=9e-08, SF6_s=8e-08 t/t (x23500) | NF3_v=9e-09, NF3_s=8e-09 t/t (x16100)\nSEC_virgin=0.48 GJ/t, SEC_scrap=0.43 GJ/t.\nBasis: ASSUMPTION: the second half of '18 HS/6 High universal(UC Mill)' — conventional 6-roll mill with intermediate-roll shifting for crown/flatness control. Fewer roll interfaces than a Sendzimir cluster gives it lower friction losses and the lowest Scope 2/SEC of the three dedicated cold-mill rows, at the cost of less extreme achievable reduction than the cluster mills. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 142.857143 kWh/t (virgin), 129.87013 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 61,
+   "id": 59,
    "department": "Cold Rolling",
    "process": "Continuous Tandem Cold Mill (TCM)",
    "variation": "General (all types)",
@@ -1218,10 +1236,11 @@
     "nf3": "(x*0.000000015+y*0.000000013)*16100",
     "sec": "x*0.55+y*0.49"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0007, EF_S1_scrap=0.0006 tCO2e/t | EF_S2_virgin=0.13, EF_S2_scrap=0.117 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.0135 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2.2e-07, CH4_s=2e-07 t/t (x28) | N2O_v=1.1e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=2.5e-05, HFC_s=2.25e-05 tCO2e/t | PFC_v=2.5e-06, PFC_s=2.25e-06 tCO2e/t | SF6_v=1.5e-07, SF6_s=1.3e-07 t/t (x23500) | NF3_v=1.5e-08, NF3_s=1.3e-08 t/t (x16100)\nSEC_virgin=0.55 GJ/t, SEC_scrap=0.49 GJ/t.\nBasis: Multiple stands in continuous tandem arrangement, each taking a lighter reduction — high-volume, continuous throughput is more per-tonne efficient than a single concentrated-reduction cluster mill, but cumulative multi-stand drives still give it a substantial Scope 2 and the highest SF6 (most substations) of the dedicated mill rows. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 168.831169 kWh/t (virgin), 151.948052 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0007, EF_S1_scrap=0.0006 tCO2e/t | EF_S2_virgin=0.13, EF_S2_scrap=0.117 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.0135 tCO2e/t\nCO2_v=0.0008, CO2_s=0.0007 t/t | CH4_v=2.2e-07, CH4_s=2e-07 t/t (x28) | N2O_v=1.1e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=2.5e-05, HFC_s=2.25e-05 tCO2e/t | PFC_v=2.5e-06, PFC_s=2.25e-06 tCO2e/t | SF6_v=1.5e-07, SF6_s=1.3e-07 t/t (x23500) | NF3_v=1.5e-08, NF3_s=1.3e-08 t/t (x16100)\nSEC_virgin=0.55 GJ/t, SEC_scrap=0.49 GJ/t.\nBasis: Multiple stands in continuous tandem arrangement, each taking a lighter reduction — high-volume, continuous throughput is more per-tonne efficient than a single concentrated-reduction cluster mill, but cumulative multi-stand drives still give it a substantial Scope 2 and the highest SF6 (most substations) of the dedicated mill rows. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 168.831169 kWh/t (virgin), 151.948052 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 62,
+   "id": 60,
    "department": "Cold Rolling",
    "process": "CAPL / AP Line (Continuous Anneal & Pickle Line)",
    "variation": "General (all types)",
@@ -1238,10 +1257,11 @@
     "nf3": "(x*0.000000007+y*0.000000006)*16100",
     "sec": "x*1.65+y*1.5"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.058, EF_S1_scrap=0.053 tCO2e/t | EF_S2_virgin=0.033, EF_S2_scrap=0.03 tCO2e/t | EF_S3_virgin=0.038, EF_S3_scrap=0.034 tCO2e/t\nCO2_v=0.053, CO2_s=0.048 t/t | CH4_v=9e-05, CH4_s=8e-05 t/t (x28) | N2O_v=3.8e-06, N2O_s=3.3e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=7e-08, SF6_s=6e-08 t/t (x23500) | NF3_v=7e-09, NF3_s=6e-09 t/t (x16100)\nSEC_virgin=1.65 GJ/t, SEC_scrap=1.5 GJ/t.\nBasis: Same underlying process as the 'Open Annealing / Pickling' row logged under the Annealing department — kept as its own row here since it sits in-line within the Cold Rolling sequence (continuous furnace anneal + acid pickle between/after cold-reduction passes). By far the largest fuel/CO2/SEC contributor in Cold Rolling, consistent with any furnace+acid-pickle combination. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 42.857143 kWh/t (virgin), 38.961039 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.058, EF_S1_scrap=0.053 tCO2e/t | EF_S2_virgin=0.033, EF_S2_scrap=0.03 tCO2e/t | EF_S3_virgin=0.038, EF_S3_scrap=0.034 tCO2e/t\nCO2_v=0.053, CO2_s=0.048 t/t | CH4_v=9e-05, CH4_s=8e-05 t/t (x28) | N2O_v=3.8e-06, N2O_s=3.3e-06 t/t (x265)\nHFC_v=2e-05, HFC_s=1.8e-05 tCO2e/t | PFC_v=2e-06, PFC_s=1.8e-06 tCO2e/t | SF6_v=7e-08, SF6_s=6e-08 t/t (x23500) | NF3_v=7e-09, NF3_s=6e-09 t/t (x16100)\nSEC_virgin=1.65 GJ/t, SEC_scrap=1.5 GJ/t.\nBasis: Same underlying process as the 'Open Annealing / Pickling' row logged under the Annealing department — kept as its own row here since it sits in-line within the Cold Rolling sequence (continuous furnace anneal + acid pickle between/after cold-reduction passes). By far the largest fuel/CO2/SEC contributor in Cold Rolling, consistent with any furnace+acid-pickle combination. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 42.857143 kWh/t (virgin), 38.961039 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 63,
+   "id": 61,
    "department": "Cold Rolling",
    "process": "Temper Mill (Skin-Pass)",
    "variation": "General (all types)",
@@ -1258,10 +1278,11 @@
     "nf3": "(x*0.000000002+y*0.0000000018)*16100",
     "sec": "x*0.12+y*0.1"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0003, EF_S1_scrap=0.00025 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.003, EF_S3_scrap=0.0027 tCO2e/t\nCO2_v=0.0003, CO2_s=0.00025 t/t | CH4_v=8e-08, CH4_s=7e-08 t/t (x28) | N2O_v=4e-09, N2O_s=3.5e-09 t/t (x265)\nHFC_v=5e-06, HFC_s=4.5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=4.5e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1.8e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1.8e-09 t/t (x16100)\nSEC_virgin=0.12 GJ/t, SEC_scrap=0.1 GJ/t.\nBasis: Light final skin-pass (~0.5-2% reduction) after annealing to set flatness/surface finish and eliminate yield-point elongation — much lower rolling force than the main cold-reduction mills, hence the lowest Scope 2/SEC of any dedicated mill row in this department. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0003, EF_S1_scrap=0.00025 tCO2e/t | EF_S2_virgin=0.025, EF_S2_scrap=0.022 tCO2e/t | EF_S3_virgin=0.003, EF_S3_scrap=0.0027 tCO2e/t\nCO2_v=0.0003, CO2_s=0.00025 t/t | CH4_v=8e-08, CH4_s=7e-08 t/t (x28) | N2O_v=4e-09, N2O_s=3.5e-09 t/t (x265)\nHFC_v=5e-06, HFC_s=4.5e-06 tCO2e/t | PFC_v=5e-07, PFC_s=4.5e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1.8e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1.8e-09 t/t (x16100)\nSEC_virgin=0.12 GJ/t, SEC_scrap=0.1 GJ/t.\nBasis: Light final skin-pass (~0.5-2% reduction) after annealing to set flatness/surface finish and eliminate yield-point elongation — much lower rolling force than the main cold-reduction mills, hence the lowest Scope 2/SEC of any dedicated mill row in this department. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 32.467532 kWh/t (virgin), 28.571429 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 64,
+   "id": 62,
    "department": "Cold Rolling",
    "process": "Bright Annealing (in-process, Cold Rolling sequence)",
    "variation": "General (all types)",
@@ -1278,10 +1299,11 @@
     "nf3": "(x*0.000000007+y*0.000000006)*16100",
     "sec": "x*1.9+y*1.7"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.055, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=0.045, EF_S2_scrap=0.04 tCO2e/t | EF_S3_virgin=0.025, EF_S3_scrap=0.022 tCO2e/t\nCO2_v=0.05, CO2_s=0.045 t/t | CH4_v=9e-05, CH4_s=8e-05 t/t (x28) | N2O_v=2.5e-06, N2O_s=2.2e-06 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=7e-08, SF6_s=6e-08 t/t (x23500) | NF3_v=7e-09, NF3_s=6e-09 t/t (x16100)\nSEC_virgin=1.9 GJ/t, SEC_scrap=1.7 GJ/t.\nBasis: SAME unit operation and coefficient set as the 'Bright Annealing' row already logged under the Annealing department — repeated here because it also occurs as an INTERMEDIATE anneal between successive cold-reduction passes (stainless work-hardens quickly, so multiple anneal/cold-reduce cycles are typical), not just as a final finishing step. Not a duplicate to be removed — it represents a different point in the process flow using the same equipment/atmosphere technology. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 58.441558 kWh/t (virgin), 51.948052 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.055, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=0.045, EF_S2_scrap=0.04 tCO2e/t | EF_S3_virgin=0.025, EF_S3_scrap=0.022 tCO2e/t\nCO2_v=0.05, CO2_s=0.045 t/t | CH4_v=9e-05, CH4_s=8e-05 t/t (x28) | N2O_v=2.5e-06, N2O_s=2.2e-06 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=7e-08, SF6_s=6e-08 t/t (x23500) | NF3_v=7e-09, NF3_s=6e-09 t/t (x16100)\nSEC_virgin=1.9 GJ/t, SEC_scrap=1.7 GJ/t.\nBasis: SAME unit operation and coefficient set as the 'Bright Annealing' row already logged under the Annealing department — repeated here because it also occurs as an INTERMEDIATE anneal between successive cold-reduction passes (stainless work-hardens quickly, so multiple anneal/cold-reduce cycles are typical), not just as a final finishing step. Not a duplicate to be removed — it represents a different point in the process flow using the same equipment/atmosphere technology. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 58.441558 kWh/t (virgin), 51.948052 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 65,
+   "id": 63,
    "department": "Cold Rolling",
    "process": "Tension Leveling / Slitting Lines",
    "variation": "General (all types)",
@@ -1298,10 +1320,11 @@
     "nf3": "(x*0.000000004+y*0.0000000035)*16100",
     "sec": "x*0.16+y*0.14"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0004, EF_S1_scrap=0.00035 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.027 tCO2e/t | EF_S3_virgin=0.004, EF_S3_scrap=0.0036 tCO2e/t\nCO2_v=0.0003, CO2_s=0.00027 t/t | CH4_v=1e-07, CH4_s=9e-08 t/t (x28) | N2O_v=5e-09, N2O_s=4.5e-09 t/t (x265)\nHFC_v=4e-06, HFC_s=3.6e-06 tCO2e/t | PFC_v=4e-07, PFC_s=3.6e-07 tCO2e/t | SF6_v=4e-08, SF6_s=3.5e-08 t/t (x23500) | NF3_v=4e-09, NF3_s=3.5e-09 t/t (x16100)\nSEC_virgin=0.16 GJ/t, SEC_scrap=0.14 GJ/t.\nBasis: Final finishing combo: stretcher-leveling rolls under tension (flatness correction) plus rotary-shear slitting to width. Mostly uncoiler/recoiler and leveler/slitter motor electricity; Scope 3 carries slitter-blade wear consumables. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 35.064935 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Cold Rolling — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0004, EF_S1_scrap=0.00035 tCO2e/t | EF_S2_virgin=0.03, EF_S2_scrap=0.027 tCO2e/t | EF_S3_virgin=0.004, EF_S3_scrap=0.0036 tCO2e/t\nCO2_v=0.0003, CO2_s=0.00027 t/t | CH4_v=1e-07, CH4_s=9e-08 t/t (x28) | N2O_v=5e-09, N2O_s=4.5e-09 t/t (x265)\nHFC_v=4e-06, HFC_s=3.6e-06 tCO2e/t | PFC_v=4e-07, PFC_s=3.6e-07 tCO2e/t | SF6_v=4e-08, SF6_s=3.5e-08 t/t (x23500) | NF3_v=4e-09, NF3_s=3.5e-09 t/t (x16100)\nSEC_virgin=0.16 GJ/t, SEC_scrap=0.14 GJ/t.\nBasis: Final finishing combo: stretcher-leveling rolls under tension (flatness correction) plus rotary-shear slitting to width. Mostly uncoiler/recoiler and leveler/slitter motor electricity; Scope 3 carries slitter-blade wear consumables. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 38.961039 kWh/t (virgin), 35.064935 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 66,
+   "id": 64,
    "department": "Outbound",
    "process": "Packing / Preservation",
    "variation": "General (all types)",
@@ -1318,10 +1341,11 @@
     "nf3": "(x*0.0000000005+y*0.00000000045)*16100",
     "sec": "x*0.06+y*0.05"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.003, EF_S1_scrap=0.0025 tCO2e/t | EF_S2_virgin=0.008, EF_S2_scrap=0.007 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.013 tCO2e/t\nCO2_v=0.002, CO2_s=0.0018 t/t | CH4_v=5e-07, CH4_s=4.5e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1.8e-08 t/t (x265)\nHFC_v=3e-06, HFC_s=2.7e-06 tCO2e/t | PFC_v=3e-07, PFC_s=2.7e-07 tCO2e/t | SF6_v=5e-09, SF6_s=4.5e-09 t/t (x23500) | NF3_v=5e-10, NF3_s=4.5e-10 t/t (x16100)\nSEC_virgin=0.06 GJ/t, SEC_scrap=0.05 GJ/t.\nBasis: Strapping/wrapping machine electricity, forklift diesel; Scope 3 dominated by packaging-material production (wood crates/pallets, VCI corrosion-preservation paper, plastic wrap, steel strapping). Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 10.38961 kWh/t (virgin), 9.090909 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.003, EF_S1_scrap=0.0025 tCO2e/t | EF_S2_virgin=0.008, EF_S2_scrap=0.007 tCO2e/t | EF_S3_virgin=0.015, EF_S3_scrap=0.013 tCO2e/t\nCO2_v=0.002, CO2_s=0.0018 t/t | CH4_v=5e-07, CH4_s=4.5e-07 t/t (x28) | N2O_v=2e-08, N2O_s=1.8e-08 t/t (x265)\nHFC_v=3e-06, HFC_s=2.7e-06 tCO2e/t | PFC_v=3e-07, PFC_s=2.7e-07 tCO2e/t | SF6_v=5e-09, SF6_s=4.5e-09 t/t (x23500) | NF3_v=5e-10, NF3_s=4.5e-10 t/t (x16100)\nSEC_virgin=0.06 GJ/t, SEC_scrap=0.05 GJ/t.\nBasis: Strapping/wrapping machine electricity, forklift diesel; Scope 3 dominated by packaging-material production (wood crates/pallets, VCI corrosion-preservation paper, plastic wrap, steel strapping). Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 10.38961 kWh/t (virgin), 9.090909 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 67,
+   "id": 65,
    "department": "Outbound",
    "process": "Warehousing",
    "variation": "General (all types)",
@@ -1338,10 +1362,11 @@
     "nf3": "(x*0.0000000003+y*0.00000000027)*16100",
     "sec": "x*0.12+y*0.1"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.0018 tCO2e/t | EF_S2_virgin=0.015, EF_S2_scrap=0.013 tCO2e/t | EF_S3_virgin=0.001, EF_S3_scrap=0.0009 tCO2e/t\nCO2_v=0.0015, CO2_s=0.0013 t/t | CH4_v=4e-07, CH4_s=3.6e-07 t/t (x28) | N2O_v=1.8e-08, N2O_s=1.6e-08 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=3e-09, SF6_s=2.7e-09 t/t (x23500) | NF3_v=3e-10, NF3_s=2.7e-10 t/t (x16100)\nSEC_virgin=0.12 GJ/t, SEC_scrap=0.1 GJ/t.\nBasis: Lighting, HVAC/dehumidification (important for stainless surface protection against staining/corrosion during storage), and forklift/crane storage-retrieval electricity; HFC term reflects warehouse HVAC refrigerant. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 19.480519 kWh/t (virgin), 16.883117 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.002, EF_S1_scrap=0.0018 tCO2e/t | EF_S2_virgin=0.015, EF_S2_scrap=0.013 tCO2e/t | EF_S3_virgin=0.001, EF_S3_scrap=0.0009 tCO2e/t\nCO2_v=0.0015, CO2_s=0.0013 t/t | CH4_v=4e-07, CH4_s=3.6e-07 t/t (x28) | N2O_v=1.8e-08, N2O_s=1.6e-08 t/t (x265)\nHFC_v=3e-05, HFC_s=2.7e-05 tCO2e/t | PFC_v=3e-06, PFC_s=2.7e-06 tCO2e/t | SF6_v=3e-09, SF6_s=2.7e-09 t/t (x23500) | NF3_v=3e-10, NF3_s=2.7e-10 t/t (x16100)\nSEC_virgin=0.12 GJ/t, SEC_scrap=0.1 GJ/t.\nBasis: Lighting, HVAC/dehumidification (important for stainless surface protection against staining/corrosion during storage), and forklift/crane storage-retrieval electricity; HFC term reflects warehouse HVAC refrigerant. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 19.480519 kWh/t (virgin), 16.883117 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 68,
+   "id": 66,
    "department": "Outbound",
    "process": "Picking",
    "variation": "General (all types)",
@@ -1358,67 +1383,29 @@
     "nf3": "(x*0.0000000002+y*0.00000000018)*16100",
     "sec": "x*0.05+y*0.045"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0015, EF_S1_scrap=0.0013 tCO2e/t | EF_S2_virgin=0.006, EF_S2_scrap=0.0053 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.0004 tCO2e/t\nCO2_v=0.0012, CO2_s=0.0011 t/t | CH4_v=3e-07, CH4_s=2.6e-07 t/t (x28) | N2O_v=1.2e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=2e-09, SF6_s=1.8e-09 t/t (x23500) | NF3_v=2e-10, NF3_s=1.8e-10 t/t (x16100)\nSEC_virgin=0.05 GJ/t, SEC_scrap=0.045 GJ/t.\nBasis: Order picking/sorting for dispatch — forklift/crane movement plus barcode/RFID scanning systems; the smallest footprint stage in the department. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 7.792208 kWh/t (virgin), 6.883117 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.0015, EF_S1_scrap=0.0013 tCO2e/t | EF_S2_virgin=0.006, EF_S2_scrap=0.0053 tCO2e/t | EF_S3_virgin=0.0005, EF_S3_scrap=0.0004 tCO2e/t\nCO2_v=0.0012, CO2_s=0.0011 t/t | CH4_v=3e-07, CH4_s=2.6e-07 t/t (x28) | N2O_v=1.2e-08, N2O_s=1e-08 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=2e-09, SF6_s=1.8e-09 t/t (x23500) | NF3_v=2e-10, NF3_s=1.8e-10 t/t (x16100)\nSEC_virgin=0.05 GJ/t, SEC_scrap=0.045 GJ/t.\nBasis: Order picking/sorting for dispatch — forklift/crane movement plus barcode/RFID scanning systems; the smallest footprint stage in the department. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 7.792208 kWh/t (virgin), 6.883117 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.",
+   "transport": false
   },
   {
-   "id": 69,
+   "id": 67,
    "department": "Outbound",
    "process": "Transport",
-   "variation": "Train",
+   "variation": "Train + Road Mix (p/q)",
    "formulas": {
-    "scope1": "x*0.01+y*0.009",
-    "scope2": "(x*5.194805+y*4.545455)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
-    "scope3": "x*0.035+y*0.03",
-    "co2": "x*0.009+y*0.008",
-    "ch4": "(x*0.000015+y*0.000013)*28",
-    "n2o": "(x*0.0000007+y*0.0000006)*265",
-    "hfc": "x*0.000002+y*0.0000018",
-    "pfc": "x*0.0000002+y*0.00000018",
-    "sf6": "(x*0.00000002+y*0.000000018)*23500",
-    "nf3": "(x*0.000000002+y*0.0000000018)*16100",
-    "sec": "x*0.3+y*0.27"
+    "scope1": "x*(p*0.01+q*0.015)+y*(p*0.009+q*0.013)",
+    "scope2": "(x*(p*5.194805+q*3.896104)+y*(p*4.545455+q*3.506494))*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
+    "scope3": "x*(p*0.035+q*0.055)+y*(p*0.03+q*0.048)",
+    "co2": "x*(p*0.009+q*0.014)+y*(p*0.008+q*0.012)",
+    "ch4": "(x*(p*0.000015+q*0.000022)+y*(p*0.000013+q*0.00002))*28",
+    "n2o": "(x*(p*0.0000007+q*0.0000011)+y*(p*0.0000006+q*0.0000009))*265",
+    "hfc": "x*(p*0.000002+q*0.000002)+y*(p*0.0000018+q*0.0000018)",
+    "pfc": "x*(p*0.0000002+q*0.0000002)+y*(p*0.00000018+q*0.00000018)",
+    "sf6": "(x*(p*0.00000002+q*0.00000001)+y*(p*0.000000018+q*0.000000009))*23500",
+    "nf3": "(x*(p*0.000000002+q*0.000000001)+y*(p*0.0000000018+q*0.0000000009))*16100",
+    "sec": "x*(p*0.3+q*0.35)+y*(p*0.27+q*0.31)"
    },
-   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.01, EF_S1_scrap=0.009 tCO2e/t | EF_S2_virgin=0.004, EF_S2_scrap=0.0035 tCO2e/t | EF_S3_virgin=0.035, EF_S3_scrap=0.03 tCO2e/t\nCO2_v=0.009, CO2_s=0.008 t/t | CH4_v=1.5e-05, CH4_s=1.3e-05 t/t (x28) | N2O_v=7e-07, N2O_s=6e-07 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1.8e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1.8e-09 t/t (x16100)\nSEC_virgin=0.3 GJ/t, SEC_scrap=0.27 GJ/t.\nBasis: Rail loading (wagon loading equipment) + outbound rail freight; rail freight ~22-30 gCO2/tkm, domestic customer/port distribution distance assumed. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nGHG Protocol mapping: this row = Scope 3 Category 9 (Downstream Transportation & Distribution).\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 5.194805 kWh/t (virgin), 4.545455 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
-  },
-  {
-   "id": 70,
-   "department": "Outbound",
-   "process": "Transport",
-   "variation": "Truck (Road)",
-   "formulas": {
-    "scope1": "x*0.015+y*0.013",
-    "scope2": "(x*3.896104+y*3.506494)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
-    "scope3": "x*0.055+y*0.048",
-    "co2": "x*0.014+y*0.012",
-    "ch4": "(x*0.000022+y*0.00002)*28",
-    "n2o": "(x*0.0000011+y*0.0000009)*265",
-    "hfc": "x*0.000002+y*0.0000018",
-    "pfc": "x*0.0000002+y*0.00000018",
-    "sf6": "(x*0.00000001+y*0.000000009)*23500",
-    "nf3": "(x*0.000000001+y*0.0000000009)*16100",
-    "sec": "x*0.35+y*0.31"
-   },
-   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.015, EF_S1_scrap=0.013 tCO2e/t | EF_S2_virgin=0.003, EF_S2_scrap=0.0027 tCO2e/t | EF_S3_virgin=0.055, EF_S3_scrap=0.048 tCO2e/t\nCO2_v=0.014, CO2_s=0.012 t/t | CH4_v=2.2e-05, CH4_s=2e-05 t/t (x28) | N2O_v=1.1e-06, N2O_s=9e-07 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=1e-08, SF6_s=9e-09 t/t (x23500) | NF3_v=1e-09, NF3_s=9e-10 t/t (x16100)\nSEC_virgin=0.35 GJ/t, SEC_scrap=0.31 GJ/t.\nBasis: Truck loading + outbound road freight; road freight ~62-105 gCO2/tkm gives it the highest Scope 3 of the three outbound transport modes for typical domestic distribution distances. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nGHG Protocol mapping: this row = Scope 3 Category 9 (Downstream Transportation & Distribution).\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 3.896104 kWh/t (virgin), 3.506494 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
-  },
-  {
-   "id": 71,
-   "department": "Outbound",
-   "process": "Transport",
-   "variation": "Ocean",
-   "formulas": {
-    "scope1": "x*0.008+y*0.007",
-    "scope2": "(x*12.987013+y*11.688312)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
-    "scope3": "x*0.12+y*0.045",
-    "co2": "x*0.007+y*0.006",
-    "ch4": "(x*0.00001+y*0.000009)*28",
-    "n2o": "(x*0.0000006+y*0.0000005)*265",
-    "hfc": "x*0.000002+y*0.0000018",
-    "pfc": "x*0.0000002+y*0.00000018",
-    "sf6": "(x*0.00000002+y*0.000000018)*23500",
-    "nf3": "(x*0.000000002+y*0.0000000018)*16100",
-    "sec": "x*0.25+y*0.22"
-   },
-   "notes": "Coefficients used in this row's formulas (illustrative, Outbound — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.008, EF_S1_scrap=0.007 tCO2e/t | EF_S2_virgin=0.01, EF_S2_scrap=0.009 tCO2e/t | EF_S3_virgin=0.12, EF_S3_scrap=0.045 tCO2e/t\nCO2_v=0.007, CO2_s=0.006 t/t | CH4_v=1e-05, CH4_s=9e-06 t/t (x28) | N2O_v=6e-07, N2O_s=5e-07 t/t (x265)\nHFC_v=2e-06, HFC_s=1.8e-06 tCO2e/t | PFC_v=2e-07, PFC_s=1.8e-07 tCO2e/t | SF6_v=2e-08, SF6_s=1.8e-08 t/t (x23500) | NF3_v=2e-09, NF3_s=1.8e-09 t/t (x16100)\nSEC_virgin=0.25 GJ/t, SEC_scrap=0.22 GJ/t.\nBasis: Electric ship-loader/crane port loading + export ocean freight; low per-tonne-km rate (~4-8 gCO2/tkm) but long intercontinental export distances (EU/US/SE Asia stainless exports) give virgin-grade product the highest absolute Scope 3 of the three modes — scrap is rarely exported, hence its much lower factor. Illustrative literature-typical values — NOT plant-measured. x/y here reflect the virgin/scrap mix carried through from Melt Shop to the finished product being dispatched.\nGHG Protocol mapping: this row = Scope 3 Category 9 (Downstream Transportation & Distribution).\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 12.987013 kWh/t (virgin), 11.688312 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors."
+   "notes": "Combined route: blends the previously-separate Train and Truck(Road) rows using p = train share, q = road share (= 1-p). Ocean removed per user request.\nUnderlying per-mode coefficients (tCO2e/t unless noted) — Train: EF_S1_v=0.01,EF_S1_s=0.009 | EF_S2(kWh/t at 0.77kg/kWh ref)_v=5.194805,_s=4.545455 | EF_S3_v=0.035,EF_S3_s=0.03 | CO2_v=0.009,CO2_s=0.008 | CH4_v=1.5e-05,CH4_s=1.3e-05(x28) | N2O_v=7e-07,N2O_s=6e-07(x265) | HFC=2e-06/1.8e-06 | PFC=2e-07/1.8e-07 | SF6_v=2e-08,SF6_s=1.8e-08(x23500) | NF3=2e-09/1.8e-09(x16100) | SEC_v=0.3,SEC_s=0.27 GJ/t.\nTruck(Road): EF_S1_v=0.015,EF_S1_s=0.013 | EF_S2(kWh/t)_v=3.896104,_s=3.506494 | EF_S3_v=0.055,EF_S3_s=0.048 | CO2_v=0.014,CO2_s=0.012 | CH4_v=2.2e-05,CH4_s=2e-05(x28) | N2O_v=1.1e-06,N2O_s=9e-07(x265) | HFC=2e-06/1.8e-06 | PFC=2e-07/1.8e-07 | SF6_v=1e-08,SF6_s=9e-09(x23500) | NF3=1e-09/9e-10(x16100) | SEC_v=0.35,SEC_s=0.31 GJ/t.\nGHG Protocol mapping: this row = Scope 3 Category 9 (Downstream Transportation & Distribution). Illustrative literature-typical values — NOT plant-measured.",
+   "transport": true
   }
  ],
  "grid_factors": {
