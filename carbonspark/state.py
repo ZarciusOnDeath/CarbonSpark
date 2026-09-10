@@ -23,6 +23,7 @@ from .presets import GRID_PRESETS, PLANT_PROFILES, profile_route
 #: Widget keys, kept distinct from the truth keys they mirror.
 SCRAP_W = "w_scrap"
 TRAIN_W = "w_train"
+INBOUND_W = "w_inbound"
 NORMALISE_W = "w_auto_normalise"
 PROFILE_W = "w_plant_profile"
 PRESET_W = "w_grid_preset"
@@ -50,6 +51,11 @@ def scrap_ratio() -> float:
 
 def train_share() -> float:
     return st.session_state.train / 100.0
+
+
+def inbound_share() -> float:
+    """How the haulage tonne-movement splits between the inbound and outbound legs."""
+    return st.session_state.inbound / 100.0
 
 
 # --------------------------------------------------------------------------- #
@@ -108,6 +114,10 @@ def on_train_change() -> None:
     st.session_state.train = st.session_state[TRAIN_W]
 
 
+def on_inbound_change() -> None:
+    st.session_state.inbound = st.session_state[INBOUND_W]
+
+
 def apply_grid_preset() -> None:
     """Preset callback: move the sliders to the chosen preset immediately."""
     st.session_state.grid_preset = st.session_state[PRESET_W]
@@ -160,6 +170,7 @@ def init_state(dataset: Dataset) -> tuple:
     st.session_state.page = "landing"
     st.session_state.scrap = 40
     st.session_state.train = 50
+    st.session_state.inbound = 50
     st.session_state.mix = {}
     st.session_state.auto_normalise = True
     st.session_state.grid_preset = "India grid today"

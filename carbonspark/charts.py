@@ -14,7 +14,7 @@ import plotly.graph_objects as go
 
 from carbon_calc.model import SCOPES, Result
 
-from .theme import AMBER, EMBER, GREEN, INK, INK_SOFT, SCOPE_COLOURS, SCOPE_NAMES, STEEL
+from .theme import AMBER, EMBER, GREEN, INK, SCOPE_COLOURS, SCOPE_NAMES, STEEL
 
 #: Passed to every ``st.plotly_chart`` call.
 PLOT_CONFIG = {
@@ -185,25 +185,6 @@ def comparison_bars(
         yaxis_title="tCO2e per tonne",
         legend=dict(orientation="h", yanchor="bottom", y=-0.22, x=0),
         legend_title_text="",
-    )
-    return _lock(figure, height)
-
-
-def scrap_sweep(points: Sequence[tuple], marker: float, height: int = 360) -> go.Figure:
-    """The optimiser's sweep of total carbon against the scrap ratio."""
-    figure = go.Figure(
-        go.Scatter(
-            x=[point[0] for point in points],
-            y=[point[1] for point in points],
-            mode="lines",
-            line=dict(color=GREEN, width=3),
-            hovertemplate="scrap %{x:.0%}<br><b>%{y:.3f} tCO2e/t</b><extra></extra>",
-        )
-    )
-    figure.add_vline(x=marker, line_dash="dash", line_color=INK_SOFT)
-    figure.update_layout(
-        xaxis=dict(title="Scrap ratio y", tickformat=".0%"),
-        yaxis_title="tCO2e per tonne",
     )
     return _lock(figure, height)
 

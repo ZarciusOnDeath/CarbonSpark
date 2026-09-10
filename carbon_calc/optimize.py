@@ -33,7 +33,7 @@ from .model import (
     calculate,
     mix_factor,
 )
-from .route import RouteMix, Stage, route_weights
+from .route import NEUTRAL_INBOUND_SHARE, RouteMix, Stage, apply_haulage, route_weights
 
 
 class InfeasibleError(ValueError):
@@ -159,7 +159,7 @@ def _best_route(
 
 @dataclass(frozen=True)
 class Optimum:
-    """The best scenario found, plus the sweep used to find it."""
+    """The best scenario found under the constraints."""
 
     scrap_ratio: float
     mix: Dict[str, float]
@@ -167,7 +167,6 @@ class Optimum:
     route: RouteMix
     result: Result
     grid_factor: float
-    sweep: Tuple[Tuple[float, float], ...]
     stage_changes: Tuple[Tuple[str, str, str], ...]
 
 
@@ -179,6 +178,7 @@ def optimise(
     enabled: Mapping[str, bool] | None = None,
     steps: int = 201,
     optimise_route: bool = True,
+    inbound_share: float = NEUTRAL_INBOUND_SHARE,
 ) -> Optimum:
     """Find the lowest-carbon scenario allowed by ``constraints``."""
     scrap_min = max(0.0, min(1.0, constraints.scrap_min))
@@ -208,7 +208,6 @@ def optimise(
     # the best share is always one of the two bounds.
     train_options = sorted({train_min, train_max})
 
-    sweep: List[Tuple[float, float]] = []
     best: Tuple[float, RouteMix, float, float] | None = None
     for scrap in grid:
         scrap_best: Tuple[float, RouteMix, float] | None = None
@@ -218,13 +217,18 @@ def optimise(
             if scrap_best is None or total < scrap_best[0] - 1e-15:
                 scrap_best = (total, route, train_share)
         assert scrap_best is not None
-        sweep.append((scrap, scrap_best[0]))
         if best is None or scrap_best[0] < best[0] - 1e-15:
             best = (scrap_best[0], scrap_best[1], scrap, scrap_best[2])
 
     assert best is not None
     _, route, scrap_ratio, train_share = best
-    result = calculate(scrap_ratio, mix, dataset, route_weights(route), train_share)
+    result = calculate(
+        scrap_ratio,
+        mix,
+        dataset,
+        apply_haulage(route_weights(route), dataset, inbound_share),
+        train_share,
+    )
 
     changes: List[Tuple[str, str, str]] = []
     by_key = {stage.key: stage for stage in stages}
@@ -251,6 +255,5 @@ def optimise(
         route=route,
         result=result,
         grid_factor=mix_factor(mix, dataset),
-        sweep=tuple(sweep),
         stage_changes=tuple(changes),
     )

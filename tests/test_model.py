@@ -294,3 +294,32 @@ def test_route_optimisation_can_be_switched_off(dataset):
     optimum = optimise(dataset, stages, Constraints(), baseline_route, optimise_route=False)
     assert optimum.route == baseline_route
     assert optimum.stage_changes == ()
+
+
+def test_haulage_split_preserves_total_movement():
+    """Shifting movement between the legs leaves the pair's total weight alone."""
+    from carbon_calc.route import apply_haulage, transport_ids
+
+    dataset = load_dataset()
+    inbound, outbound = transport_ids(dataset)
+    assert len(inbound) == 1 and len(outbound) == 1
+
+    weights = {proc.id: 1.0 for proc in dataset.processes}
+    for share in (0.0, 0.25, 0.5, 0.75, 1.0):
+        scaled = apply_haulage(weights, dataset, share)
+        assert scaled[inbound[0]] + scaled[outbound[0]] == pytest.approx(2.0)
+        assert scaled[inbound[0]] == pytest.approx(2 * share)
+    # Every other row is untouched.
+    scaled = apply_haulage(weights, dataset, 0.9)
+    others = [pid for pid in weights if pid not in inbound + outbound]
+    assert all(scaled[pid] == 1.0 for pid in others)
+
+
+def test_all_haulage_inbound_drops_the_outbound_transport_row():
+    from carbon_calc.route import apply_haulage, transport_ids
+
+    dataset = load_dataset()
+    _, outbound = transport_ids(dataset)
+    weights = apply_haulage({proc.id: 1.0 for proc in dataset.processes}, dataset, 1.0)
+    result = calculate(0.4, INDIA_GRID_MIX, dataset, weights)
+    assert not any(row["id"] == outbound[0] for row in result.per_process)

@@ -58,7 +58,10 @@ split wherever a profile is shown.
 * **Grid-mix driven** — Scope 2 is
   `(x·kWh_virgin + y·kWh_scrap) × (a·EF_coal + … + g·EF_nuclear) / 1000`.
 * **Haulage-driven** — the two transport rows (RMHS unloading, outbound despatch) blend
-  rail and road as `p` and `q = 1 − p`.
+  rail and road as `p` and `q = 1 − p`, and a second slider splits the tonne-movement
+  between the inbound and outbound legs. Both rows are stated per tonne moved, so 50%
+  is the workbook as published; the panel reports the split the workbook's own rows
+  imply (54% of transport carbon, 59% of transport energy on the inbound leg).
 
 **Total CO₂e/t = Scope 1 + Scope 2 + Scope 3 (upstream, Cat. 1-8).** The gas-by-gas columns
 are a disaggregation of the same footprint, reported separately and never added into the

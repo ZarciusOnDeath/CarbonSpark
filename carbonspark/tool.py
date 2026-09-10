@@ -9,6 +9,7 @@ import pandas as pd
 import streamlit as st
 
 from carbon_calc.model import (
+    INDIA_GRID_MIX,
     METRIC_LABELS,
     MIX_VARIABLES,
     REFERENCE_GRID_FACTOR,
@@ -16,15 +17,25 @@ from carbon_calc.model import (
     TRACE_GASES,
     Dataset,
     Result,
+    build_variables,
     calculate,
     mix_factor,
 )
 from carbon_calc.optimize import Constraints, InfeasibleError, optimise
-from carbon_calc.route import Stage, default_route, even_mix, normalise_mix, route_weights
+from carbon_calc.route import (
+    Stage,
+    apply_haulage,
+    default_route,
+    even_mix,
+    normalise_mix,
+    route_weights,
+    transport_ids,
+)
 
 from . import charts
 from .presets import GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
 from .state import (
+    INBOUND_W,
     NORMALISE_W,
     PRESET_W,
     PROFILE_W,
@@ -34,8 +45,10 @@ from .state import (
     apply_plant_profile,
     current_mix,
     go,
+    inbound_share,
     mix_total,
     mix_widget,
+    on_inbound_change,
     on_mix_change,
     on_normalise_toggle,
     on_scrap_change,
@@ -74,7 +87,37 @@ def _open_panel(panel: str | None) -> None:
     st.session_state.drawer_panel = panel
 
 
-def _panel_scrap() -> None:
+@st.cache_data(show_spinner=False)
+def _workbook_haulage_split(_dataset: Dataset) -> tuple:
+    """The inbound leg's share of haulage carbon and energy, read off the workbook.
+
+    Evaluated at the workbook's own reference basis — an even virgin/scrap charge,
+    an even rail/road split and today's Indian grid — so the figure describes the
+    two transport rows themselves rather than the user's current scenario.
+    """
+    inbound_ids, outbound_ids = transport_ids(_dataset)
+    variables = build_variables(0.5, INDIA_GRID_MIX, 0.5)
+    by_id = {proc.id: proc for proc in _dataset.processes}
+
+    def leg(ids):
+        carbon = energy = 0.0
+        for process_id in ids:
+            values = by_id[process_id].evaluate(variables)
+            carbon += sum(values[scope] for scope in SCOPES)
+            energy += values["sec"]
+        return carbon, energy
+
+    in_carbon, in_energy = leg(inbound_ids)
+    out_carbon, out_energy = leg(outbound_ids)
+    carbon_total = in_carbon + out_carbon
+    energy_total = in_energy + out_energy
+    return (
+        in_carbon / carbon_total if carbon_total else 0.0,
+        in_energy / energy_total if energy_total else 0.0,
+    )
+
+
+def _panel_scrap(dataset: Dataset) -> None:
     st.markdown("#### Scrap vs virgin charge")
     scrap = st.slider(
         "Scrap steel ratio  y",
@@ -108,6 +151,31 @@ def _panel_scrap() -> None:
         f'<span class="cs-chip">rail p = {train}%</span> '
         f'<span class="cs-chip cs-chip-warn">road q = {100 - train}%</span>',
         unsafe_allow_html=True,
+    )
+    inbound = st.slider(
+        "Inbound share of haulage",
+        min_value=0,
+        max_value=100,
+        value=st.session_state.inbound,
+        key=INBOUND_W,
+        on_change=on_inbound_change,
+        format="%d%%",
+        help="How the material movement splits between the inbound leg (raw material and "
+        "scrap arriving at RMHS) and the outbound leg (finished coil despatched). Both "
+        "workbook rows are stated per tonne moved, so 50% is the workbook as published; "
+        "moving the slider shifts movement from one leg to the other and leaves the total "
+        "unchanged.",
+    )
+    st.markdown(
+        f'<span class="cs-chip">inbound = {inbound}%</span> '
+        f'<span class="cs-chip cs-chip-warn">outbound = {100 - inbound}%</span>',
+        unsafe_allow_html=True,
+    )
+    carbon_share, energy_share = _workbook_haulage_split(dataset)
+    st.caption(
+        f"At an even split the workbook's two haulage rows put {carbon_share:.0%} of the "
+        f"transport carbon and {energy_share:.0%} of the transport energy on the inbound "
+        "leg — inbound moves bulk ore, ferroalloy and scrap, outbound moves finished coil."
     )
 
 
@@ -275,7 +343,7 @@ def _drawer(dataset: Dataset, stages) -> None:
         )
     st.divider()
     if panel == "scrap":
-        _panel_scrap()
+        _panel_scrap(dataset)
     elif panel == "grid":
         _panel_grid(dataset)
     else:
@@ -390,7 +458,9 @@ def _baseline(result: Result, dataset: Dataset, stages) -> None:
             "mix": current_mix(),
             "route": {key: dict(value) for key, value in st.session_state.route.items()},
             "train": train_share(),
-            "label": f"Captured: y={st.session_state.scrap}%, p={st.session_state.train}%",
+            "inbound": inbound_share(),
+            "label": f"Captured: y={st.session_state.scrap}%, p={st.session_state.train}%, "
+            f"inbound={st.session_state.inbound}%",
         }
     if controls[2].button("Reset baseline", use_container_width=True):
         st.session_state.baseline = None
@@ -402,12 +472,17 @@ def _baseline(result: Result, dataset: Dataset, stages) -> None:
             "mix": GRID_PRESETS["India grid today"],
             "route": default_route(stages),
             "train": 0.50,
+            "inbound": 0.50,
             "label": "Default baseline: y=40%, India grid today, first-listed technologies",
         }
     st.info(saved["label"])
 
     baseline = calculate(
-        saved["scrap"], saved["mix"], dataset, route_weights(saved["route"]), saved["train"]
+        saved["scrap"],
+        saved["mix"],
+        dataset,
+        apply_haulage(route_weights(saved["route"]), dataset, saved.get("inbound", 0.50)),
+        saved["train"],
     )
 
     def delta(current: float, base: float) -> str:
@@ -504,7 +579,12 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
     )
     try:
         optimum = optimise(
-            dataset, stages, constraints, st.session_state.route, optimise_route=optimise_route
+            dataset,
+            stages,
+            constraints,
+            st.session_state.route,
+            optimise_route=optimise_route,
+            inbound_share=inbound_share(),
         )
     except InfeasibleError as error:
         st.error(f"No feasible scenario: {error}")
@@ -559,11 +639,6 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
             use_container_width=True,
             hide_index=True,
         )
-    st.plotly_chart(
-        charts.scrap_sweep(optimum.sweep, optimum.scrap_ratio),
-        use_container_width=True,
-        config=charts.PLOT_CONFIG,
-    )
 
 
 def _process_grid(result: Result, dataset: Dataset) -> None:
@@ -616,7 +691,7 @@ def render(dataset: Dataset, stages) -> None:
 
     # The drawer mutates the route as it renders, so the result is computed
     # afterwards — otherwise every reading would lag one interaction behind.
-    weights = route_weights(st.session_state.route)
+    weights = apply_haulage(route_weights(st.session_state.route), dataset, inbound_share())
     if not weights:
         with main:
             st.error(
