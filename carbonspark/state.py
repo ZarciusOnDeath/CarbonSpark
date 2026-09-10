@@ -1,12 +1,19 @@
 """Session state for CarbonSpark.
 
-Streamlit has one sharp edge that shapes this module: a slider whose ``key`` was
-written in an *earlier* run renders at its minimum, even though session state
-holds the right number. Presets therefore appeared to leave the sliders where
-they were. The fix is to keep the truth in plain (non-widget) state — ``mix``,
-``scrap``, ``train`` — and give each widget its own key seeded through ``value=``
-the first time it renders. Widgets write back to the truth in their callbacks,
-and presets update both, so what the sliders show is always what the model used.
+Two ideas run through this module.
+
+**The truth is not the widget.** A slider whose ``key`` was written in an
+earlier run renders at its minimum even though session state holds the right
+number, which is why presets appeared to leave the sliders where they were. So
+plain state holds the truth, each widget has its own key seeded through
+``value=``, and callbacks write back.
+
+**Some panels are staged.** The grid mix and the process route are edited as a
+*draft* and only reach the model when Apply is pressed. Seven shares or fifty
+tick-boxes are one decision, not fifty; recomputing between each one made the
+figures jump around while the user was still halfway through expressing an
+intent. The scrap and haulage sliders are not staged — they are single
+decisions, and their feedback is the point.
 """
 
 from __future__ import annotations
@@ -37,12 +44,77 @@ def mix_widget(var: str) -> str:
 # Reading the truth
 # --------------------------------------------------------------------------- #
 def current_mix() -> Dict[str, float]:
-    """The grid mix as fractions."""
+    """The applied grid mix, as fractions — this is what the model reads."""
     return {var: st.session_state.mix[var] / 100.0 for var in MIX_VARIABLES}
 
 
+def draft_mix() -> Dict[str, float]:
+    """The mix as the sliders currently stand, applied or not."""
+    return {var: st.session_state.mix_draft[var] / 100.0 for var in MIX_VARIABLES}
+
+
 def mix_total() -> float:
-    return sum(st.session_state.mix[var] for var in MIX_VARIABLES)
+    return sum(st.session_state.mix_draft[var] for var in MIX_VARIABLES)
+
+
+def mix_dirty() -> bool:
+    """True when the sliders hold something the model has not been given yet."""
+    return any(
+        abs(st.session_state.mix_draft[var] - st.session_state.mix[var]) > 1e-9
+        for var in MIX_VARIABLES
+    )
+
+
+def apply_mix() -> None:
+    """Hand the drafted mix to the model."""
+    st.session_state.mix = dict(st.session_state.mix_draft)
+
+
+def revert_mix() -> None:
+    """Throw the draft away and put the sliders back on the applied mix."""
+    write_mix(st.session_state.mix, as_fraction=False)
+
+
+def route_dirty() -> bool:
+    """True when the tick-boxes hold a route the model has not been given yet."""
+    return _route_signature(st.session_state.route_draft) != _route_signature(
+        st.session_state.route
+    )
+
+
+def _route_signature(route) -> tuple:
+    return tuple(
+        sorted(
+            (key, tuple(sorted(normalise_mix(mix).items())))
+            for key, mix in route.items()
+            if normalise_mix(mix)
+        )
+    )
+
+
+def apply_route() -> None:
+    """Hand the drafted route to the model."""
+    st.session_state.route = {
+        key: dict(value) for key, value in st.session_state.route_draft.items()
+    }
+
+
+def revert_route() -> None:
+    """Throw the drafted route away and rebuild the tick-boxes from the applied one."""
+    st.session_state.route_draft = {
+        key: dict(value) for key, value in st.session_state.route.items()
+    }
+    forget_route_widgets()
+
+
+def forget_route_widgets() -> None:
+    """Drop every route widget so they re-read from the draft."""
+    for key in [
+        key
+        for key in st.session_state
+        if key.startswith(("techniques_", "vars_", "share_", "on_", "pick_", "sig_"))
+    ]:
+        del st.session_state[key]
 
 
 def scrap_ratio() -> float:
@@ -87,7 +159,7 @@ def write_mix(mix: Mapping[str, float], *, as_fraction: bool = True) -> None:
         largest = max(values, key=lambda var: values[var])
         values[largest] = round(values[largest] + (100.0 - total), 1)
     for var in MIX_VARIABLES:
-        st.session_state.mix[var] = values[var]
+        st.session_state.mix_draft[var] = values[var]
         if mix_widget(var) in st.session_state:
             st.session_state[mix_widget(var)] = values[var]
 
@@ -101,9 +173,7 @@ def rescale_mix() -> None:
     total = mix_total()
     if total <= 0:
         return
-    write_mix(
-        {var: st.session_state.mix[var] / total for var in MIX_VARIABLES},
-    )
+    write_mix({var: st.session_state.mix_draft[var] / total for var in MIX_VARIABLES})
 
 
 def on_mix_change(var: str) -> None:
@@ -113,7 +183,7 @@ def on_mix_change(var: str) -> None:
     the first three rewritten under their hand before the fourth was entered.
     Normalising is an explicit button in the panel instead.
     """
-    st.session_state.mix[var] = st.session_state[mix_widget(var)]
+    st.session_state.mix_draft[var] = st.session_state[mix_widget(var)]
 
 
 def on_scrap_change() -> None:
@@ -133,11 +203,12 @@ def on_inbound_change() -> None:
 
 
 def apply_grid_preset() -> None:
-    """Preset callback: move the sliders to the chosen preset immediately."""
+    """Preset callback: move the sliders and apply, since a preset is one decision."""
     st.session_state.grid_preset = st.session_state[PRESET_W]
     preset = GRID_PRESETS.get(st.session_state.grid_preset)
     if preset:
         write_mix(preset)
+        apply_mix()
 
 
 def apply_plant_profile(stages) -> None:
@@ -149,6 +220,7 @@ def apply_plant_profile(stages) -> None:
         return
     route, problems = profile_route(profile, stages)
     st.session_state.route = route
+    st.session_state.route_draft = {key: dict(value) for key, value in route.items()}
     st.session_state.profile_problems = problems
 
     st.session_state.scrap = int(round(profile.scrap_ratio * 100))
@@ -167,22 +239,21 @@ def apply_plant_profile(stages) -> None:
     if PRESET_W in st.session_state:
         st.session_state[PRESET_W] = profile.grid_preset
     write_mix(GRID_PRESETS[profile.grid_preset])
+    apply_mix()
 
     # A profile replaces the route wholesale, so every route widget is dropped
-    # and rebuilt from the new route. Without this the checkboxes would keep
+    # and rebuilt from the new route. Without this the tick-boxes would keep
     # showing the previous plant's selections while the model used the new one.
-    stale = [
-        key
-        for key in st.session_state
-        if key.startswith(("techniques_", "vars_", "share_", "on_", "pick_", "sig_"))
-    ]
-    for key in stale:
-        del st.session_state[key]
+    forget_route_widgets()
 
 
 def set_stage_mix(stage: Stage, mix: Mapping[int, float]) -> None:
-    route: RouteMix = st.session_state.route
+    route: RouteMix = st.session_state.route_draft
     route[stage.key] = {int(pid): float(share) for pid, share in mix.items() if share > 0}
+
+
+def toggle_dark() -> None:
+    st.session_state.dark = not st.session_state.dark
 
 
 def init_state(dataset: Dataset) -> tuple:
@@ -198,9 +269,19 @@ def init_state(dataset: Dataset) -> tuple:
     st.session_state.train_out = 50
     st.session_state.inbound = 50
     st.session_state.mix = {}
+    st.session_state.mix_draft = {}
     st.session_state.grid_preset = "India grid today"
     write_mix(GRID_PRESETS["India grid today"])
+    apply_mix()
     st.session_state.route = default_route(stages)
+    st.session_state.route_draft = {
+        key: dict(value) for key, value in st.session_state.route.items()
+    }
+    # Which drill-down rows were open when the last rerun happened, so ticking a
+    # box does not fold the list up under the user's hand.
+    st.session_state.open_department = None
+    st.session_state.open_stage = None
+    st.session_state.dark = False
     st.session_state.profile_problems = []
     st.session_state.plant_profile = "Custom"
     st.session_state.drawer_open = False

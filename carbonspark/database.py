@@ -9,7 +9,7 @@ import streamlit as st
 
 from carbon_calc.model import METRICS, METRIC_LABELS, MIX_VARIABLES, Dataset
 
-from .state import go
+from .state import go, toggle_dark
 from .theme import spark_mark
 
 
@@ -19,15 +19,22 @@ def _variation(variation: str) -> str:
 
 
 def render(dataset: Dataset) -> None:
-    bar = st.columns([4.4, 1.5, 1.3])
+    bar = st.columns([4.0, 0.8, 1.5, 1.3])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
         f'font-size:1.1rem">{spark_mark(24)} CarbonSpark '
         f'<span class="cs-chip">database</span></div>',
         unsafe_allow_html=True,
     )
-    bar[1].button("Use the tool", on_click=go, args=("loading",), use_container_width=True)
-    bar[2].button("← Back to site", on_click=go, args=("landing",), use_container_width=True)
+    bar[1].button(
+        "☀️" if st.session_state.dark else "☾",
+        on_click=toggle_dark,
+        use_container_width=True,
+        help="Switch to light mode" if st.session_state.dark else "Switch to dark mode",
+        key="dark_toggle_db",
+    )
+    bar[2].button("Use the tool", on_click=go, args=("loading",), use_container_width=True)
+    bar[3].button("← Back to site", on_click=go, args=("landing",), use_container_width=True)
     st.divider()
 
     st.markdown(

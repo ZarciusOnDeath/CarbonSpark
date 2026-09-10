@@ -77,6 +77,13 @@ class PlantProfile:
     excluded_departments: Tuple[str, ...] = ()
     #: Individual techniques the site does not run, by process name.
     excluded_techniques: Tuple[str, ...] = ()
+    #: Departments where only the listed techniques run. A department named here
+    #: keeps *only* what ``route_choices`` and ``kept_techniques`` mention;
+    #: everything else in it is switched off. This is how a site profile comes
+    #: out visibly narrower than "run everything".
+    restricted_departments: Tuple[str, ...] = ()
+    #: Techniques kept in a restricted department beyond those in route_choices.
+    kept_techniques: Tuple[str, ...] = ()
     sources: Tuple[Tuple[str, str], ...] = ()
     estimated: Tuple[str, ...] = ()
 
@@ -116,10 +123,20 @@ JAJPUR = PlantProfile(
             ("Curved Mold Caster", "Submerged Entry Nozzle (SEN)", "Argon Shrouding"),
         ),
     ),
-    excluded_techniques=(
-        # The specialty remelting shops are Hisar's, not Jajpur's integrated line.
-        "18-High Sendzimir Cluster Mill",
-        "6-High Universal Crown-Control Mill (UC Mill)",
+    # Jajpur is the integrated melt-to-coil line: the publicly described route is
+    # EAF → AOD → LF → single-strand slab caster → hot strip. Its finishing end is
+    # narrower than the workbook's full catalogue, so those departments keep only
+    # what is evidenced.
+    restricted_departments=("Melt Shop", "Annealing", "Pickling", "Cold Rolling"),
+    kept_techniques=(
+        "Scrap Prep / Charging",
+        "Solution Annealing",
+        "Continuous Strand / Tube Annealing",
+        "Continuous Tank Pickling",
+        "20-High Cluster Mill (Z-Mill / Sendzimir)",
+        "Continuous Tandem Cold Mill (TCM)",
+        "CAPL / AP Line (Continuous Anneal & Pickle Line)",
+        "Tension Leveling / Slitting Lines",
     ),
     sources=(
         (
@@ -165,12 +182,24 @@ HISAR = PlantProfile(
         ),
         ("Continuous Casting (CCM)", ("Curved Mold Caster", "Argon Shrouding")),
     ),
-    excluded_techniques=(
-        # The published Hisar cold-rolling complex is Sendzimir 20-Hi plus the
-        # anneal-and-pickle lines; it does not run a tandem cold mill.
-        "Continuous Tandem Cold Mill (TCM)",
+    # Hisar is the specialty end: four 20-Hi Sendzimir mills, three continuous
+    # anneal-and-pickle lines, a bright annealing line, slitting and cut-to-length
+    # (ANDRITZ / Jindal Stainless, cited below). The tandem cold mill and the
+    # 6-High UC mill are not part of that description.
+    restricted_departments=("Melt Shop", "Annealing", "Pickling", "Cold Rolling"),
+    kept_techniques=(
+        "Scrap Prep / Charging",
+        "Bright Annealing",
+        "Open Annealing / Pickling",
+        "Solution Annealing",
+        "Continuous Tank Pickling",
+        "Batch Acid Bath",
+        "20-High Cluster Mill (Z-Mill / Sendzimir)",
         "18-High Sendzimir Cluster Mill",
-        "6-High Universal Crown-Control Mill (UC Mill)",
+        "CAPL / AP Line (Continuous Anneal & Pickle Line)",
+        "Bright Annealing (in-process, Cold Rolling sequence)",
+        "Temper Mill (Skin-Pass)",
+        "Tension Leveling / Slitting Lines",
     ),
     sources=(
         (
@@ -203,11 +232,14 @@ def profile_route(profile: PlantProfile, stages: Sequence[Stage]) -> Tuple[Route
     route = default_route(stages)
     wanted = dict(profile.route_choices)
     problems: List[str] = []
+    kept = set(profile.kept_techniques) | {name for name, _ in profile.route_choices}
 
     for stage in stages:
+        restricted = stage.department in profile.restricted_departments
         if (
             stage.department in profile.excluded_departments
             or stage.process in profile.excluded_techniques
+            or (restricted and stage.process not in kept)
         ):
             route[stage.key] = {}
             continue

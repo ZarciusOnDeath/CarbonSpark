@@ -44,10 +44,14 @@ from .state import (
     TRAIN_OUT_W,
     apply_grid_preset,
     apply_plant_profile,
+    apply_mix,
+    apply_route,
     current_mix,
+    draft_mix,
     go,
     inbound_rail,
     inbound_share,
+    mix_dirty,
     mix_total,
     mix_widget,
     on_inbound_change,
@@ -55,10 +59,14 @@ from .state import (
     on_scrap_change,
     on_train_in_change,
     on_train_out_change,
-    rescale_mix,
     outbound_rail,
+    rescale_mix,
+    revert_mix,
+    revert_route,
+    route_dirty,
     scrap_ratio,
     set_stage_mix,
+    toggle_dark,
     train_share,
 )
 from .theme import DEPARTMENT_ICONS, SCOPE_NAMES, panel_art, section_band, spark_mark
@@ -185,6 +193,36 @@ def _panel_scrap(dataset: Dataset) -> None:
     )
 
 
+def _action_bar(dirty: bool, apply_label: str, on_apply, on_revert, dirty_note: str) -> None:
+    """The panel's docked Apply / Discard row.
+
+    It sits at the bottom of the drawer and stays there while the panel scrolls,
+    so the control that commits a change is never somewhere off screen.
+    """
+    # A keyed container, not an unclosed <div>: Streamlit strips a dangling tag
+    # from markdown, and the wrapper has to actually contain the buttons for the
+    # sticky rule to hold them on screen.
+    with st.container(key="cs_dock"):
+        if dirty:
+            st.markdown(f'<p class="cs-dock-note">{dirty_note}</p>', unsafe_allow_html=True)
+        columns = st.columns([1.4, 1])
+        columns[0].button(
+            apply_label,
+            on_click=on_apply,
+            use_container_width=True,
+            type="primary" if dirty else "secondary",
+            disabled=not dirty,
+            key=f"apply_{apply_label}",
+        )
+        columns[1].button(
+            "Discard",
+            on_click=on_revert,
+            use_container_width=True,
+            disabled=not dirty,
+            key=f"revert_{apply_label}",
+        )
+
+
 def _panel_grid(dataset: Dataset) -> None:
     st.markdown("#### Grid energy mix")
     presets = list(GRID_PRESETS)
@@ -194,68 +232,60 @@ def _panel_grid(dataset: Dataset) -> None:
         index=presets.index(st.session_state.grid_preset),
         key=PRESET_W,
         on_change=apply_grid_preset,
-        help="Choosing a preset moves the sliders immediately.",
+        help="A preset is a single decision, so choosing one moves the sliders and "
+        "applies straight away.",
     )
     note = GRID_PRESET_NOTES.get(st.session_state.grid_preset)
     if note:
         st.caption(note)
 
-    # Normalising is a deliberate action, not something that happens under the
-    # user's hand: setting four shares in a row would otherwise have the first
-    # three rescaled out from under the fourth. The control sits above the
-    # sliders it governs and rewrites their values, so what you see is what the
-    # model used.
     total = mix_total()
     off_by = abs(total - 100.0)
-    left, right = st.columns([1.6, 1])
-    with left:
-        if off_by <= 0.05:
-            st.markdown(
-                f'<span class="cs-chip cs-chip-good">shares total {total:.0f}%</span>',
-                unsafe_allow_html=True,
-            )
-        else:
-            st.markdown(
-                f'<span class="cs-chip cs-chip-warn">shares total {total:.1f}%</span>',
-                unsafe_allow_html=True,
-            )
-    right.button(
-        "Normalise",
+    tone = "cs-chip-good" if off_by <= 0.05 else "cs-chip-warn"
+    st.markdown(
+        f'<span class="cs-chip {tone}">shares total {total:.1f}%</span>',
+        unsafe_allow_html=True,
+    )
+    st.button(
+        "Normalise to 100%",
         on_click=rescale_mix,
         use_container_width=True,
         disabled=off_by <= 0.05,
-        type="primary" if off_by > 0.05 else "secondary",
-        help="Rescales every share proportionally so the mix sums to 100%. The sliders "
-        "glide to the rescaled values rather than jumping.",
+        help="Rescales every share proportionally. The sliders glide to the rescaled "
+        "values rather than jumping.",
     )
-    if off_by > 0.05:
-        st.caption(
-            "Set as many shares as you like — nothing is rescaled until you press "
-            "Normalise. Until then the model uses the shares exactly as they stand."
-        )
 
     for var in MIX_VARIABLES:
         source = dataset.source_by_var[var]
         st.slider(
-            f"{source.source}  ·  {source.ef} kg CO\u2082e/kWh",
+            f"{source.source}  \u00b7  {source.ef} kg CO\u2082e/kWh",
             min_value=0.0,
             max_value=100.0,
             step=1.0,
-            value=float(st.session_state.mix[var]),
+            value=float(st.session_state.mix_draft[var]),
             key=mix_widget(var),
             format="%.1f%%",
             on_change=on_mix_change,
             args=(var,),
         )
 
-    mix = current_mix()
+    drafted = draft_mix()
     st.plotly_chart(
-        charts.mix_donut(mix, dataset.source_by_var),
+        charts.mix_donut(drafted, dataset.source_by_var),
         use_container_width=True,
         config=charts.PLOT_CONFIG,
     )
-    st.metric("Blended grid factor", f"{mix_factor(mix, dataset):.3f} kg CO\u2082e/kWh")
+    st.metric("Blended grid factor", f"{mix_factor(drafted, dataset):.3f} kg CO\u2082e/kWh")
     st.caption(f"Workbook reference (CEA midpoint): {REFERENCE_GRID_FACTOR} kg CO\u2082e/kWh")
+
+    _action_bar(
+        mix_dirty(),
+        "Apply mix",
+        apply_mix,
+        revert_mix,
+        "Set every share you want, normalise, then apply \u2014 nothing reaches the model "
+        "until you do.",
+    )
 
 
 def _variation_label(variation: str) -> str:
@@ -280,15 +310,28 @@ def _stage_on(route, stage: Stage) -> bool:
     return bool(normalise_mix(route.get(stage.key, {})))
 
 
+def _remember_open(stage: Stage) -> None:
+    """Note which rows the user is working in, so a rerun re-opens them.
+
+    Streamlit rebuilds expanders closed on every run unless told otherwise, so
+    ticking a box inside one folded it away and threw the user back to the top
+    of the list.
+    """
+    st.session_state.open_department = stage.department
+    st.session_state.open_stage = stage.key
+
+
 def _toggle_stage(stage: Stage) -> None:
     """Checkbox callback for a step with nothing to choose between."""
-    route = st.session_state.route
+    route = st.session_state.route_draft
     route[stage.key] = {stage.default_id: 1.0} if st.session_state[f"on_{stage.key}"] else {}
+    st.session_state.open_department = stage.department
 
 
 def _toggle_variation(stage: Stage, process_id: int) -> None:
     """Checkbox callback for one variation of a step."""
-    route = st.session_state.route
+    _remember_open(stage)
+    route = st.session_state.route_draft
     chosen = [
         pid
         for pid in stage.option_ids
@@ -378,7 +421,7 @@ def _panel_plant(dataset: Dataset, stages) -> None:
     """
     st.markdown("#### Plant customisation")
     st.caption("Tick what the plant runs. Untick to take it out of the route.")
-    route = st.session_state.route
+    route = st.session_state.route_draft
 
     for department in dataset.departments:
         dept_stages = [stage for stage in stages if stage.department == department]
@@ -386,7 +429,9 @@ def _panel_plant(dataset: Dataset, stages) -> None:
         mark = ALL_ON if len(running) == len(dept_stages) else (SOME_ON if running else ALL_OFF)
         icon = DEPARTMENT_ICONS.get(department, BULLET)
         title = f"{mark}  {icon}  {department}  {MIDDOT}  {len(running)}/{len(dept_stages)}"
-        with st.expander(title, expanded=False):
+        with st.expander(
+            title, expanded=department == st.session_state.get("open_department")
+        ):
             band = section_band(department)
             st.markdown(
                 f'{band}<div class="cs-band-title">{icon} {department}</div>',
@@ -419,8 +464,20 @@ def _panel_plant(dataset: Dataset, stages) -> None:
                     )
                     continue
                 summary = _stage_summary(stage, route.get(stage.key, {}))
-                with st.expander(f"{stage.process}  {DASH}  {summary}", expanded=False):
+                with st.expander(
+                    f"{stage.process}  {DASH}  {summary}",
+                    expanded=stage.key == st.session_state.get("open_stage"),
+                ):
                     _stage_controls(stage, route)
+
+    _action_bar(
+        route_dirty(),
+        "Apply route",
+        apply_route,
+        revert_route,
+        "Tick everything the plant runs, then apply \u2014 the model keeps the current "
+        "route until you do.",
+    )
 
 
 def _stage_summary(stage: Stage, mix) -> str:
@@ -437,7 +494,9 @@ def _stage_summary(stage: Stage, mix) -> str:
 
 def _set_department(dept_stages, on: bool) -> None:
     """Turn a whole department on (first-listed variation) or off."""
-    route = st.session_state.route
+    if dept_stages:
+        st.session_state.open_department = dept_stages[0].department
+    route = st.session_state.route_draft
     for stage in dept_stages:
         if on:
             if not normalise_mix(route.get(stage.key, {})):
@@ -518,15 +577,19 @@ def _headline(result: Result, dataset: Dataset) -> None:
             _metric("Specific energy", f"{result.energy_gj:.1f}", "GJ/t"),
         )
     )
-    st.markdown(
-        f'<div class="cs-readout">{figures}</div>'
-        f'<p class="cs-readout-note">scrap y = {result.scrap_ratio:.0%} '
-        f"\u00b7 rail p = {result.train_share:.0%} "
-        f"\u00b7 grid {result.grid_factor:.3f} kg CO\u2082e/kWh "
-        f"\u00b7 electricity \u2248 "
-        f"{'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}</p>",
-        unsafe_allow_html=True,
-    )
+    # A keyed container, so the sticky rule has a tall parent to travel in: a
+    # markdown block is exactly its own height, and a sticky element with no
+    # room to move never moves.
+    with st.container(key="cs_readout"):
+        st.markdown(
+            f'<div class="cs-readout">{figures}</div>'
+            f'<p class="cs-readout-note">scrap y = {result.scrap_ratio:.0%} '
+            f"\u00b7 rail p = {result.train_share:.0%} "
+            f"\u00b7 grid {result.grid_factor:.3f} kg CO\u2082e/kWh "
+            f"\u00b7 electricity \u2248 "
+            f"{'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}</p>",
+            unsafe_allow_html=True,
+        )
 
 
 def _profile_banner(stages) -> None:
@@ -843,14 +906,29 @@ def _process_grid(result: Result, dataset: Dataset) -> None:
 # --------------------------------------------------------------------------- #
 def render(dataset: Dataset, stages) -> None:
     live.enable()
-    bar = st.columns([4.0, 1.3, 1.3])
+    bar = st.columns([2.6, 1.2, 0.7, 1.2, 1.2])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
         f'font-size:1.1rem">{spark_mark(24)} CarbonSpark <span class="cs-chip">tool</span></div>',
         unsafe_allow_html=True,
     )
-    bar[1].button("Database", on_click=go, args=("database",), use_container_width=True)
-    bar[2].button("\u2190 Back to site", on_click=go, args=("landing",), use_container_width=True)
+    bar[1].button(
+        "\u2715 Close inputs" if st.session_state.drawer_open else "\u2699\ufe0f Customise",
+        on_click=_toggle_drawer,
+        use_container_width=True,
+        type="secondary" if st.session_state.drawer_open else "primary",
+        help="Scrap ratio, energy grid mix and the plant's process route",
+        key="open_inputs",
+    )
+    bar[2].button(
+        "\u2600\ufe0f" if st.session_state.dark else "\u263e",
+        on_click=toggle_dark,
+        use_container_width=True,
+        help="Switch to light mode" if st.session_state.dark else "Switch to dark mode",
+        key="dark_toggle_tool",
+    )
+    bar[3].button("Database", on_click=go, args=("database",), use_container_width=True)
+    bar[4].button("\u2190 Back to site", on_click=go, args=("landing",), use_container_width=True)
     st.markdown('<div class="cs-rule"></div>', unsafe_allow_html=True)
 
     # The drawer mutates the route as it renders, so the result is computed
@@ -884,19 +962,7 @@ def render(dataset: Dataset, stages) -> None:
     )
 
     with main:
-        # The inputs button sits with the readings it changes, not in a far
-        # corner of the page.
-        opener, headline = st.columns([1.15, 6], gap="medium")
-        opener.button(
-            "\u2715 Close" if st.session_state.drawer_open else "\u2699\ufe0f Customise",
-            on_click=_toggle_drawer,
-            use_container_width=True,
-            type="secondary" if st.session_state.drawer_open else "primary",
-            help="Scrap ratio, energy grid mix and the plant's process route",
-            key="open_inputs",
-        )
-        with headline:
-            _headline(result, dataset)
+        _headline(result, dataset)
         view = st.segmented_control(
             "View", VIEWS, key="tool_view", label_visibility="collapsed"
         ) or VIEWS[0]

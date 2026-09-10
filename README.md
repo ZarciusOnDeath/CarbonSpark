@@ -27,10 +27,15 @@ doors into the tool and the database.
 
 **Tool** — entered through a two-second welcome, then:
 
-* an **inputs drawer** (30% of the width, opened by the button beside the readings it
-  changes, with the main content scaling to match) holding three panels — *scrap vs
-  virgin*, *energy grid mix*, *plant customisation* — each fronted by its own artwork
-  until you pick one;
+* an **inputs drawer** (45% of the width, opened from the toolbar, with the main content
+  scaling to match) holding three panels — *scrap vs virgin*, *energy grid mix*, *plant
+  customisation* — each fronted by its own artwork until you pick one. It holds its
+  position while the page scrolls and scrolls on its own;
+* **staged panels**: the grid mix and the process route are edited as a draft and reach
+  the model when Apply is pressed, from a bar docked at the foot of the drawer. Seven
+  shares or fifty tick-boxes are one decision, not fifty;
+* a **light/dark switch** on every page, each mode's chart palette validated against its
+  own surface rather than flipped from the other;
 * **full-width charts**, one per screen with a scroll hint between them: where the carbon
   sits, then the department split, then the gas-by-gas table. Both are drawn against a
   fixed axis so a scenario that halves its carbon visibly halves, and the bars tween

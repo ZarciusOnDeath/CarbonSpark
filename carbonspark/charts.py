@@ -20,13 +20,23 @@ from __future__ import annotations
 from typing import Mapping, Sequence
 
 import plotly.graph_objects as go
+import streamlit as st
 
 from carbon_calc.model import SCOPES, Result
 
-from .theme import AMBER, GREEN, INK, LINE, SCOPE_COLOURS, SCOPE_NAMES, STEEL
+from .theme import STACK_ORDER, SCOPE_NAMES, scope_colours, tokens
 
-#: Grid and zero lines, recessive against the paper ground.
-GRID = LINE
+
+def _mode() -> bool:
+    return bool(st.session_state.get("dark", False))
+
+
+def _ink() -> str:
+    return tokens(_mode())["ink"]
+
+
+def _grid() -> str:
+    return tokens(_mode())["line"]
 
 #: Passed to every ``st.plotly_chart`` call.
 PLOT_CONFIG = {
@@ -37,7 +47,11 @@ PLOT_CONFIG = {
     "staticPlot": False,
 }
 
-_FONT = dict(family="Inter, Segoe UI, system-ui, sans-serif", color=INK, size=14)
+_FONT_FAMILY = "Inter, Segoe UI, system-ui, sans-serif"
+
+
+def _font(size: int = 14) -> dict:
+    return dict(family=_FONT_FAMILY, color=_ink(), size=size)
 
 #: Bars tween to their new values rather than jumping there.
 _TRANSITION = dict(duration=520, easing="cubic-in-out")
@@ -51,12 +65,12 @@ DEPARTMENT_AXIS_MAX = 4.2
 
 def _lock(figure: go.Figure, height: int) -> go.Figure:
     """Disable zoom/pan and apply the shared chart styling."""
-    figure.update_xaxes(fixedrange=True, gridcolor=GRID, zerolinecolor=GRID)
-    figure.update_yaxes(fixedrange=True, gridcolor=GRID, zerolinecolor=GRID)
+    figure.update_xaxes(fixedrange=True, gridcolor=_grid(), zerolinecolor=_grid())
+    figure.update_yaxes(fixedrange=True, gridcolor=_grid(), zerolinecolor=_grid())
     figure.update_layout(
         dragmode=False,
         height=height,
-        font=_FONT,
+        font=_font(),
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=10, r=10, t=30, b=10),
@@ -74,7 +88,7 @@ def scope_breakdown(result: Result, height: int = 520) -> go.Figure:
             x=values,
             y=[SCOPE_NAMES[scope] for scope in SCOPES],
             orientation="h",
-            marker_color=[SCOPE_COLOURS[scope] for scope in SCOPES],
+            marker_color=[scope_colours(_mode())[scope] for scope in SCOPES],
             text=[f"{value:.3f}" for value in values],
             textposition="auto",
             textfont=dict(size=16),
@@ -96,13 +110,16 @@ def department_breakdown(result: Result, height: int = 520) -> go.Figure:
         key=lambda name: result.by_department[name]["total_co2e"],
     )
     figure = go.Figure()
-    for scope in SCOPES:
+    for scope in STACK_ORDER:
         figure.add_bar(
             x=[result.by_department[name][scope] for name in departments],
             y=departments,
             name=SCOPE_NAMES[scope],
+            # The stack order is a legibility choice; the legend still reads
+            # Scope 1, 2, 3.
+            legendrank=SCOPES.index(scope),
             orientation="h",
-            marker_color=SCOPE_COLOURS[scope],
+            marker_color=scope_colours(_mode())[scope],
             hovertemplate="%{y} · %{fullData.name}<br><b>%{x:.4f} tCO2e/t</b><extra></extra>",
         )
     figure.update_layout(
@@ -125,12 +142,13 @@ def comparison_bars(
 ) -> go.Figure:
     """Two or more scenarios side by side, stacked by scope."""
     figure = go.Figure()
-    for scope in SCOPES:
+    for scope in STACK_ORDER:
         figure.add_bar(
             x=list(labels),
             y=[result.totals[scope] for result in results],
             name=SCOPE_NAMES[scope],
-            marker_color=SCOPE_COLOURS[scope],
+            legendrank=SCOPES.index(scope),
+            marker_color=scope_colours(_mode())[scope],
             hovertemplate="%{x} · %{fullData.name}<br><b>%{y:.4f} tCO2e/t</b><extra></extra>",
         )
     figure.update_layout(
@@ -145,23 +163,32 @@ def comparison_bars(
 def mix_donut(mix: Mapping[str, float], sources: Mapping[str, object], height: int = 300) -> go.Figure:
     """The grid mix as a donut, so the sliders have a visual counterpart."""
     order = [var for var in mix if mix.get(var, 0) > 0.0005]
+    active = tokens(_mode())
+    # Seven generation sources is past the three a categorical set can carry, so
+    # the donut leans on its labels: fossil sources are neutral greys stepped by
+    # weight, and only the renewables and nuclear take a hue.
     palette = {
-        "a": "#4a4a4a", "b": "#7a5c3e", "c": AMBER, "d": STEEL,
-        "e": GREEN, "f": "#e6c34a", "g": "#8e7cc3",
+        "a": "#5a564e" if not _mode() else "#8d887d",
+        "b": "#7b6a56" if not _mode() else "#a3927c",
+        "c": "#9d9384" if not _mode() else "#bdb3a2",
+        "d": active["steel"],
+        "e": active["green"],
+        "f": active["amber"],
+        "g": "#7a6f9c" if not _mode() else "#9b8fc0",
     }
     figure = go.Figure(
         go.Pie(
             labels=[getattr(sources[var], "source", var) for var in order],
             values=[mix[var] for var in order],
             hole=0.62,
-            marker=dict(colors=[palette.get(var, STEEL) for var in order]),
+            marker=dict(colors=[palette.get(var, active["steel"]) for var in order]),
             textinfo="none",
             hovertemplate="%{label}<br><b>%{percent}</b><extra></extra>",
         )
     )
     figure.update_layout(
         height=height,
-        font=_FONT,
+        font=_font(),
         paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=True,

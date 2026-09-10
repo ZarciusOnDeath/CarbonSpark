@@ -7,7 +7,7 @@ import streamlit as st
 
 from carbon_calc.model import Dataset
 
-from .state import go
+from .state import go, toggle_dark
 from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, hero_art, scope_bars, spark_mark
 
 CHEVRON = """
@@ -28,6 +28,17 @@ def _nav() -> None:
   <a href="#database">Database</a>
 </div>""",
         unsafe_allow_html=True,
+    )
+
+
+def _mode_toggle() -> None:
+    """A light/dark switch, parked at the top right under the nav."""
+    spacer, button = st.columns([9, 1])
+    button.button(
+        "\u2600\ufe0f Light" if st.session_state.dark else "\u263e Dark",
+        on_click=toggle_dark,
+        use_container_width=True,
+        key="dark_toggle_landing",
     )
 
 
@@ -306,6 +317,7 @@ def _database_door(dataset: Dataset) -> None:
 
 def render(dataset: Dataset) -> None:
     _nav()
+    _mode_toggle()
     _hero()
     _info(dataset)
     _route_strip(dataset)

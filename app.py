@@ -14,7 +14,7 @@ import streamlit as st
 from carbon_calc.model import load_dataset
 from carbonspark import database, landing, loading, tool
 from carbonspark.state import init_state
-from carbonspark.styles import BASE_CSS
+from carbonspark.styles import base_css
 
 st.set_page_config(
     page_title="CarbonSpark",
@@ -22,10 +22,12 @@ st.set_page_config(
     layout="wide",
     initial_sidebar_state="collapsed",
 )
-st.markdown(BASE_CSS, unsafe_allow_html=True)
-
 DATASET = load_dataset()
 STAGES = init_state(DATASET)
+
+# The stylesheet is rendered for the active mode, after state exists to say
+# which mode that is.
+st.markdown(base_css(st.session_state.dark), unsafe_allow_html=True)
 
 page = st.session_state.page
 if page == "loading":

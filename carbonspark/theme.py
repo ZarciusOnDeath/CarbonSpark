@@ -27,7 +27,47 @@ STEEL = "#1f6e9e"        # upstream / Scope 3
 GREEN = "#3f7d58"        # savings
 SLATE = "#3a3833"
 
+#: The dark-mode steps of the same three hues, chosen for the dark surface
+#: rather than flipped from the light ones.
+EMBER_DARK = "#d1673c"
+AMBER_DARK = "#b3862c"
+STEEL_DARK = "#3f92c9"
+
+#: Page tokens per mode. The dark set is selected, not inverted.
+LIGHT_TOKENS = {
+    "ink": INK, "ink_soft": INK_SOFT, "paper": PAPER,
+    "surface": SURFACE, "surface_hi": SURFACE_HI,
+    "line": LINE, "clay": CLAY,
+    "ember": EMBER, "amber": AMBER, "steel": STEEL, "green": GREEN,
+    "nav": "rgba(250,249,245,.86)",
+    "scroll": "rgba(20,20,19,.18)",
+}
+DARK_TOKENS = {
+    "ink": "#eceae4", "ink_soft": "#9a978c", "paper": "#1a1a19",
+    "surface": "#232320", "surface_hi": "#2c2b28",
+    "line": "rgba(236,234,228,0.14)", "clay": "#d1673c",
+    "ember": EMBER_DARK, "amber": AMBER_DARK, "steel": STEEL_DARK, "green": "#5aa07a",
+    "nav": "rgba(26,26,25,.88)",
+    "scroll": "rgba(236,234,228,.20)",
+}
+
+
+def tokens(dark: bool = False) -> dict:
+    """The page's colour tokens for the active mode."""
+    return DARK_TOKENS if dark else LIGHT_TOKENS
+
+
+def scope_colours(dark: bool = False) -> dict:
+    palette = tokens(dark)
+    return {"scope1": palette["ember"], "scope2": palette["amber"], "scope3": palette["steel"]}
+
+
 SCOPE_COLOURS = {"scope1": EMBER, "scope2": AMBER, "scope3": STEEL}
+
+#: Order the scopes are stacked in. Clay and gold are the one pair that cannot
+#: be told apart reliably on a dark surface, so blue is stacked between them —
+#: with this order both modes clear every gate the palette validator applies.
+STACK_ORDER = ("scope1", "scope3", "scope2")
 SCOPE_NAMES = {
     "scope1": "Scope 1 — direct",
     "scope2": "Scope 2 — purchased electricity",

@@ -88,8 +88,48 @@ _SCRIPT = """
     attributes: true, attributeFilter: ['aria-valuenow', 'style'],
   });
 
-  doc.__csLiveSliders = { sync: schedule };
+  // --- the readout condenses as the page scrolls ---------------------------
+  const scroller = () =>
+    doc.querySelector('section[data-testid="stMain"]') ||
+    doc.querySelector('.main') ||
+    doc.scrollingElement;
+
+  const condense = () => {
+    const dock = doc.querySelector('.st-key-cs_readout');
+    const box = scroller();
+    if (!dock || !box) return;
+    const past = (box.scrollTop || 0) > 90;
+    dock.classList.toggle('cs-condensed', past);
+  };
+
+  // --- the drawer keeps its scroll position across reruns ------------------
+  // Streamlit rebuilds the column on every interaction, so ticking a box would
+  // otherwise throw the user back to the top of a long list.
+  const drawerCol = () => {
+    const drawer = doc.querySelector('.st-key-cs_drawer');
+    return drawer ? drawer.closest('div[data-testid="stColumn"]') : null;
+  };
+  let savedScroll = 0;
+  const rememberScroll = () => {
+    const column = drawerCol();
+    if (column && column.scrollTop > 0) savedScroll = column.scrollTop;
+  };
+  const restoreScroll = () => {
+    const column = drawerCol();
+    if (column && savedScroll > 0 && Math.abs(column.scrollTop - savedScroll) > 4) {
+      column.scrollTop = savedScroll;
+    }
+  };
+
+  const onScroll = () => { rememberScroll(); condense(); };
+  doc.addEventListener('scroll', onScroll, true);
+
+  const tick = () => { schedule(); restoreScroll(); condense(); };
+  new MutationObserver(tick).observe(doc.body, { subtree: true, childList: true });
+
+  doc.__csLiveSliders = { sync: tick };
   paint();
+  condense();
 })();
 </script>
 """

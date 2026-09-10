@@ -12,16 +12,23 @@ dense analytical page from reading like a spreadsheet.
 
 from __future__ import annotations
 
-from .theme import AMBER, CLAY, EMBER, GREEN, INK, INK_SOFT, LINE, PAPER, STEEL, SURFACE, SURFACE_HI
+from .theme import tokens
 
-BASE_CSS = f"""
+
+def base_css(dark: bool = False) -> str:
+    """The page stylesheet for the active mode."""
+    t = tokens(dark)
+    return _TEMPLATE.format(**t)
+
+
+_TEMPLATE = """
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
 
 :root {{
-  --ink: {INK}; --ink-soft: {INK_SOFT}; --paper: {PAPER};
-  --surface: {SURFACE}; --surface-hi: {SURFACE_HI}; --line: {LINE};
-  --clay: {CLAY}; --ember: {EMBER}; --amber: {AMBER}; --steel: {STEEL}; --green: {GREEN};
+  --ink: {ink}; --ink-soft: {ink_soft}; --paper: {paper};
+  --surface: {surface}; --surface-hi: {surface_hi}; --line: {line};
+  --clay: {clay}; --ember: {ember}; --amber: {amber}; --steel: {steel}; --green: {green};
   --serif: Newsreader, Georgia, "Times New Roman", serif;
   --sans: Inter, -apple-system, "Segoe UI", system-ui, sans-serif;
 }}
@@ -63,7 +70,7 @@ html {{ scroll-behavior: smooth; }}
   position: sticky; top: 0; z-index: 999;
   display: flex; align-items: center; gap: 28px;
   padding: 14px 18px; margin: 0 -1rem 4px -1rem;
-  background: rgba(250,249,245,.86); backdrop-filter: blur(10px);
+  background: {nav}; backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }}
 .cs-nav .cs-brand {{ display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.01em; font-size:1.04rem; }}
@@ -160,11 +167,11 @@ div[data-testid="stColumn"]:has(.st-key-cs_drawer) {{
   position: sticky; top: 8px; align-self: flex-start;
   max-height: calc(100vh - 20px);
   overflow-y: auto; overscroll-behavior: contain;
-  scrollbar-width: thin; scrollbar-color: rgba(20,20,19,.2) transparent;
+  scrollbar-width: thin; scrollbar-color: {scroll} transparent;
 }}
 div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar {{ width: 8px; }}
 div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar-thumb {{
-  background: rgba(20,20,19,.18); border-radius: 999px;
+  background: {scroll}; border-radius: 999px;
 }}
 .st-key-cs_drawer {{
   background: var(--surface);
@@ -187,13 +194,46 @@ div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar-thumb {{
   display:inline-block; padding:2px 0; margin-right:16px;
   font-size:.8rem; font-weight:600; color: var(--steel); background:none;
 }}
-.cs-chip-warn {{ color:#9a6f12; }}
+.cs-chip-warn {{ color:{amber}; }}
 .cs-chip-good {{ color: var(--green); }}
 .cs-band {{ width:100%; height:44px; border-radius:0; display:block; }}
 .cs-band-title {{
   margin-top:-44px; height:44px; display:flex; align-items:center; gap:9px;
   padding:0 14px; color:var(--ink); font-weight:600; position:relative; letter-spacing:-.01em;
 }}
+
+/* ---------- Streamlit widget surfaces ---------- */
+/* The Streamlit theme is pinned in config.toml, so in dark mode its own text
+   and control surfaces have to be re-stated here — otherwise near-black type
+   sits on a near-black ground. Both modes take their values from the same
+   tokens, so this block is not a dark-mode special case. */
+.stApp, .stApp p, .stApp li, .stApp label, .stApp summary,
+.stApp h1, .stApp h2, .stApp h3, .stApp h4, .stApp h5,
+[data-testid="stWidgetLabel"] p, [data-testid="stMarkdownContainer"] p {{
+  color: var(--ink);
+}}
+[data-testid="stCaptionContainer"], [data-testid="stCaptionContainer"] p,
+.stApp small, [data-testid="stExpander"] summary svg {{ color: var(--ink-soft); }}
+.stButton button, .stDownloadButton button {{
+  background: var(--surface); color: var(--ink);
+}}
+.stButton button[kind="primary"] {{
+  background: var(--clay); color: var(--paper); border-color: var(--clay);
+}}
+.stButton button[kind="primary"]:hover {{ color: var(--paper); opacity:.92; }}
+.stButton button:disabled, .stButton button:disabled p {{ opacity:.45; }}
+.stSelectbox div[data-baseweb="select"] div,
+.stMultiSelect div[data-baseweb="select"] div,
+[data-baseweb="input"] input, [data-baseweb="input"], textarea,
+[data-baseweb="popover"] li, [data-baseweb="menu"], [role="listbox"] {{
+  background-color: var(--surface) !important; color: var(--ink) !important;
+}}
+.stSelectbox div[data-baseweb="select"], .stMultiSelect div[data-baseweb="select"] {{
+  border-radius: 6px;
+}}
+[data-baseweb="tag"] {{ background: var(--surface-hi) !important; color: var(--ink) !important; }}
+[data-testid="stAlertContainer"] {{ background: var(--surface); color: var(--ink); }}
+hr, [data-testid="stDivider"] hr {{ border-color: var(--line); }}
 
 /* ---------- Streamlit widget polish ---------- */
 h1, h2, h3, h4 {{ font-family: var(--serif); font-weight: 400; letter-spacing:-.02em; }}
@@ -228,12 +268,61 @@ div[data-testid="stButtonGroup"] {{
 button[data-baseweb="tab"] {{ font-weight:550; }}
 div[data-baseweb="tab-highlight"] {{ background-color: var(--clay) !important; }}
 
-/* Expanders read as rows in a list, not stacked boxes. */
-details[data-testid="stExpander"] {{
+/* Expanders read as rows in a list, not stacked boxes. The testid sits on the
+   wrapper, not the <details> that actually draws the border — which is why an
+   earlier rule aimed at details[data-testid="stExpander"] never matched, and
+   the drop-downs stayed boxed while the plain tick-boxes beside them were not. */
+div[data-testid="stExpander"] details {{
   border:none !important; border-bottom:1px solid var(--line) !important;
   border-radius:0 !important; background:transparent !important;
 }}
-details[data-testid="stExpander"] summary {{ padding-left:0 !important; font-weight:550; }}
+div[data-testid="stExpander"] details summary {{
+  padding-left:0 !important; padding-right:0 !important; font-weight:550;
+}}
+div[data-testid="stExpander"] details [data-testid="stVerticalBlockBorderWrapper"] {{
+  border:none !important;
+}}
+
+/* ---------- docked panel actions ---------- */
+/* Apply and Discard stay on screen at the bottom of the drawer: the control
+   that commits a change should never be somewhere the user has to hunt for. */
+.st-key-cs_dock {{
+  position: sticky; bottom: -1px; z-index: 30;
+  background: var(--surface); padding: 12px 0 10px 0; margin-top: 10px;
+  border-top: 1px solid var(--line);
+}}
+.cs-dock-note {{ font-size:.82rem; color:var(--ink-soft); margin:0 0 6px 0; }}
+
+/* ---------- the locked readout ---------- */
+/* The figures stay on screen and shrink into a single line as the page moves,
+   so the number a reader is steering by is never scrolled away. */
+/* Streamlit wraps every element in a layout box sized to its content, and a
+   sticky element can only travel inside its parent's box — so the wrapper is
+   collapsed out of the layout and the sticky rule resolves against the tall
+   column instead. */
+div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_readout),
+div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; }}
+
+.st-key-cs_readout {{
+  position: sticky; top: 0; z-index: 60;
+  background: var(--paper);
+  padding: 6px 0 18px 0;
+  transition: padding .3s ease, box-shadow .3s ease;
+}}
+.cs-metric-label, .cs-metric-value {{
+  transition: font-size .3s cubic-bezier(.22,.61,.36,1), margin .3s ease;
+}}
+.cs-readout-note {{ transition: opacity .25s ease, max-height .3s ease; overflow:hidden; }}
+.cs-condensed .cs-metric-value {{ font-size: 1.3rem !important; }}
+.cs-condensed .cs-metric-lead .cs-metric-value {{ font-size: 1.85rem !important; }}
+.cs-condensed .cs-metric-label {{ font-size:.6rem; margin-bottom:0; }}
+.cs-condensed .cs-metric {{ padding: 2px 0 2px 0; }}
+.cs-condensed .cs-readout-note {{ opacity:0; max-height:0; margin:0; }}
+.st-key-cs_readout.cs-condensed {{
+  padding: 10px 0 10px 0;
+  border-bottom: 1px solid var(--line);
+  box-shadow: 0 10px 18px -14px rgba(0,0,0,.35);
+}}
 
 .cs-note {{
   max-height: 320px; overflow-y: auto; padding: 16px 18px; border-radius: 6px;
@@ -249,7 +338,7 @@ details[data-testid="stExpander"] summary {{ padding-left:0 !important; font-wei
   letter-spacing:-.03em; animation: csFade .8s ease both; color: var(--ink);
 }}
 .cs-splash p {{ color: var(--ink-soft); animation: csFade .8s .3s ease both; }}
-.cs-loadbar {{ width:min(420px,70vw); height:3px; border-radius:999px; background: rgba(20,20,19,.10); overflow:hidden; }}
+.cs-loadbar {{ width:min(420px,70vw); height:3px; border-radius:999px; background: {line}; overflow:hidden; }}
 .cs-loadbar i {{
   display:block; width:34%; height:100%; border-radius:999px; background: var(--clay);
   animation: csSweep 1s ease-in-out infinite;
