@@ -24,6 +24,7 @@ Then open http://localhost:8501.
 | Tab | Purpose |
 | --- | --- |
 | **Calculator** | Live Scope 1 / Scope 2 / Scope 3 / total tCO₂e per tonne and GJ per tonne, split by scope and by department, plus a sensitivity curve across the full scrap-ratio range. |
+| **Route builder** | Every department, stage and technology variation selectable from dropdowns, with each option priced at the current inputs, per-stage contribution bars, and the saving available at each stage. |
 | **Process grid** | All per-process results, filterable and downloadable as CSV, with the exact workbook formula and the row's coefficient notes for any step. |
 | **Baseline comparison** | Current scenario against a default or user-captured baseline: per-scope deltas, tonnes avoided, and the annual saving at 1 Mt of output. |
 | **Optimiser** | Lowest-carbon path within user constraints — scrap availability, per-source share caps, renewable and non-fossil floors, and stages locked to installed assets. |
@@ -51,7 +52,11 @@ Several stages in the grid list **mutually exclusive alternatives** — inbound 
 by train / road / ocean, primary melting by EAF / IF / BF-converter / VIM / VAR / ESR,
 decarburisation by AOD / VOD / K-OBM-S / CLU, and so on. Adding all 71 rows would
 double-count them, so the app groups the rows into **48 stages** and a route takes
-exactly one variation per stage. Stages can also be switched off entirely.
+exactly one variation per stage. Stages and whole departments can also be switched
+off entirely. The **Route builder** tab exposes all of this: a department picker, a
+per-department accordion, and a dropdown at every stage whose options are labelled
+with what each technology costs at the current scrap ratio and grid mix — so the
+carbon consequence of a choice is visible while making it.
 
 ### How the optimiser works
 

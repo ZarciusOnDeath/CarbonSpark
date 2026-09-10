@@ -54,6 +54,80 @@ MIX_PRESETS: Dict[str, Dict[str, float]] = {
     "Near-zero carbon grid": {"d": 0.25, "e": 0.40, "f": 0.25, "g": 0.10},
 }
 
+#: A small visual marker per department, used across the route builder.
+DEPARTMENT_ICONS: Dict[str, str] = {
+    "RMHS": "🚚",
+    "Melt Shop": "🔥",
+    "Hot Rolling": "🌡️",
+    "Annealing": "♨️",
+    "Descaling": "💨",
+    "Pickling": "🧪",
+    "Cold Rolling": "🧊",
+    "Outbound": "📦",
+}
+
+#: Motion and depth for the route builder. Kept to transitions and a single
+#: entrance keyframe so the page still reads instantly on a slow machine, and
+#: disabled outright for anyone who asks for reduced motion.
+ROUTE_STYLES = """
+<style>
+@keyframes routeFadeIn {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0); }
+}
+div[data-testid="stExpander"] {
+    animation: routeFadeIn 0.28s ease-out both;
+    border-radius: 10px;
+    transition: box-shadow 0.22s ease, transform 0.22s ease;
+}
+div[data-testid="stExpander"]:hover {
+    box-shadow: 0 3px 14px rgba(0, 0, 0, 0.09);
+    transform: translateY(-1px);
+}
+div[data-testid="stExpander"] details > summary { transition: color 0.18s ease; }
+.route-bar-track {
+    background: rgba(128, 128, 128, 0.16);
+    border-radius: 999px;
+    height: 7px;
+    overflow: hidden;
+    margin: 2px 0 4px 0;
+}
+.route-bar-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+}
+.route-bar-label {
+    font-size: 0.76rem;
+    opacity: 0.75;
+    font-variant-numeric: tabular-nums;
+}
+.route-chip {
+    display: inline-block;
+    padding: 1px 9px;
+    border-radius: 999px;
+    font-size: 0.72rem;
+    background: rgba(46, 134, 193, 0.13);
+    transition: background 0.2s ease;
+}
+.route-chip-off { background: rgba(128, 128, 128, 0.15); opacity: 0.65; }
+@media (prefers-reduced-motion: reduce) {
+    div[data-testid="stExpander"], .route-bar-fill { animation: none; transition: none; }
+}
+</style>
+"""
+
+
+def contribution_bar(value: float, ceiling: float, colour: str, unit: str = "tCO2e/t") -> str:
+    """A small proportional bar, so a stage's weight is visible at a glance."""
+    share = 0.0 if ceiling <= 0 else max(0.0, min(1.0, value / ceiling))
+    return (
+        f'<div class="route-bar-track"><div class="route-bar-fill" '
+        f'style="width:{share * 100:.1f}%;background:{colour};"></div></div>'
+        f'<div class="route-bar-label">{value:.4f} {unit}</div>'
+    )
+
+
 DATASET = load_dataset()
 STAGES = build_stages(DATASET)
 STAGE_BY_KEY = {stage.key: stage for stage in STAGES}
@@ -108,7 +182,30 @@ def init_state() -> None:
     for stage in STAGES:
         st.session_state[f"stage_{stage.key}"] = stage.default_id
         st.session_state[f"on_{stage.key}"] = True
+    st.session_state.dept_select = list(DATASET.departments)
     st.session_state.baseline = None
+
+
+def sync_departments() -> None:
+    """Include or exclude a whole department's stages from the department picker."""
+    chosen = set(st.session_state.dept_select)
+    for stage in STAGES:
+        st.session_state[f"on_{stage.key}"] = stage.department in chosen
+
+
+def set_department_stages(department: str, value: bool) -> None:
+    """Toggle every stage inside one department."""
+    for stage in STAGES:
+        if stage.department == department:
+            st.session_state[f"on_{stage.key}"] = value
+
+
+def reset_route() -> None:
+    """Return every stage to the workbook's first-listed variation, all included."""
+    for stage in STAGES:
+        st.session_state[f"stage_{stage.key}"] = stage.default_id
+        st.session_state[f"on_{stage.key}"] = True
+    st.session_state.dept_select = list(DATASET.departments)
 
 
 def apply_preset(name: str) -> None:
@@ -173,23 +270,9 @@ with st.sidebar:
 
     st.subheader("Process route")
     st.caption(
-        "Stages that offer interchangeable technologies are selectable. "
-        "Deselect a stage to exclude it from the route."
+        "Every department, process and technology variation is selectable on the "
+        "**Route builder** tab."
     )
-    with st.expander("Technology choices", expanded=False):
-        for stage in STAGES:
-            if not stage.has_choice:
-                continue
-            options = [option.id for option in stage.options]
-            st.selectbox(
-                f"{stage.department} — {stage.process}",
-                options=options,
-                format_func=lambda pid, s=stage: s.option_by_id(pid).variation,
-                key=f"stage_{stage.key}",
-            )
-    with st.expander("Stages included", expanded=False):
-        for stage in STAGES:
-            st.checkbox(f"{stage.department} — {stage.process}", key=f"on_{stage.key}")
 
 selection = {stage.key: st.session_state[f"stage_{stage.key}"] for stage in STAGES}
 enabled = {stage.key: st.session_state[f"on_{stage.key}"] for stage in STAGES}
@@ -207,8 +290,17 @@ st.caption(
     "evaluated live from the Stainless Steel Carbon Accounting Grid."
 )
 
-tab_calc, tab_grid, tab_compare, tab_optimise, tab_method = st.tabs(
-    ["Calculator", "Process grid", "Baseline comparison", "Optimiser", "Methodology"]
+st.markdown(ROUTE_STYLES, unsafe_allow_html=True)
+
+tab_calc, tab_route, tab_grid, tab_compare, tab_optimise, tab_method = st.tabs(
+    [
+        "Calculator",
+        "Route builder",
+        "Process grid",
+        "Baseline comparison",
+        "Optimiser",
+        "Methodology",
+    ]
 )
 
 
@@ -323,6 +415,137 @@ with tab_calc:
     )
     st.dataframe(
         gases.style.format({"tCO2e/t": "{:.5f}"}), use_container_width=True, hide_index=True
+    )
+
+
+# --------------------------------------------------------------------------- #
+# Route builder
+# --------------------------------------------------------------------------- #
+with tab_route:
+    st.subheader("Build the production route")
+    st.caption(
+        "Choose which departments and process stages the route runs through, and "
+        "which technology each stage uses. Every option is priced at your current "
+        "scrap ratio and grid mix, so the cost of each choice is visible as you make it."
+    )
+
+    header = st.columns([3, 1, 1])
+    with header[0]:
+        st.multiselect(
+            "Departments in the route",
+            options=DATASET.departments,
+            format_func=lambda name: f"{DEPARTMENT_ICONS.get(name, '•')}  {name}",
+            key="dept_select",
+            on_change=sync_departments,
+        )
+    header[1].metric("Stages included", f"{active_stages} / {len(STAGES)}")
+    header[2].button("Reset route", on_click=reset_route, use_container_width=True)
+
+    # Current variables, so each option can be priced as the user chooses it.
+    variables = {"x": 1 - scrap_ratio, "y": scrap_ratio, **mix}
+    stage_totals: Dict[str, float] = {}
+    option_totals: Dict[int, float] = {}
+    for stage in STAGES:
+        for option in stage.options:
+            values = option.evaluate(variables)
+            option_totals[option.id] = sum(values[scope] for scope in SCOPES)
+        stage_totals[stage.key] = option_totals[selection[stage.key]]
+
+    included = [s for s in STAGES if enabled[s.key]]
+    heaviest = max((stage_totals[s.key] for s in included), default=0.0)
+
+    for department in DATASET.departments:
+        stages = [stage for stage in STAGES if stage.department == department]
+        live = [stage for stage in stages if enabled[stage.key]]
+        dept_total = sum(stage_totals[stage.key] for stage in live)
+        icon = DEPARTMENT_ICONS.get(department, "•")
+        share = dept_total / result.total_co2e if result.total_co2e else 0.0
+        title = (
+            f"{icon}  {department}  —  {len(live)}/{len(stages)} stages  ·  "
+            f"{dept_total:.3f} tCO2e/t ({share:.0%} of route)"
+        )
+        with st.expander(title, expanded=False):
+            controls = st.columns([1, 1, 4])
+            controls[0].button(
+                "Include all",
+                key=f"all_on_{department}",
+                on_click=set_department_stages,
+                args=(department, True),
+                use_container_width=True,
+            )
+            controls[1].button(
+                "Exclude all",
+                key=f"all_off_{department}",
+                on_click=set_department_stages,
+                args=(department, False),
+                use_container_width=True,
+            )
+
+            for stage in stages:
+                row = st.columns([0.55, 3, 2.2])
+                row[0].checkbox(
+                    "Include",
+                    key=f"on_{stage.key}",
+                    label_visibility="collapsed",
+                    help=f"Include {stage.process} in the route",
+                )
+                is_on = st.session_state[f"on_{stage.key}"]
+                with row[1]:
+                    st.selectbox(
+                        stage.process,
+                        options=[option.id for option in stage.options],
+                        format_func=lambda pid, s=stage: (
+                            f"{s.option_by_id(pid).variation} — {option_totals[pid]:.4f} tCO2e/t"
+                        ),
+                        key=f"stage_{stage.key}",
+                        disabled=not is_on,
+                        help=(
+                            f"{len(stage.options)} interchangeable technologies"
+                            if stage.has_choice
+                            else "This stage has a single specification in the workbook"
+                        ),
+                    )
+                with row[2]:
+                    if is_on:
+                        best = min(option_totals[o.id] for o in stage.options)
+                        chosen = option_totals[selection[stage.key]]
+                        st.markdown(
+                            contribution_bar(chosen, heaviest, SCOPE_COLOURS["scope2"]),
+                            unsafe_allow_html=True,
+                        )
+                        if stage.has_choice and chosen > best + 1e-9:
+                            st.markdown(
+                                f'<span class="route-chip">−{chosen - best:.4f} available</span>',
+                                unsafe_allow_html=True,
+                            )
+                        elif stage.has_choice:
+                            st.markdown(
+                                '<span class="route-chip">lowest-carbon option</span>',
+                                unsafe_allow_html=True,
+                            )
+                    else:
+                        st.markdown(
+                            '<span class="route-chip route-chip-off">excluded</span>',
+                            unsafe_allow_html=True,
+                        )
+
+    st.subheader("Route summary")
+    summary_rows = [
+        {
+            "": DEPARTMENT_ICONS.get(stage.department, "•"),
+            "Department": stage.department,
+            "Stage": stage.process,
+            "Technology": stage.option_by_id(selection[stage.key]).variation,
+            "tCO2e/t": stage_totals[stage.key],
+        }
+        for stage in STAGES
+        if enabled[stage.key]
+    ]
+    st.dataframe(
+        pd.DataFrame(summary_rows).style.format({"tCO2e/t": "{:.4f}"}),
+        use_container_width=True,
+        hide_index=True,
+        height=340,
     )
 
 
