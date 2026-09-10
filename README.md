@@ -27,13 +27,14 @@ doors into the tool and the database.
 
 **Tool** — entered through a two-second welcome, then:
 
-* a **drawer** (30% of the width, toggled by ☰, with the main content scaling to match)
-  holding three panels — *scrap vs virgin*, *energy grid mix*, *plant customisation* —
-  each fronted by its own artwork until you pick one;
-* a **plant flow diagram** showing material running down the line with carbon branching
-  off at each department;
-* **full-height charts**, one per screen with a scroll hint between them: where the carbon
+* an **inputs drawer** (30% of the width, opened by the button beside the readings it
+  changes, with the main content scaling to match) holding three panels — *scrap vs
+  virgin*, *energy grid mix*, *plant customisation* — each fronted by its own artwork
+  until you pick one;
+* **full-width charts**, one per screen with a scroll hint between them: where the carbon
   sits, then the department split, then the gas-by-gas table;
+* **live slider readouts** — the chips describing a slider follow the thumb as it is
+  dragged, while the model's own figures commit when the slider is released;
 * **baseline comparison**, **optimiser** and **process grid** views.
 
 **Database** — the accounting grid itself: every formula, every emission factor and its

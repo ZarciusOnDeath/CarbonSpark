@@ -8,13 +8,13 @@ the accidental zoom that made the charts confusing.
 
 from __future__ import annotations
 
-from typing import Dict, List, Mapping, Sequence
+from typing import Mapping, Sequence
 
 import plotly.graph_objects as go
 
 from carbon_calc.model import SCOPES, Result
 
-from .theme import AMBER, EMBER, GREEN, INK, SCOPE_COLOURS, SCOPE_NAMES, STEEL
+from .theme import AMBER, GREEN, INK, SCOPE_COLOURS, SCOPE_NAMES, STEEL
 
 #: Passed to every ``st.plotly_chart`` call.
 PLOT_CONFIG = {
@@ -91,78 +91,6 @@ def department_breakdown(result: Result, height: int = 520) -> go.Figure:
         margin=dict(l=10, r=10, t=54, b=48),
     )
     return _lock(figure, height)
-
-
-def plant_flow(
-    result: Result,
-    order: Sequence[str],
-    height: int = 520,
-) -> go.Figure:
-    """The plant as a flow: material passes down the line, carbon leaves at each stop.
-
-    Node and link widths are the departments' own carbon, so the diagram doubles
-    as the answer to "where does this route actually spend its emissions?".
-    The ``↑`` nodes are the carbon leaving at each department.
-    """
-    live = [name for name in order if name in result.by_department]
-    if not live:
-        return _lock(go.Figure(), height)
-
-    totals = {name: result.by_department[name]["total_co2e"] for name in live}
-    grand = sum(totals.values()) or 1.0
-
-    labels: List[str] = list(live) + ["Finished coil"] + [f"↑ {name}" for name in live]
-    colours = [STEEL] * len(live) + [GREEN] + [EMBER] * len(live)
-    sources: List[int] = []
-    targets: List[int] = []
-    values: List[float] = []
-    link_colours: List[str] = []
-
-    # Material chain: each department passes the remaining carbon budget onward.
-    remaining = grand
-    for index, name in enumerate(live):
-        emitted = totals[name]
-        onward = max(remaining - emitted, 0.0)
-        sources.append(index)
-        targets.append(len(live) + 1 + index)
-        values.append(max(emitted, 1e-6))
-        link_colours.append("rgba(217,79,43,0.45)")
-        next_node = index + 1 if index + 1 < len(live) else len(live)
-        sources.append(index)
-        targets.append(next_node)
-        values.append(max(onward, 1e-6))
-        link_colours.append("rgba(47,127,181,0.30)")
-        remaining = onward
-
-    figure = go.Figure(
-        go.Sankey(
-            arrangement="snap",
-            node=dict(
-                label=labels,
-                color=colours,
-                pad=16,
-                thickness=16,
-                line=dict(color="rgba(0,0,0,0)", width=0),
-                hovertemplate="%{label}<extra></extra>",
-            ),
-            link=dict(
-                source=sources,
-                target=targets,
-                value=values,
-                color=link_colours,
-                hovertemplate="%{source.label} → %{target.label}<br>"
-                "<b>%{value:.4f} tCO2e/t</b><extra></extra>",
-            ),
-        )
-    )
-    figure.update_layout(
-        height=height,
-        font=dict(family=_FONT["family"], color=INK, size=11),
-        paper_bgcolor="rgba(0,0,0,0)",
-        margin=dict(l=10, r=10, t=10, b=10),
-        dragmode=False,
-    )
-    return figure
 
 
 def comparison_bars(

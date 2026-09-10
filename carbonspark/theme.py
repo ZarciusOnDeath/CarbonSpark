@@ -10,9 +10,15 @@ from __future__ import annotations
 # --------------------------------------------------------------------------- #
 # Palette
 # --------------------------------------------------------------------------- #
-INK = "#0f1720"
-INK_SOFT = "#5b6673"
-PAPER = "#f7f8fa"
+# The palette is dark-first: CarbonSpark pins a dark Streamlit theme in
+# .streamlit/config.toml, so INK is the colour text is drawn *in* and PAPER is
+# the ground it sits on — not the other way round.
+INK = "#e8edf3"          # primary text
+INK_SOFT = "#93a1b1"     # secondary text
+PAPER = "#0b1017"        # page ground
+SURFACE = "#121a24"      # raised surface (drawer, panels)
+SURFACE_HI = "#1b2634"   # hover / selected surface
+LINE = "rgba(255,255,255,0.10)"
 EMBER = "#d94f2b"        # furnace / Scope 1
 AMBER = "#e8a020"        # electricity / Scope 2
 STEEL = "#2f7fb5"        # upstream / Scope 3

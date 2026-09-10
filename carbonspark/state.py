@@ -24,7 +24,6 @@ from .presets import GRID_PRESETS, PLANT_PROFILES, profile_route
 SCRAP_W = "w_scrap"
 TRAIN_W = "w_train"
 INBOUND_W = "w_inbound"
-NORMALISE_W = "w_auto_normalise"
 PROFILE_W = "w_plant_profile"
 PRESET_W = "w_grid_preset"
 
@@ -94,16 +93,13 @@ def rescale_mix() -> None:
 
 
 def on_mix_change(var: str) -> None:
-    """Slider callback: adopt the new value, then rescale if asked to."""
+    """Slider callback: adopt the new value and leave the others alone.
+
+    Rescaling here would fight the user: setting four shares in a row would see
+    the first three rewritten under their hand before the fourth was entered.
+    Normalising is an explicit button in the panel instead.
+    """
     st.session_state.mix[var] = st.session_state[mix_widget(var)]
-    if st.session_state.get("auto_normalise", True):
-        rescale_mix()
-
-
-def on_normalise_toggle() -> None:
-    st.session_state.auto_normalise = st.session_state[NORMALISE_W]
-    if st.session_state.auto_normalise:
-        rescale_mix()
 
 
 def on_scrap_change() -> None:
@@ -172,7 +168,6 @@ def init_state(dataset: Dataset) -> tuple:
     st.session_state.train = 50
     st.session_state.inbound = 50
     st.session_state.mix = {}
-    st.session_state.auto_normalise = True
     st.session_state.grid_preset = "India grid today"
     write_mix(GRID_PRESETS["India grid today"])
     st.session_state.route = default_route(stages)
@@ -181,6 +176,7 @@ def init_state(dataset: Dataset) -> tuple:
     st.session_state.drawer_open = False
     st.session_state.drawer_panel = None
     st.session_state.baseline = None
+    st.session_state.tool_view = "Dashboard"
     return stages
 
 

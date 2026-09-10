@@ -8,7 +8,7 @@ import streamlit as st
 from carbon_calc.model import Dataset
 
 from .state import go
-from .theme import hero_art, spark_mark
+from .theme import DEPARTMENT_ICONS, hero_art, spark_mark
 
 CHEVRON = """
 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -83,6 +83,58 @@ def _info(dataset: Dataset) -> None:
         )
 
 
+def _route_strip(dataset: Dataset) -> None:
+    """The plant as a line of departments — the shape of what the tool models."""
+    steps = "".join(
+        f'<span class="cs-step">{DEPARTMENT_ICONS.get(name, "•")} <b>{name}</b></span>'
+        for name in dataset.departments
+    )
+    st.markdown(
+        f"""
+<div class="cs-section" style="padding-top:26px">
+  <div class="cs-eyebrow">The route</div>
+  <h2>Raw material in, finished coil out</h2>
+  <p>
+    Eight departments, {len(dataset.processes)} process steps and every interchangeable
+    technology the workbook records between them — melting by arc furnace or induction,
+    decarburising by AOD or VOD, annealing bright or open, rail or road at both ends.
+    Every one of them is yours to switch.
+  </p>
+  <div class="cs-strip">{steps}</div>
+</div>""",
+        unsafe_allow_html=True,
+    )
+
+
+def _how() -> None:
+    """Three steps, so a first-time visitor knows what using it involves."""
+    st.markdown(
+        """
+<div class="cs-section">
+  <div class="cs-eyebrow">How it works</div>
+  <h2>Three moves from spreadsheet to answer</h2>
+</div>""",
+        unsafe_allow_html=True,
+    )
+    steps = [
+        ("01", "Set the charge",
+         "Choose how much of the melt is recycled scrap and how the inbound and outbound "
+         "tonnes travel — rail or road, arriving or leaving."),
+        ("02", "Set the supply",
+         "Move the seven grid shares, or start from the Indian grid, a half-renewable "
+         "position, near-zero supply or either JSL site."),
+        ("03", "Read the consequence",
+         "Scope 1, 2 and 3 per tonne, split by department and by gas, against a baseline "
+         "you captured — and the lowest-carbon route the optimiser can find."),
+    ]
+    for column, (number, title, body) in zip(st.columns(3, gap="large"), steps):
+        column.markdown(
+            f'<div class="cs-card cs-rise"><div class="cs-stat" style="font-size:1.5rem">'
+            f"{number}</div><h3>{title}</h3><p>{body}</p></div>",
+            unsafe_allow_html=True,
+        )
+
+
 def _why() -> None:
     st.markdown(
         """
@@ -125,8 +177,8 @@ def _tool_door() -> None:
   <h2>Open the calculator</h2>
   <p>
     A live model of the plant: pick a starting point — a custom route or one of the two
-    JSL site profiles — then move the levers and watch the flow diagram, the scope
-    breakdown and the department split respond.
+    JSL site profiles — then move the levers and watch the scope breakdown, the
+    department split and the gas-by-gas table respond.
   </p>
 </div>""",
         unsafe_allow_html=True,
@@ -141,7 +193,7 @@ def _tool_door() -> None:
             use_container_width=True,
             key="launch_tool",
         )
-        st.caption("Opens the full calculator with the input drawer, flow diagram and optimiser.")
+        st.caption("Opens the full calculator: inputs, scope and department charts, baseline and optimiser.")
     with right:
         st.markdown(f'<div class="cs-shot">{_tool_preview()}</div>', unsafe_allow_html=True)
 
@@ -150,15 +202,15 @@ def _tool_preview() -> str:
     """A miniature rendering of the tool's own layout."""
     return """
 <svg viewBox="0 0 640 330" aria-label="Preview of the CarbonSpark tool">
-  <rect width="640" height="330" fill="#f7f8fa"/>
-  <rect x="0" y="0" width="640" height="34" fill="#0f1720"/>
+  <rect width="640" height="330" fill="#0b1017"/>
+  <rect x="0" y="0" width="640" height="34" fill="#060a0f"/>
   <circle cx="22" cy="17" r="6" fill="#e8a020"/>
   <rect x="38" y="11" width="86" height="11" rx="5" fill="#42525f"/>
-  <rect x="14" y="48" width="176" height="266" rx="10" fill="#fff" stroke="#e2e6ea"/>
+  <rect x="14" y="48" width="176" height="266" rx="10" fill="#141d28" stroke="#2a3644"/>
   <rect x="28" y="62" width="148" height="52" rx="8" fill="#111b26"/>
   <rect x="28" y="124" width="148" height="52" rx="8" fill="#1b2735"/>
   <rect x="28" y="186" width="148" height="52" rx="8" fill="#1b2735"/>
-  <rect x="206" y="48" width="420" height="120" rx="10" fill="#fff" stroke="#e2e6ea"/>
+  <rect x="206" y="48" width="420" height="120" rx="10" fill="#111a24" stroke="#2a3644"/>
   <g opacity="0.9">
     <rect x="226" y="70" width="54" height="76" rx="5" fill="#2f7fb5"/>
     <rect x="316" y="70" width="54" height="76" rx="5" fill="#2f7fb5" opacity=".8"/>
@@ -166,7 +218,7 @@ def _tool_preview() -> str:
     <rect x="496" y="70" width="54" height="76" rx="5" fill="#1f8a5f"/>
     <path d="M280 108 h36 M370 108 h36 M460 108 h36" stroke="#d94f2b" stroke-width="3"/>
   </g>
-  <rect x="206" y="180" width="420" height="134" rx="10" fill="#fff" stroke="#e2e6ea"/>
+  <rect x="206" y="180" width="420" height="134" rx="10" fill="#111a24" stroke="#2a3644"/>
   <rect x="226" y="204" width="300" height="22" rx="5" fill="#d94f2b"/>
   <rect x="226" y="236" width="366" height="22" rx="5" fill="#e8a020"/>
   <rect x="226" y="268" width="188" height="22" rx="5" fill="#2f7fb5"/>
@@ -202,17 +254,17 @@ def _database_door(dataset: Dataset) -> None:
         st.markdown(
             """
 <div class="cs-shot"><svg viewBox="0 0 640 260" aria-label="Preview of the database view">
-  <rect width="640" height="260" fill="#fff"/>
+  <rect width="640" height="260" fill="#0e1620"/>
   <rect x="0" y="0" width="640" height="34" fill="#243447"/>
   <g fill="#8ea3b8">
     <rect x="20" y="12" width="70" height="10" rx="5"/><rect x="150" y="12" width="90" height="10" rx="5"/>
     <rect x="300" y="12" width="70" height="10" rx="5"/><rect x="430" y="12" width="110" height="10" rx="5"/>
   </g>
-  <g fill="#eef1f4">
+  <g fill="#141d28">
     <rect x="0" y="44" width="640" height="26"/><rect x="0" y="96" width="640" height="26"/>
     <rect x="0" y="148" width="640" height="26"/><rect x="0" y="200" width="640" height="26"/>
   </g>
-  <g fill="#c3ccd6">
+  <g fill="#3d4c5d">
     <rect x="20" y="52" width="86" height="10" rx="5"/><rect x="150" y="52" width="150" height="10" rx="5"/>
     <rect x="330" y="52" width="120" height="10" rx="5"/><rect x="480" y="52" width="60" height="10" rx="5"/>
     <rect x="20" y="78" width="70" height="10" rx="5"/><rect x="150" y="78" width="190" height="10" rx="5"/>
@@ -237,6 +289,8 @@ def render(dataset: Dataset) -> None:
     _nav()
     _hero()
     _info(dataset)
+    _route_strip(dataset)
+    _how()
     _why()
     _tool_door()
     _database_door(dataset)

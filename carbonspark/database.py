@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import html
+
 import pandas as pd
 import streamlit as st
 
@@ -9,6 +11,11 @@ from carbon_calc.model import METRICS, METRIC_LABELS, MIX_VARIABLES, Dataset
 
 from .state import go
 from .theme import spark_mark
+
+
+def _variation(variation: str) -> str:
+    """Match the tool's naming for the workbook's catch-all variation."""
+    return "General estimate" if variation.strip().lower().startswith("general") else variation
 
 
 def render(dataset: Dataset) -> None:
@@ -46,7 +53,7 @@ def render(dataset: Dataset) -> None:
                 "#": proc.id,
                 "Department": proc.department,
                 "Technique / Process": proc.process,
-                "Variation": proc.variation,
+                "Variation": _variation(proc.variation),
                 **{METRIC_LABELS[metric]: proc.formulas[metric] for metric in METRICS},
             }
             for proc in dataset.processes
@@ -91,7 +98,14 @@ def render(dataset: Dataset) -> None:
             use_container_width=True,
             hide_index=True,
         )
-        st.text(proc.notes or "No notes recorded.")
+        st.markdown("**Coefficients, basis and caveats for this row**")
+        # A row's note runs to several hundred words of coefficient listings.
+        # Rendered as plain text it ran the full width of the page and pushed
+        # everything else off screen, so it gets its own scrollable block.
+        st.markdown(
+            f'<div class="cs-note">{html.escape(proc.notes or "No notes recorded.")}</div>',
+            unsafe_allow_html=True,
+        )
 
     with factors:
         st.dataframe(

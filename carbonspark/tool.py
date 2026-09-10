@@ -32,11 +32,10 @@ from carbon_calc.route import (
     transport_ids,
 )
 
-from . import charts
+from . import charts, live
 from .presets import GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
 from .state import (
     INBOUND_W,
-    NORMALISE_W,
     PRESET_W,
     PROFILE_W,
     SCRAP_W,
@@ -50,7 +49,6 @@ from .state import (
     mix_widget,
     on_inbound_change,
     on_mix_change,
-    on_normalise_toggle,
     on_scrap_change,
     on_train_change,
     rescale_mix,
@@ -65,6 +63,14 @@ PANELS = [
     ("grid", "Energy grid mix", "Where the electricity comes from"),
     ("plant", "Plant customisation", "Departments, techniques and variations"),
 ]
+
+#: Slider labels, shared with the live-readout chips that follow them.
+SCRAP_LABEL = "Scrap steel ratio  y"
+RAIL_LABEL = "Rail share  p"
+INBOUND_LABEL = "Inbound share of haulage"
+
+#: The tool's result views, shown as a tab strip matching the database page.
+VIEWS = ["Dashboard", "Baseline comparison", "Optimiser", "Process grid"]
 
 SCROLL_HINT = """
 <div class="cs-scroll-hint" style="margin-top:8px">
@@ -120,7 +126,7 @@ def _workbook_haulage_split(_dataset: Dataset) -> tuple:
 def _panel_scrap(dataset: Dataset) -> None:
     st.markdown("#### Scrap vs virgin charge")
     scrap = st.slider(
-        "Scrap steel ratio  y",
+        SCRAP_LABEL,
         min_value=0,
         max_value=100,
         value=st.session_state.scrap,
@@ -130,14 +136,15 @@ def _panel_scrap(dataset: Dataset) -> None:
         help="Share of the metallic charge that is recycled scrap. Virgin ratio x = 1 − y.",
     )
     st.markdown(
-        f'<span class="cs-chip">virgin x = {100 - scrap}%</span> '
-        f'<span class="cs-chip cs-chip-good">scrap y = {scrap}%</span>',
+        live.rendered_chip(SCRAP_LABEL, "virgin x = {inv}%", scrap)
+        + " "
+        + live.rendered_chip(SCRAP_LABEL, "scrap y = {v}%", scrap, tone="cs-chip-good"),
         unsafe_allow_html=True,
     )
     st.divider()
     st.markdown("#### Inbound / outbound haulage")
     train = st.slider(
-        "Rail share  p",
+        RAIL_LABEL,
         min_value=0,
         max_value=100,
         value=st.session_state.train,
@@ -148,12 +155,13 @@ def _panel_scrap(dataset: Dataset) -> None:
         "transport rows: RMHS unloading and outbound despatch.",
     )
     st.markdown(
-        f'<span class="cs-chip">rail p = {train}%</span> '
-        f'<span class="cs-chip cs-chip-warn">road q = {100 - train}%</span>',
+        live.rendered_chip(RAIL_LABEL, "rail p = {v}%", train)
+        + " "
+        + live.rendered_chip(RAIL_LABEL, "road q = {inv}%", train, tone="cs-chip-warn"),
         unsafe_allow_html=True,
     )
     inbound = st.slider(
-        "Inbound share of haulage",
+        INBOUND_LABEL,
         min_value=0,
         max_value=100,
         value=st.session_state.inbound,
@@ -167,8 +175,9 @@ def _panel_scrap(dataset: Dataset) -> None:
         "unchanged.",
     )
     st.markdown(
-        f'<span class="cs-chip">inbound = {inbound}%</span> '
-        f'<span class="cs-chip cs-chip-warn">outbound = {100 - inbound}%</span>',
+        live.rendered_chip(INBOUND_LABEL, "inbound = {v}%", inbound)
+        + " "
+        + live.rendered_chip(INBOUND_LABEL, "outbound = {inv}%", inbound, tone="cs-chip-warn"),
         unsafe_allow_html=True,
     )
     carbon_share, energy_share = _workbook_haulage_split(dataset)
@@ -194,25 +203,44 @@ def _panel_grid(dataset: Dataset) -> None:
     if note:
         st.caption(note)
 
-    # The normalise control sits above the sliders it governs, and rescaling
-    # rewrites the slider values themselves rather than adjusting silently.
-    st.checkbox(
-        "Keep shares summing to 100%",
-        value=st.session_state.auto_normalise,
-        key=NORMALISE_W,
-        on_change=on_normalise_toggle,
-        help="On: moving one slider rescales the others so the mix always totals 100%.",
-    )
+    # Normalising is a deliberate action, not something that happens under the
+    # user's hand: setting four shares in a row would otherwise have the first
+    # three rescaled out from under the fourth. The control sits above the
+    # sliders it governs and rewrites their values, so what you see is what the
+    # model used.
     total = mix_total()
-    if abs(total - 100.0) > 0.5:
-        left, right = st.columns([2, 1])
-        left.warning(f"Shares total {total:.0f}%.")
-        right.button("Rescale to 100%", on_click=rescale_mix, use_container_width=True)
+    off_by = abs(total - 100.0)
+    left, right = st.columns([1.6, 1])
+    with left:
+        if off_by <= 0.05:
+            st.markdown(
+                f'<span class="cs-chip cs-chip-good">shares total {total:.0f}%</span>',
+                unsafe_allow_html=True,
+            )
+        else:
+            st.markdown(
+                f'<span class="cs-chip cs-chip-warn">shares total {total:.1f}%</span>',
+                unsafe_allow_html=True,
+            )
+    right.button(
+        "Normalise",
+        on_click=rescale_mix,
+        use_container_width=True,
+        disabled=off_by <= 0.05,
+        type="primary" if off_by > 0.05 else "secondary",
+        help="Rescales every share proportionally so the mix sums to 100%. The sliders "
+        "glide to the rescaled values rather than jumping.",
+    )
+    if off_by > 0.05:
+        st.caption(
+            "Set as many shares as you like — nothing is rescaled until you press "
+            "Normalise. Until then the model uses the shares exactly as they stand."
+        )
 
     for var in MIX_VARIABLES:
         source = dataset.source_by_var[var]
         st.slider(
-            f"{source.source}  ·  {source.ef} kg CO₂e/kWh",
+            f"{source.source}  ·  {source.ef} kg CO\u2082e/kWh",
             min_value=0.0,
             max_value=100.0,
             step=1.0,
@@ -229,99 +257,160 @@ def _panel_grid(dataset: Dataset) -> None:
         use_container_width=True,
         config=charts.PLOT_CONFIG,
     )
-    st.metric("Blended grid factor", f"{mix_factor(mix, dataset):.3f} kg CO₂e/kWh")
-    st.caption(f"Workbook reference (CEA midpoint): {REFERENCE_GRID_FACTOR} kg CO₂e/kWh")
+    st.metric("Blended grid factor", f"{mix_factor(mix, dataset):.3f} kg CO\u2082e/kWh")
+    st.caption(f"Workbook reference (CEA midpoint): {REFERENCE_GRID_FACTOR} kg CO\u2082e/kWh")
 
 
-def _panel_plant(dataset: Dataset, stages) -> None:
-    st.markdown("#### Plant customisation")
-    st.caption(
-        "Pick a department, then the techniques it runs, then the variations of each. "
-        "Selecting more than one variation splits that stage's tonne between them."
+def _variation_label(variation: str) -> str:
+    """Display name for a workbook variation.
+
+    The workbook writes "General (all types)" wherever a step has no
+    interchangeable technologies. That reads like a selectable option among
+    others, when it is really the step's single general estimate.
+    """
+    if variation.strip().lower().startswith("general"):
+        return "General estimate"
+    return variation
+
+
+def _stage_summary(stage: Stage, mix) -> str:
+    """One line describing what a stage is currently running."""
+    live_mix = normalise_mix(mix)
+    if not live_mix:
+        return "off"
+    parts = [
+        f"{_variation_label(stage.option_by_id(pid).variation)}"
+        + (f" {share:.0%}" if len(live_mix) > 1 else "")
+        for pid, share in sorted(live_mix.items(), key=lambda item: -item[1])
+    ]
+    return " + ".join(parts)
+
+
+def _stage_controls(stage: Stage, route) -> None:
+    """The variation picker for one technique."""
+    current = normalise_mix(route.get(stage.key, {}))
+    picked = st.multiselect(
+        "Variations in use",
+        options=list(stage.option_ids),
+        default=[pid for pid in stage.option_ids if pid in current],
+        format_func=lambda pid, s=stage: _variation_label(s.option_by_id(pid).variation),
+        key=f"vars_{stage.key}",
+        help="Pick as many as the plant actually runs — the stage's tonne is split "
+        "between them.",
     )
-    route = st.session_state.route
-    department = st.selectbox("Department", options=dataset.departments, key="dept_pick")
+    if not picked:
+        route[stage.key] = {}
+        st.caption("Nothing selected — this technique is out of the route.")
+        return
+    if len(picked) == 1:
+        set_stage_mix(stage, {picked[0]: 1.0})
+        return
+
+    # Adding or removing a variation resets the split to even, so a new
+    # selection never inherits a lopsided share from the previous set.
+    signature = tuple(sorted(picked))
+    signature_key = f"sig_{stage.key}"
+    if st.session_state.get(signature_key) != signature:
+        st.session_state[signature_key] = signature
+        current = even_mix(picked)
+        for pid in picked:
+            st.session_state.pop(f"share_{stage.key}_{pid}", None)
+
+    st.caption("Share of this stage's tonne through each variation:")
+    raw: Dict[int, float] = {}
+    for pid in picked:
+        previous = current.get(pid, 1.0 / len(picked))
+        raw[pid] = st.slider(
+            _variation_label(stage.option_by_id(pid).variation),
+            min_value=0.0,
+            max_value=100.0,
+            value=float(round(previous * 100, 1)),
+            step=1.0,
+            format="%.0f%%",
+            key=f"share_{stage.key}_{pid}",
+        )
+    normalised = normalise_mix(raw) or even_mix(picked)
+    set_stage_mix(stage, normalised)
     st.markdown(
-        f'{section_band(department)}<div class="cs-band-title">'
-        f'{DEPARTMENT_ICONS.get(department, "•")} {department}</div>',
+        " ".join(
+            f'<span class="cs-chip">{_variation_label(stage.option_by_id(pid).variation)} '
+            f"{share:.0%}</span>"
+            for pid, share in normalised.items()
+        ),
         unsafe_allow_html=True,
     )
 
-    dept_stages = [stage for stage in stages if stage.department == department]
-    running = [stage for stage in dept_stages if normalise_mix(route.get(stage.key, {}))]
-    chosen = st.multiselect(
-        "Techniques / processes in use",
-        options=[stage.key for stage in dept_stages],
-        default=[stage.key for stage in running],
-        format_func=lambda key: next(s.process for s in dept_stages if s.key == key),
-        key=f"techniques_{department}",
-    )
-    for stage in dept_stages:
-        if stage.key not in chosen:
-            route[stage.key] = {}
-        elif not normalise_mix(route.get(stage.key, {})):
-            route[stage.key] = {stage.default_id: 1.0}
 
-    for stage in dept_stages:
-        if stage.key not in chosen:
-            continue
-        with st.expander(stage.process, expanded=stage.has_choice):
-            current = normalise_mix(route.get(stage.key, {}))
-            picked = st.multiselect(
-                "Variations",
-                options=list(stage.option_ids),
-                default=[pid for pid in stage.option_ids if pid in current],
-                format_func=lambda pid, s=stage: s.option_by_id(pid).variation,
-                key=f"vars_{stage.key}",
-            )
-            if not picked:
-                route[stage.key] = {}
-                st.caption("No variation selected — this stage is out of the route.")
-                continue
-            if len(picked) == 1:
-                set_stage_mix(stage, {picked[0]: 1.0})
-                continue
+def _panel_plant(dataset: Dataset, stages) -> None:
+    """Department → technique → variation, as one drill-down.
 
-            # Adding or removing a variation resets the split to even, so a new
-            # selection never inherits a lopsided share from the previous set.
-            signature = tuple(sorted(picked))
-            signature_key = f"sig_{stage.key}"
-            if st.session_state.get(signature_key) != signature:
-                st.session_state[signature_key] = signature
-                current = even_mix(picked)
-                for pid in picked:
-                    st.session_state.pop(f"share_{stage.key}_{pid}", None)
+    Every level works the same way: open the level, see what is running, turn
+    things on or off. There is no separate "which techniques" list sitting
+    beside the department picker — a technique is on when it has a variation
+    selected, exactly as a variation is on when it is ticked.
+    """
+    st.markdown("#### Plant customisation")
+    route = st.session_state.route
 
-            st.caption("Share of this stage's tonne through each variation:")
-            raw: Dict[int, float] = {}
-            for pid in picked:
-                previous = current.get(pid, 1.0 / len(picked))
-                raw[pid] = st.slider(
-                    stage.option_by_id(pid).variation,
-                    min_value=0.0,
-                    max_value=100.0,
-                    value=float(round(previous * 100, 1)),
-                    step=1.0,
-                    format="%.0f%%",
-                    key=f"share_{stage.key}_{pid}",
-                )
-            normalised = normalise_mix(raw) or even_mix(picked)
-            set_stage_mix(stage, normalised)
+    for department in dataset.departments:
+        dept_stages = [stage for stage in stages if stage.department == department]
+        running = [
+            stage for stage in dept_stages if normalise_mix(route.get(stage.key, {}))
+        ]
+        with st.expander(
+            f"{DEPARTMENT_ICONS.get(department, '•')}  {department}"
+            f"  ·  {len(running)}/{len(dept_stages)} techniques",
+            expanded=False,
+        ):
             st.markdown(
-                " ".join(
-                    f'<span class="cs-chip">{stage.option_by_id(pid).variation} '
-                    f"{share:.0%}</span>"
-                    for pid, share in normalised.items()
-                ),
+                f'{section_band(department)}<div class="cs-band-title">'
+                f'{DEPARTMENT_ICONS.get(department, "•")} {department}</div>',
                 unsafe_allow_html=True,
             )
+            head = st.columns([1, 1])
+            head[0].button(
+                "Run every technique",
+                key=f"all_{department}",
+                use_container_width=True,
+                on_click=_set_department,
+                args=(dept_stages, True),
+            )
+            head[1].button(
+                "Skip this department",
+                key=f"none_{department}",
+                use_container_width=True,
+                on_click=_set_department,
+                args=(dept_stages, False),
+            )
+            for stage in dept_stages:
+                summary = _stage_summary(stage, route.get(stage.key, {}))
+                with st.expander(f"{stage.process}  —  {summary}", expanded=False):
+                    _stage_controls(stage, route)
+
+
+def _set_department(dept_stages, on: bool) -> None:
+    """Turn a whole department on (first-listed variation) or off."""
+    route = st.session_state.route
+    for stage in dept_stages:
+        if on:
+            if not normalise_mix(route.get(stage.key, {})):
+                route[stage.key] = {stage.default_id: 1.0}
+        else:
+            route[stage.key] = {}
+        st.session_state.pop(f"vars_{stage.key}", None)
 
 
 def _drawer(dataset: Dataset, stages) -> None:
     panel = st.session_state.drawer_panel
+    head = st.columns([3, 1])
+    head[0].markdown(
+        '<div class="cs-drawer-title">\u2699\ufe0f Inputs</div>'
+        '<p class="cs-drawer-sub">Everything you can change about the scenario.</p>',
+        unsafe_allow_html=True,
+    )
+    head[1].button("Close  \u2715", key="close_drawer", on_click=_toggle_drawer,
+                   use_container_width=True)
     if panel is None:
-        st.markdown("#### Inputs")
-        st.caption("Pick what you want to change.")
         for key, title, blurb in PANELS:
             st.markdown(panel_art(key), unsafe_allow_html=True)
             st.button(title, key=f"open_{key}", on_click=_open_panel, args=(key,),
@@ -399,17 +488,6 @@ def _profile_banner(stages) -> None:
 
 def _dashboard(result: Result, dataset: Dataset, stages) -> None:
     _profile_banner(stages)
-    st.markdown("### How this route flows")
-    st.caption(
-        "Material runs left to right; the red branches are the carbon each department "
-        "releases on the way."
-    )
-    st.plotly_chart(
-        charts.plant_flow(result, dataset.departments),
-        use_container_width=True,
-        config=charts.PLOT_CONFIG,
-    )
-    st.markdown(SCROLL_HINT.format(label="Scroll for the scope breakdown"), unsafe_allow_html=True)
 
     st.markdown('<div class="cs-stage">', unsafe_allow_html=True)
     st.markdown("### Where the carbon sits")
@@ -418,8 +496,10 @@ def _dashboard(result: Result, dataset: Dataset, stages) -> None:
         use_container_width=True,
         config=charts.PLOT_CONFIG,
     )
-    st.markdown(SCROLL_HINT.format(label="Scroll for the department split"), unsafe_allow_html=True)
     st.markdown("</div>", unsafe_allow_html=True)
+    st.markdown(
+        SCROLL_HINT.format(label="Scroll for the department split"), unsafe_allow_html=True
+    )
 
     st.markdown('<div class="cs-stage">', unsafe_allow_html=True)
     st.markdown("### By department")
@@ -669,47 +749,57 @@ def _process_grid(result: Result, dataset: Dataset) -> None:
 # Page
 # --------------------------------------------------------------------------- #
 def render(dataset: Dataset, stages) -> None:
-    bar = st.columns([0.6, 3.2, 1.5, 1.3])
-    bar[0].button("☰", on_click=_toggle_drawer, use_container_width=True,
-                  help="Show or hide the input drawer")
-    bar[1].markdown(
+    live.enable()
+    bar = st.columns([4.0, 1.3, 1.3])
+    bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
         f'font-size:1.1rem">{spark_mark(24)} CarbonSpark <span class="cs-chip">tool</span></div>',
         unsafe_allow_html=True,
     )
-    bar[2].button("Database", on_click=go, args=("database",), use_container_width=True)
-    bar[3].button("← Back to site", on_click=go, args=("landing",), use_container_width=True)
-
-    if st.session_state.drawer_open:
-        drawer, main = st.columns([3, 7], gap="large")
-        with drawer:
-            st.markdown('<div class="cs-drawer">', unsafe_allow_html=True)
-            _drawer(dataset, stages)
-            st.markdown("</div>", unsafe_allow_html=True)
-    else:
-        main = st.container()
+    bar[1].button("Database", on_click=go, args=("database",), use_container_width=True)
+    bar[2].button("\u2190 Back to site", on_click=go, args=("landing",), use_container_width=True)
+    st.markdown('<div class="cs-rule"></div>', unsafe_allow_html=True)
 
     # The drawer mutates the route as it renders, so the result is computed
     # afterwards — otherwise every reading would lag one interaction behind.
+    if st.session_state.drawer_open:
+        drawer, main = st.columns([3, 7], gap="large")
+        with drawer:
+            # A keyed container gets its own CSS class, so the drawer's raised
+            # surface wraps its contents instead of an unclosed <div> leaving an
+            # empty box floating above them.
+            with st.container(border=True, key="cs_drawer"):
+                _drawer(dataset, stages)
+    else:
+        main = st.container()
+
     weights = apply_haulage(route_weights(st.session_state.route), dataset, inbound_share())
     if not weights:
         with main:
             st.error(
-                "Every stage is switched off. Open the drawer and add at least one process."
+                "Every stage is switched off. Open Inputs and add at least one process."
             )
+            st.button("\u2699\ufe0f  Open inputs", on_click=_toggle_drawer, type="primary")
         return
     result = calculate(scrap_ratio(), current_mix(), dataset, weights, train_share())
 
     with main:
-        _headline(result, dataset)
-        view = st.radio(
-            "View",
-            ["Dashboard", "Baseline comparison", "Optimiser", "Process grid"],
-            horizontal=True,
-            key="tool_view",
-            label_visibility="collapsed",
+        # The inputs button sits with the readings it changes, not in a far
+        # corner of the page.
+        opener, headline = st.columns([1.15, 6], gap="medium")
+        opener.button(
+            "\u2715  Close inputs" if st.session_state.drawer_open else "\u2699\ufe0f  Customise inputs",
+            on_click=_toggle_drawer,
+            use_container_width=True,
+            type="secondary" if st.session_state.drawer_open else "primary",
+            help="Scrap ratio, energy grid mix and the plant's process route",
+            key="open_inputs",
         )
-        st.divider()
+        with headline:
+            _headline(result, dataset)
+        view = st.segmented_control(
+            "View", VIEWS, key="tool_view", label_visibility="collapsed"
+        ) or VIEWS[0]
         if view == "Dashboard":
             _dashboard(result, dataset, stages)
         elif view == "Baseline comparison":

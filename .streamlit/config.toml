@@ -1,0 +1,19 @@
+# CarbonSpark ships a dark theme. Pinning it here means the page never renders
+# light-palette CSS against a dark ground (or the reverse) depending on what the
+# viewer's browser or Streamlit profile happens to prefer.
+[theme]
+base = "dark"
+primaryColor = "#e8a020"
+backgroundColor = "#0b1017"
+secondaryBackgroundColor = "#141d28"
+textColor = "#e8edf3"
+font = "sans serif"
+
+[client]
+# Streamlit's own "Deploy" button and hamburger sit on top of CarbonSpark's
+# toolbar, so the built-in chrome is reduced to the essentials.
+toolbarMode = "minimal"
+showErrorDetails = true
+
+[server]
+runOnSave = false
