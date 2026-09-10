@@ -89,67 +89,61 @@ DEPARTMENT_ICONS = {
 # --------------------------------------------------------------------------- #
 # Generated SVG art
 # --------------------------------------------------------------------------- #
-def hero_art() -> str:
-    """The landing hero: a furnace pour against a rolling-mill horizon."""
+def hero_art(dark: bool = False) -> str:
+    """The hero figure: a tonne of steel, drawn as the carbon it carries.
+
+    Three stacked bands in the scope colours, above the route the tonne takes.
+    It is the same reading the tool gives — which is a truer thing to open with
+    than an illustration of a furnace.
+    """
+    t = tokens(dark)
+    ink, ink_soft, clay = t["ink"], t["ink_soft"], t["clay"]
+    bands = (
+        ("Scope 1 \u00b7 direct", t["ember"], 0.166, "1.020", 0),
+        ("Scope 2 \u00b7 purchased electricity", t["amber"], 0.560, "3.451", 1),
+        ("Scope 3 \u00b7 upstream", t["steel"], 0.274, "1.696", 2),
+    )
+    marks = "".join(
+        f'<g transform="translate(0,{index * 74})">'
+        f'<text x="0" y="0" fill="{ink_soft}" font-size="12" font-family="Inter,sans-serif" '
+        f'letter-spacing="1.2">{name.upper()}</text>'
+        f'<rect x="0" y="12" width="{int(520 * width)}" height="28" rx="4" fill="{colour}"/>'
+        f'<text x="{int(520 * width) + 12}" y="32" fill="{ink}" font-size="15" '
+        f'font-family="Inter,sans-serif" font-weight="600">{value}</text>'
+        f"</g>"
+        for name, colour, width, value, index in bands
+    )
+    stops = ["RMHS", "MELT", "HOT", "ANNEAL", "PICKLE", "COLD", "OUT"]
+    step = 540 / (len(stops) - 1)
+    route = "".join(
+        f'<g transform="translate({index * step:.0f},0)">'
+        f'<circle cx="0" cy="0" r="4" fill="{"none" if index else clay}" '
+        f'stroke="{clay}" stroke-width="1.6"/>'
+        f'<text x="0" y="22" fill="{ink_soft}" font-size="10" text-anchor="middle" '
+        f'font-family="Inter,sans-serif" letter-spacing="1">{name}</text></g>'
+        for index, name in enumerate(stops)
+    )
     return f"""
-<svg viewBox="0 0 720 420" class="cs-hero-art" role="img" aria-label="Stainless steel plant illustration">
-  <defs>
-    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#efece3"/><stop offset="100%" stop-color="#e2ded1"/>
-    </linearGradient>
-    <radialGradient id="glow" cx="50%" cy="50%">
-      <stop offset="0%" stop-color="{AMBER}" stop-opacity="0.85"/>
-      <stop offset="55%" stop-color="{EMBER}" stop-opacity="0.30"/>
-      <stop offset="100%" stop-color="{EMBER}" stop-opacity="0"/>
-    </radialGradient>
-    <linearGradient id="pour" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#f6dfa6"/><stop offset="60%" stop-color="{AMBER}"/>
-      <stop offset="100%" stop-color="{EMBER}"/>
-    </linearGradient>
-  </defs>
-  <rect width="720" height="420" fill="url(#sky)"/>
-  <path d="M0 300 H720" stroke="{SLATE}" stroke-width="1.5" opacity="0.25" fill="none"/>
-  <!-- mill housings -->
-  <g fill="#ded8c7" stroke="#a89f8b" stroke-width="2">
-    <rect x="70" y="196" width="86" height="104" rx="4"/>
-    <rect x="565" y="214" width="78" height="86" rx="4"/>
+<svg viewBox="0 0 620 360" class="cs-hero-art" role="img"
+     aria-label="One tonne of stainless steel broken into Scope 1, 2 and 3 emissions">
+  <g transform="translate(20,34)">{marks}</g>
+  <g transform="translate(24,292)">
+    <line x1="0" y1="0" x2="540" y2="0" stroke="{ink_soft}" stroke-width="1" opacity="0.3"/>
+    {route}
   </g>
-  <!-- coil -->
-  <g transform="translate(604,257)">
-    <circle r="27" fill="#ddd8c9" stroke="#b9b1a0" stroke-width="2"/>
-    <circle r="17" fill="none" stroke="#a79f8e" stroke-width="2"/>
-    <circle r="8" fill="{STEEL}" opacity="0.65"/>
-  </g>
-  <!-- ladle glow -->
-  <circle cx="330" cy="250" r="150" fill="url(#glow)" class="cs-pulse"/>
-  <!-- ladle -->
-  <g transform="translate(268,120)">
-    <path d="M4 0 h116 l-13 74 a52 52 0 0 1 -90 0 Z" fill="#c8c0ad" stroke="{SLATE}" stroke-width="2.5"/>
-    <rect x="-12" y="-8" width="140" height="14" rx="6" fill="#b6ad99"/>
-  </g>
-  <!-- pour stream + sparks -->
-  <path d="M330 190 q7 46 -3 84 q-8 30 3 26" stroke="url(#pour)" stroke-width="11"
-        fill="none" stroke-linecap="round" class="cs-pour"/>
-  <ellipse cx="330" cy="302" rx="52" ry="12" fill="url(#pour)" opacity="0.95"/>
-  <g fill="{AMBER}">
-    <circle cx="300" cy="286" r="2.6" class="cs-spark cs-s1"/>
-    <circle cx="356" cy="278" r="2.2" class="cs-spark cs-s2"/>
-    <circle cx="341" cy="296" r="1.8" class="cs-spark cs-s3"/>
-    <circle cx="313" cy="270" r="2.0" class="cs-spark cs-s2"/>
-  </g>
-  <rect y="300" width="720" height="120" fill="#e0dbcb"/>
-  <g stroke="{STEEL}" stroke-width="2" opacity="0.5" fill="none">
-    <path d="M0 334 H720"/><path d="M0 352 H720"/>
-  </g>
+  <text x="24" y="348" fill="{ink_soft}" font-size="11" font-family="Inter,sans-serif">
+    6.167 tCO2e per tonne \u00b7 default route, 40% scrap, today\u2019s Indian grid
+  </text>
 </svg>"""
 
 
-def panel_art(kind: str) -> str:
+def panel_art(kind: str, dark: bool = False) -> str:
     """Art for the three control panels in the tool's drawer."""
+    ground = tokens(dark)["surface_hi"]
     if kind == "scrap":
         return f"""
 <svg viewBox="0 0 240 120" class="cs-panel-art" aria-hidden="true">
-  <rect width="240" height="120" rx="10" fill="#efece3"/>
+  <rect width="240" height="120" rx="10" fill="{ground}"/>
   <g opacity="0.9">
     <path d="M28 92 l26-34 22 20 20-30 24 26 22-40 26 34 18-16" fill="none"
           stroke="{STEEL}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
@@ -165,7 +159,7 @@ def panel_art(kind: str) -> str:
     if kind == "grid":
         return f"""
 <svg viewBox="0 0 240 120" class="cs-panel-art" aria-hidden="true">
-  <rect width="240" height="120" rx="10" fill="#efece3"/>
+  <rect width="240" height="120" rx="10" fill="{ground}"/>
   <g transform="translate(62,60)" stroke="{GREEN}" stroke-width="5" stroke-linecap="round">
     <line x1="0" y1="0" x2="0" y2="-30" class="cs-spin-a"/>
     <line x1="0" y1="0" x2="26" y2="16" class="cs-spin-a"/>
@@ -188,7 +182,7 @@ def panel_art(kind: str) -> str:
 </svg>"""
     return f"""
 <svg viewBox="0 0 240 120" class="cs-panel-art" aria-hidden="true">
-  <rect width="240" height="120" rx="10" fill="#efece3"/>
+  <rect width="240" height="120" rx="10" fill="{ground}"/>
   <g fill="none" stroke="{STEEL}" stroke-width="3">
     <rect x="24" y="42" width="38" height="38" rx="5"/>
     <rect x="96" y="30" width="38" height="38" rx="5"/>
@@ -225,7 +219,7 @@ def scope_bars() -> str:
     )
 
 
-def section_band(kind: str) -> str:
+def section_band(kind: str, dark: bool = False) -> str:
     """A slim decorative band used as a department/section header background."""
     motifs = {
         "RMHS": (STEEL, "M10 40 h60 l14-16 h40 M96 40 h120"),
@@ -238,18 +232,20 @@ def section_band(kind: str) -> str:
         "Outbound": (AMBER, "M28 30 h44 v32 h-44 Z M72 46 h40"),
     }
     colour, path = motifs.get(kind, (STEEL, "M20 40 h160"))
+    ground = tokens(dark)["surface_hi"]
     return f"""
 <svg viewBox="0 0 240 80" preserveAspectRatio="none" class="cs-band" aria-hidden="true">
-  <rect width="240" height="80" fill="#efece3"/>
+  <rect width="240" height="80" fill="{ground}"/>
   <path d="{path}" fill="none" stroke="{colour}" stroke-width="4"
         stroke-linecap="round" opacity="0.75"/>
 </svg>"""
 
 
-def spark_mark(size: int = 34) -> str:
+def spark_mark(size: int = 34, dark: bool = False) -> str:
     """The CarbonSpark mark: a spark struck off a steel arc."""
+    mark_ink, mark_clay = tokens(dark)["ink"], tokens(dark)["clay"]
     return f"""
 <svg viewBox="0 0 48 48" width="{size}" height="{size}" class="cs-mark" aria-hidden="true">
-  <circle cx="24" cy="24" r="20" fill="none" stroke="{INK}" stroke-width="1.5" opacity="0.35"/>
-  <path d="M26 6 L14 26 h9 l-3 16 L36 21 h-10 Z" fill="{CLAY}"/>
+  <circle cx="24" cy="24" r="20" fill="none" stroke="{mark_ink}" stroke-width="1.5" opacity="0.35"/>
+  <path d="M26 6 L14 26 h9 l-3 16 L36 21 h-10 Z" fill="{mark_clay}"/>
 </svg>"""

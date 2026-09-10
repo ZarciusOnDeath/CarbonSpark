@@ -108,13 +108,22 @@ def revert_route() -> None:
 
 
 def forget_route_widgets() -> None:
-    """Drop every route widget so they re-read from the draft."""
-    for key in [
-        key
-        for key in st.session_state
-        if key.startswith(("techniques_", "vars_", "share_", "on_", "pick_", "sig_"))
-    ]:
-        del st.session_state[key]
+    """Rebuild every route widget from the draft.
+
+    Deleting the widgets' session-state keys looked like the way to do this, and
+    it crashed: a checkbox whose key had been removed while the widget was still
+    on screen raised ``KeyError`` in its own callback the next time it was
+    clicked — which is what happened when switching between the two site
+    profiles. Instead the generation counter moves, every route widget key
+    changes with it, and Streamlit builds fresh widgets seeded from the draft.
+    The old keys are simply never asked for again.
+    """
+    st.session_state.route_generation = st.session_state.get("route_generation", 0) + 1
+
+
+def route_key(prefix: str, name: str) -> str:
+    """A widget key that changes whenever the route is replaced wholesale."""
+    return f"{prefix}_{name}_g{st.session_state.get('route_generation', 0)}"
 
 
 def scrap_ratio() -> float:
@@ -279,6 +288,7 @@ def init_state(dataset: Dataset) -> tuple:
     }
     # Which drill-down rows were open when the last rerun happened, so ticking a
     # box does not fold the list up under the user's hand.
+    st.session_state.route_generation = 0
     st.session_state.open_department = None
     st.session_state.open_stage = None
     st.session_state.dark = False

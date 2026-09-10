@@ -56,6 +56,10 @@ split wherever a profile is shown.
 
 | Profile | Route (sourced) |
 | --- | --- |
+A site profile switches on only the equipment publicly described for that site — it is
+not an inventory of the plant, and anything left unticked is unevidenced rather than known
+to be absent.
+
 | **JSL Jajpur** | Ferrochrome from submerged arc furnaces into an EAF, 150 t AOD converter, 150 t ladle furnace, single-strand slab caster ([Primetals](https://www.primetals.com/press-media/news/primetals-technologies-receives-fac-for-new-aod-converter-ladle-furnace-and-stainless-caster-at-jsl)); 30+ MWp captive solar, ~44.3 MU/year ([Jindal Stainless](https://www.jindalstainless.com/press-releases/jindal-stainless-and-ab-energia-set-new-benchmark-with-odishas-largest-captive-industrial-solar-plant/)) |
 | **JSL Hisar** | Stainless melt shop plus the cold-rolling complex — four 20-Hi Sendzimir mills, three continuous anneal-and-pickle lines, a bright annealing line ([ANDRITZ](https://www.andritz.com/metals-en/news-media/references-and-success-stories/jindal-india), [Jindal Stainless](https://www.jindalstainless.com/50years/)) |
 

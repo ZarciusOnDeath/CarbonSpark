@@ -22,7 +22,7 @@ def render(dataset: Dataset) -> None:
     bar = st.columns([4.0, 0.8, 1.5, 1.3])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
-        f'font-size:1.1rem">{spark_mark(24)} CarbonSpark '
+        f'font-size:1.1rem">{spark_mark(24, st.session_state.dark)} CarbonSpark '
         f'<span class="cs-chip">database</span></div>',
         unsafe_allow_html=True,
     )

@@ -21,7 +21,7 @@ def _nav() -> None:
     st.markdown(
         f"""
 <div class="cs-nav">
-  <span class="cs-brand">{spark_mark(26)} CarbonSpark</span>
+  <span class="cs-brand">{spark_mark(26, st.session_state.dark)} CarbonSpark</span>
   <span class="cs-spacer"></span>
   <a href="#info">Info</a>
   <a href="#usetool">Use Tool</a>
@@ -59,7 +59,7 @@ def _hero() -> None:
             unsafe_allow_html=True,
         )
     with right:
-        st.markdown(f'<div class="cs-hero" style="min-height:auto">{hero_art()}</div>',
+        st.markdown(f'<div class="cs-hero" style="min-height:auto">{hero_art(st.session_state.dark)}</div>',
                     unsafe_allow_html=True)
 
 

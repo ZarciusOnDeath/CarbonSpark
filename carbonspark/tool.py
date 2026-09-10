@@ -62,8 +62,10 @@ from .state import (
     outbound_rail,
     rescale_mix,
     revert_mix,
+    forget_route_widgets,
     revert_route,
     route_dirty,
+    route_key,
     scrap_ratio,
     set_stage_mix,
     toggle_dark,
@@ -324,7 +326,8 @@ def _remember_open(stage: Stage) -> None:
 def _toggle_stage(stage: Stage) -> None:
     """Checkbox callback for a step with nothing to choose between."""
     route = st.session_state.route_draft
-    route[stage.key] = {stage.default_id: 1.0} if st.session_state[f"on_{stage.key}"] else {}
+    on = st.session_state.get(route_key("on", stage.key), False)
+    route[stage.key] = {stage.default_id: 1.0} if on else {}
     st.session_state.open_department = stage.department
 
 
@@ -335,7 +338,7 @@ def _toggle_variation(stage: Stage, process_id: int) -> None:
     chosen = [
         pid
         for pid in stage.option_ids
-        if st.session_state.get(f"pick_{stage.key}_{pid}", False)
+        if st.session_state.get(route_key("pick", f"{stage.key}_{pid}"), False)
     ]
     if not chosen:
         route[stage.key] = {}
@@ -384,7 +387,7 @@ def _stage_controls(stage: Stage, route) -> None:
         st.checkbox(
             _variation_label(stage.option_by_id(pid).variation),
             value=pid in current,
-            key=f"pick_{stage.key}_{pid}",
+            key=route_key("pick", f"{stage.key}_{pid}"),
             on_change=_toggle_variation,
             args=(stage, pid),
         )
@@ -404,7 +407,7 @@ def _stage_controls(stage: Stage, route) -> None:
                 value=float(round(previous * 100, 1)),
                 step=1.0,
                 format="%.0f%%",
-                key=f"share_{stage.key}_{pid}",
+                key=route_key("share", f"{stage.key}_{pid}"),
             )
         set_stage_mix(stage, normalise_mix(raw) or even_mix(picked))
     if stage.options[0].transport:
@@ -432,7 +435,7 @@ def _panel_plant(dataset: Dataset, stages) -> None:
         with st.expander(
             title, expanded=department == st.session_state.get("open_department")
         ):
-            band = section_band(department)
+            band = section_band(department, st.session_state.dark)
             st.markdown(
                 f'{band}<div class="cs-band-title">{icon} {department}</div>',
                 unsafe_allow_html=True,
@@ -458,7 +461,7 @@ def _panel_plant(dataset: Dataset, stages) -> None:
                     st.checkbox(
                         stage.process,
                         value=_stage_on(route, stage),
-                        key=f"on_{stage.key}",
+                        key=route_key("on", stage.key),
                         on_change=_toggle_stage,
                         args=(stage,),
                     )
@@ -507,11 +510,13 @@ def _set_department(dept_stages, on: bool) -> None:
 
 
 def _forget_stage_widgets(stage: Stage) -> None:
-    """Drop the checkbox state for a stage so it re-reads from the route."""
-    st.session_state.pop(f"on_{stage.key}", None)
-    for pid in stage.option_ids:
-        st.session_state.pop(f"pick_{stage.key}_{pid}", None)
-        st.session_state.pop(f"share_{stage.key}_{pid}", None)
+    """Rebuild a stage's widgets from the draft on the next run.
+
+    Bumping the generation is heavier than dropping this stage's three keys, but
+    dropping keys of widgets that are still on screen is what crashed when a
+    profile was switched, so the route never does it.
+    """
+    forget_route_widgets()
 
 
 def _drawer(dataset: Dataset, stages) -> None:
@@ -526,7 +531,7 @@ def _drawer(dataset: Dataset, stages) -> None:
                    use_container_width=True)
     if panel is None:
         for key, title, blurb in PANELS:
-            st.markdown(panel_art(key), unsafe_allow_html=True)
+            st.markdown(panel_art(key, st.session_state.dark), unsafe_allow_html=True)
             st.button(title, key=f"open_{key}", on_click=_open_panel, args=(key,),
                       use_container_width=True)
             st.caption(blurb)
@@ -604,6 +609,13 @@ def _profile_banner(stages) -> None:
     )
     profile = PLANT_PROFILES[st.session_state.plant_profile]
     st.caption(profile.summary)
+    if profile.restricted_departments:
+        st.caption(
+            "This profile switches on only the equipment publicly described for the "
+            "site \u2014 it is not an inventory of the plant. Anything left unticked is "
+            "unevidenced rather than known to be absent, so tick it back on if you "
+            "know the site runs it."
+        )
     if profile.sources:
         with st.expander("Where this profile comes from", expanded=False):
             st.markdown(
@@ -909,7 +921,7 @@ def render(dataset: Dataset, stages) -> None:
     bar = st.columns([2.6, 1.2, 0.7, 1.2, 1.2])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
-        f'font-size:1.1rem">{spark_mark(24)} CarbonSpark <span class="cs-chip">tool</span></div>',
+        f'font-size:1.1rem">{spark_mark(24, st.session_state.dark)} CarbonSpark <span class="cs-chip">tool</span></div>',
         unsafe_allow_html=True,
     )
     bar[1].button(

@@ -127,14 +127,23 @@ JAJPUR = PlantProfile(
     # EAF → AOD → LF → single-strand slab caster → hot strip. Its finishing end is
     # narrower than the workbook's full catalogue, so those departments keep only
     # what is evidenced.
-    restricted_departments=("Melt Shop", "Annealing", "Pickling", "Cold Rolling"),
+    restricted_departments=(
+        "Melt Shop", "Hot Rolling", "Annealing", "Descaling", "Pickling", "Cold Rolling",
+    ),
     kept_techniques=(
         "Scrap Prep / Charging",
+        # The hot strip line as described: reheat, rough, finish, coil.
+        "Reheating in Furnace",
+        "High Pressure Hydraulic Descaling",
+        "Roughing Rolling Mill",
+        "Finishing Rolling Train",
+        "Controlled Cooling",
+        "Coiling or Plate Shearing",
+        "Hydraulic High Pressure Spraying",
+        "Mechanical Impingement Shot Blasting",
         "Solution Annealing",
-        "Continuous Strand / Tube Annealing",
         "Continuous Tank Pickling",
         "20-High Cluster Mill (Z-Mill / Sendzimir)",
-        "Continuous Tandem Cold Mill (TCM)",
         "CAPL / AP Line (Continuous Anneal & Pickle Line)",
         "Tension Leveling / Slitting Lines",
     ),
@@ -186,16 +195,24 @@ HISAR = PlantProfile(
     # anneal-and-pickle lines, a bright annealing line, slitting and cut-to-length
     # (ANDRITZ / Jindal Stainless, cited below). The tandem cold mill and the
     # 6-High UC mill are not part of that description.
-    restricted_departments=("Melt Shop", "Annealing", "Pickling", "Cold Rolling"),
+    restricted_departments=(
+        "Melt Shop", "Hot Rolling", "Annealing", "Descaling", "Pickling", "Cold Rolling",
+    ),
     kept_techniques=(
         "Scrap Prep / Charging",
+        "Reheating in Furnace",
+        "High Pressure Hydraulic Descaling",
+        "Roughing Rolling Mill",
+        "Finishing Rolling Train",
+        "Coiling or Plate Shearing",
+        "Hydraulic High Pressure Spraying",
+        "Mechanical Impingement Shot Blasting",
+        # The four 20-Hi Sendzimir mills, three anneal-and-pickle lines and the
+        # bright annealing line ANDRITZ and Jindal Stainless describe.
         "Bright Annealing",
         "Open Annealing / Pickling",
-        "Solution Annealing",
         "Continuous Tank Pickling",
-        "Batch Acid Bath",
         "20-High Cluster Mill (Z-Mill / Sendzimir)",
-        "18-High Sendzimir Cluster Mill",
         "CAPL / AP Line (Continuous Anneal & Pickle Line)",
         "Bright Annealing (in-process, Cold Rolling sequence)",
         "Temper Mill (Skin-Pass)",
