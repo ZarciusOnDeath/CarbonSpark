@@ -32,7 +32,9 @@ doors into the tool and the database.
   virgin*, *energy grid mix*, *plant customisation* — each fronted by its own artwork
   until you pick one;
 * **full-width charts**, one per screen with a scroll hint between them: where the carbon
-  sits, then the department split, then the gas-by-gas table;
+  sits, then the department split, then the gas-by-gas table. Both are drawn against a
+  fixed axis so a scenario that halves its carbon visibly halves, and the bars tween
+  between renders rather than jumping;
 * **live slider readouts** — the chips describing a slider follow the thumb as it is
   dragged, while the model's own figures commit when the slider is released;
 * **baseline comparison**, **optimiser** and **process grid** views.

@@ -1,12 +1,12 @@
-# CarbonSpark ships a dark theme. Pinning it here means the page never renders
-# light-palette CSS against a dark ground (or the reverse) depending on what the
-# viewer's browser or Streamlit profile happens to prefer.
+# CarbonSpark ships one theme: warm paper, near-black ink, a single clay accent.
+# Pinning it means the page never renders its CSS against the wrong ground
+# depending on what the viewer's browser or Streamlit profile prefers.
 [theme]
-base = "dark"
-primaryColor = "#e8a020"
-backgroundColor = "#0b1017"
-secondaryBackgroundColor = "#141d28"
-textColor = "#e8edf3"
+base = "light"
+primaryColor = "#c1633f"
+backgroundColor = "#faf9f5"
+secondaryBackgroundColor = "#f2f0e9"
+textColor = "#141413"
 font = "sans serif"
 
 [client]

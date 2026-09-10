@@ -1,261 +1,257 @@
-"""Page-level CSS. Kept in one place so the pages share a visual language.
+"""Page-level CSS.
 
-The design is dark-first and *embedded*: sections are separated by hairlines,
-spacing and type scale rather than by cards floating on the page. The one place
-a raised surface survives is the input drawer, where the contrast is the signal
-that a menu is open.
+The scheme is warm paper and near-black ink with a single clay accent, and the
+layout is *embedded*: hairlines, spacing and type scale carry the structure, so
+almost nothing on the page is a box. The two exceptions earn it — the inputs
+drawer, where a recessed surface is the signal that a menu is open, and a long
+coefficient note, which needs a bounded scroll area.
+
+Display type is a serif; the interface stays sans. That pairing is what keeps a
+dense analytical page from reading like a spreadsheet.
 """
 
 from __future__ import annotations
 
-from .theme import AMBER, EMBER, GREEN, INK, INK_SOFT, LINE, PAPER, STEEL, SURFACE, SURFACE_HI
+from .theme import AMBER, CLAY, EMBER, GREEN, INK, INK_SOFT, LINE, PAPER, STEEL, SURFACE, SURFACE_HI
 
 BASE_CSS = f"""
 <style>
+@import url('https://fonts.googleapis.com/css2?family=Newsreader:opsz,wght@6..72,400;6..72,500;6..72,600&display=swap');
+
 :root {{
   --ink: {INK}; --ink-soft: {INK_SOFT}; --paper: {PAPER};
   --surface: {SURFACE}; --surface-hi: {SURFACE_HI}; --line: {LINE};
-  --ember: {EMBER}; --amber: {AMBER}; --steel: {STEEL}; --green: {GREEN};
+  --clay: {CLAY}; --ember: {EMBER}; --amber: {AMBER}; --steel: {STEEL}; --green: {GREEN};
+  --serif: Newsreader, Georgia, "Times New Roman", serif;
+  --sans: Inter, -apple-system, "Segoe UI", system-ui, sans-serif;
 }}
-html, body, [class*="css"] {{
-  font-family: Inter, "Segoe UI", system-ui, sans-serif;
-}}
+html, body, [class*="css"] {{ font-family: var(--sans); color: var(--ink); }}
 .stApp {{ background: var(--paper); }}
 #MainMenu, footer {{ visibility: hidden; }}
 header[data-testid="stHeader"] {{ display: none; }}
 html {{ scroll-behavior: smooth; }}
 
-/* Wide by default — the old 1400px cap left deep gutters on a desktop screen. */
 .block-container {{
-  padding-top: .4rem; padding-bottom: 3rem;
-  max-width: min(1920px, 95vw);
-  padding-left: clamp(12px, 2.2vw, 40px);
-  padding-right: clamp(12px, 2.2vw, 40px);
+  padding-top: .4rem; padding-bottom: 4rem;
+  max-width: min(1920px, 94vw);
+  padding-left: clamp(14px, 2.4vw, 44px);
+  padding-right: clamp(14px, 2.4vw, 44px);
 }}
 
 /* ---------- motion ---------- */
-@keyframes csRise {{ from {{ opacity:0; transform: translateY(18px); }} to {{ opacity:1; transform:none; }} }}
+@keyframes csRise {{ from {{ opacity:0; transform: translateY(16px); }} to {{ opacity:1; transform:none; }} }}
 @keyframes csFade {{ from {{ opacity:0; }} to {{ opacity:1; }} }}
-@keyframes csBob {{ 0%,100% {{ transform: translateY(0); }} 50% {{ transform: translateY(9px); }} }}
-@keyframes csPulse {{ 0%,100% {{ opacity:.55; }} 50% {{ opacity:1; }} }}
+@keyframes csBob {{ 0%,100% {{ transform: translateY(0); }} 50% {{ transform: translateY(8px); }} }}
+@keyframes csPulse {{ 0%,100% {{ opacity:.5; }} 50% {{ opacity:.9; }} }}
 @keyframes csPour {{ 0%,100% {{ stroke-dashoffset:0; }} 50% {{ stroke-dashoffset:14; }} }}
 @keyframes csSpark {{ 0% {{ transform: translateY(0); opacity:1; }} 100% {{ transform: translateY(-34px); opacity:0; }} }}
 @keyframes csSpin {{ from {{ transform: rotate(0); }} to {{ transform: rotate(360deg); }} }}
 @keyframes csSweep {{ from {{ transform: translateX(-100%); }} to {{ transform: translateX(320%); }} }}
-@keyframes csSlideIn {{ from {{ opacity:0; transform: translateX(-14px); }} to {{ opacity:1; transform:none; }} }}
+@keyframes csSlideIn {{ from {{ opacity:0; transform: translateX(-10px); }} to {{ opacity:1; transform:none; }} }}
 
-.cs-rise {{ animation: csRise .55s cubic-bezier(.22,.61,.36,1) both; }}
-.cs-rise-2 {{ animation: csRise .55s .12s cubic-bezier(.22,.61,.36,1) both; }}
-.cs-rise-3 {{ animation: csRise .55s .24s cubic-bezier(.22,.61,.36,1) both; }}
+.cs-rise {{ animation: csRise .5s cubic-bezier(.22,.61,.36,1) both; }}
+.cs-rise-2 {{ animation: csRise .5s .1s cubic-bezier(.22,.61,.36,1) both; }}
+.cs-rise-3 {{ animation: csRise .5s .2s cubic-bezier(.22,.61,.36,1) both; }}
 .cs-pulse {{ animation: csPulse 3.4s ease-in-out infinite; }}
 .cs-pour {{ stroke-dasharray: 8 6; animation: csPour 1.1s linear infinite; }}
 .cs-spark {{ animation: csSpark 1.8s ease-out infinite; }}
 .cs-s1 {{ animation-delay: .2s; }} .cs-s2 {{ animation-delay: .9s; }} .cs-s3 {{ animation-delay: 1.4s; }}
 .cs-spin-a {{ transform-origin: 0 0; animation: csSpin 7s linear infinite; }}
 
-/* ---------- sticky nav ---------- */
+/* ---------- nav ---------- */
 .cs-nav {{
   position: sticky; top: 0; z-index: 999;
-  display: flex; align-items: center; gap: 26px;
-  padding: 13px 18px; margin: 0 -1rem 6px -1rem;
-  background: rgba(11,16,23,.82); backdrop-filter: blur(10px);
+  display: flex; align-items: center; gap: 28px;
+  padding: 14px 18px; margin: 0 -1rem 4px -1rem;
+  background: rgba(250,249,245,.86); backdrop-filter: blur(10px);
   border-bottom: 1px solid var(--line);
 }}
-.cs-nav .cs-brand {{ display:flex; align-items:center; gap:10px; font-weight:800; letter-spacing:-.02em; font-size:1.06rem; color: var(--ink); }}
-.cs-nav a {{ color: var(--ink-soft); text-decoration:none; font-weight:600; font-size:.92rem; transition: color .18s ease; }}
-.cs-nav a:hover {{ color: var(--amber); }}
+.cs-nav .cs-brand {{ display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.01em; font-size:1.04rem; }}
+.cs-nav a {{ color: var(--ink-soft); text-decoration:none; font-weight:500; font-size:.92rem; transition: color .18s ease; }}
+.cs-nav a:hover {{ color: var(--clay); }}
 .cs-nav .cs-spacer {{ flex: 1; }}
 
 /* ---------- hero ---------- */
-.cs-hero::before {{
-  content:""; position:absolute; inset:0 auto auto 0; width:min(62vw,900px); height:520px;
-  background: radial-gradient(60% 60% at 20% 30%, rgba(217,79,43,.16), transparent 70%),
-              radial-gradient(50% 50% at 70% 10%, rgba(232,160,32,.12), transparent 70%);
-  pointer-events:none; z-index:-1; filter: blur(6px);
-}}
-.cs-hero {{ position:relative; min-height: 72vh; display:flex; flex-direction:column; justify-content:center; padding: 24px 0 8px 0; }}
+.cs-hero {{ min-height: 70vh; display:flex; flex-direction:column; justify-content:center; padding: 24px 0 8px 0; }}
 .cs-hero h1 {{
-  font-size: clamp(3rem, 8vw, 5.8rem); font-weight: 850; letter-spacing:-.045em;
-  line-height:.95; margin:.1em 0; color: var(--ink);
+  font-family: var(--serif); font-size: clamp(3.2rem, 8vw, 6rem); font-weight: 400;
+  letter-spacing:-.03em; line-height:.98; margin:.06em 0; color: var(--ink);
 }}
-.cs-hero h1 span {{
-  background: linear-gradient(96deg, var(--ember), var(--amber));
-  -webkit-background-clip: text; background-clip: text; color: transparent;
+.cs-hero h1 em {{ font-style: italic; color: var(--clay); }}
+.cs-hero p.cs-lede {{
+  font-size: 1.2rem; color: var(--ink-soft); max-width: 46ch; line-height:1.6; margin-top:.6rem;
 }}
-.cs-hero p.cs-lede {{ font-size: 1.24rem; color: var(--ink-soft); max-width: 46ch; line-height:1.55; }}
-.cs-hero-art {{ width:100%; border-radius: 18px; }}
+.cs-hero-art {{ width:100%; border-radius: 4px; }}
 .cs-scroll-hint {{
   display:flex; flex-direction:column; align-items:center; gap:6px;
-  margin-top: 22px; color: var(--ink-soft); font-size:.82rem; letter-spacing:.16em; text-transform:uppercase;
+  margin-top: 22px; color: var(--ink-soft); font-size:.78rem; letter-spacing:.16em; text-transform:uppercase;
 }}
 .cs-scroll-hint svg {{ animation: csBob 1.7s ease-in-out infinite; }}
 
-/* ---------- sections: hairlines, not boxes ---------- */
-.cs-section {{ padding: 64px 0 12px 0; scroll-margin-top: 76px; }}
-.cs-rule {{ height:1px; background: linear-gradient(90deg, var(--line), transparent); margin: 8px 0 0 0; }}
+/* ---------- sections ---------- */
+.cs-section {{ padding: 76px 0 10px 0; scroll-margin-top: 78px; }}
+.cs-rule {{ height:1px; background: var(--line); margin: 6px 0 0 0; }}
 .cs-eyebrow {{
-  font-size:.74rem; font-weight:700; letter-spacing:.2em; text-transform:uppercase;
-  color: var(--ember); margin-bottom:10px;
+  font-size:.72rem; font-weight:600; letter-spacing:.18em; text-transform:uppercase;
+  color: var(--clay); margin-bottom:12px;
 }}
-.cs-section h2 {{ font-size: clamp(1.8rem,3.6vw,2.7rem); font-weight:800; letter-spacing:-.03em; margin:0 0 14px 0; color: var(--ink); }}
-.cs-section p {{ color: var(--ink-soft); font-size:1.04rem; line-height:1.7; max-width: 74ch; }}
+.cs-section h2 {{
+  font-family: var(--serif); font-size: clamp(1.9rem,3.6vw,2.9rem); font-weight:400;
+  letter-spacing:-.02em; margin:0 0 16px 0; color: var(--ink); line-height:1.12;
+}}
+.cs-section p {{ color: var(--ink-soft); font-size:1.05rem; line-height:1.72; max-width: 68ch; }}
 
-/* A "card" is now just a left accent rule and space — no floating panel. */
-.cs-card {{
-  border-left: 2px solid var(--accent, var(--line)); padding: 4px 0 14px 18px;
-  margin-bottom: 20px; position: relative;
-  transition: border-color .22s ease, transform .22s ease;
-}}
-.cs-card:hover {{ transform: translateX(3px); }}
+/* A feature is a hairline and space. No panel, no border, no shadow. */
+.cs-card {{ padding: 2px 0 18px 0; margin-bottom: 18px; border-top: 1px solid var(--line); }}
 .cs-card-icon {{
-  display:inline-flex; align-items:center; justify-content:center;
-  width:34px; height:34px; border-radius:10px; font-size:1rem; margin-bottom:8px;
+  display:inline-block; font-size:.7rem; font-weight:600; letter-spacing:.14em;
+  text-transform:uppercase; color: var(--accent, var(--clay)); margin: 14px 0 6px 0;
 }}
+.cs-card h3 {{ margin:0 0 .4rem 0; font-size:1.08rem; font-weight:600; color: var(--ink); }}
+.cs-card p {{ font-size:.96rem; margin:0; color: var(--ink-soft); line-height:1.66; }}
 
-/* A figure sitting beside the copy, so a text section is never only text. */
-.cs-figure {{
-  border:1px solid var(--line); border-radius:16px; padding:20px 22px;
-  background: radial-gradient(120% 100% at 100% 0%, rgba(232,160,32,.08), transparent 60%);
-}}
+.cs-figure {{ padding-top: 6px; }}
 .cs-figure-label {{
-  font-size:.74rem; letter-spacing:.16em; text-transform:uppercase;
-  color:var(--ink-soft); font-weight:700; margin-bottom:14px;
+  font-size:.72rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-soft); font-weight:600; margin-bottom:16px;
 }}
-.cs-figure-note {{ font-size:.86rem; color:var(--ink-soft); margin:12px 0 0 0; line-height:1.6; }}
+.cs-figure-note {{ font-size:.88rem; color:var(--ink-soft); margin:14px 0 0 0; line-height:1.6; }}
 
-/* Stats read as a figure plus a ring, not a number in a box. */
-.cs-stat-row {{ display:flex; align-items:center; gap:16px; }}
-.cs-stat-ring {{ flex:0 0 auto; filter: drop-shadow(0 0 18px var(--accent)); opacity:.95; }}
-.cs-stat-label {{ font-size:.9rem; color:var(--ink-soft); margin:2px 0 0 0; line-height:1.5; }}
-.cs-card h3 {{ margin:.1rem 0 .45rem 0; font-size:1.04rem; font-weight:720; color: var(--ink); }}
-.cs-card p {{ font-size:.94rem; margin:0; color: var(--ink-soft); line-height:1.62; }}
+/* Statistics: the number is the element. */
+.cs-stat-row {{ border-top:1px solid var(--line); padding-top:16px; }}
 .cs-stat {{
-  font-size:2.3rem; font-weight:840; letter-spacing:-.035em; line-height:1;
-  color: var(--accent, var(--amber)); margin-bottom:2px;
+  font-family: var(--serif); font-size:3.4rem; font-weight:400; letter-spacing:-.03em;
+  line-height:1; color: var(--accent, var(--ink)); margin-bottom:8px;
 }}
-.cs-shot {{ border-radius:16px; overflow:hidden; border:1px solid var(--line); }}
+.cs-stat-label {{ font-size:.92rem; color:var(--ink-soft); margin:0; line-height:1.55; max-width:34ch; }}
 
-/* the department strip on the landing page */
-.cs-strip {{ display:flex; flex-wrap:wrap; gap:10px; margin-top:10px; }}
+/* the department strip */
+.cs-strip {{ display:flex; flex-wrap:wrap; gap:0; margin-top:18px; border-top:1px solid var(--line); }}
 .cs-step {{
-  display:flex; align-items:center; gap:9px; padding:9px 15px; border-radius:999px;
-  border:1px solid var(--line); color:var(--ink-soft); font-size:.88rem; font-weight:600;
-  transition: border-color .2s ease, color .2s ease, transform .2s ease;
+  display:flex; align-items:center; gap:8px; padding:14px 22px 14px 0;
+  margin-right:22px; color:var(--ink-soft); font-size:.92rem; font-weight:500;
+  border-bottom:1px solid transparent; transition: color .2s ease, border-color .2s ease;
 }}
-.cs-step:hover {{ border-color: var(--amber); color: var(--ink); transform: translateY(-2px); }}
-.cs-step b {{ color: var(--ink); font-weight:750; }}
+.cs-step:hover {{ color: var(--ink); border-bottom-color: var(--clay); }}
+.cs-step b {{ color: var(--ink); font-weight:600; }}
 
-/* ---------- tool ---------- */
-.cs-toolbar {{
-  display:flex; align-items:center; gap:14px; padding:8px 2px 12px 2px;
-  border-bottom:1px solid var(--line); margin-bottom: 10px;
+/* ---------- the tool's headline figures ---------- */
+.cs-readout {{ display:flex; flex-wrap:wrap; gap:0 clamp(24px,3.2vw,60px); align-items:flex-end; }}
+.cs-metric {{ padding: 4px 0 10px 0; }}
+.cs-metric-label {{
+  font-size:.7rem; letter-spacing:.14em; text-transform:uppercase;
+  color:var(--ink-soft); font-weight:600; margin-bottom:6px;
 }}
+.cs-metric-value {{
+  font-family: var(--serif); font-weight:400; letter-spacing:-.03em; line-height:1;
+  font-size: clamp(1.8rem, 2.4vw, 2.6rem); color: var(--ink);
+}}
+.cs-metric-value .cs-unit {{ font-size:.4em; color:var(--ink-soft); margin-left:.3em; letter-spacing:0; }}
+.cs-metric-lead .cs-metric-value {{ font-size: clamp(2.9rem, 4.6vw, 4.8rem); color: var(--clay); }}
+.cs-metric-lead .cs-metric-label {{ color: var(--clay); }}
+.cs-readout-note {{ color:var(--ink-soft); font-size:.85rem; margin:4px 0 0 0; }}
 
-/* The drawer is the one deliberately raised surface: opening it should feel
-   like a menu came forward over the page. */
-.st-key-cs_drawer {{
-  background: linear-gradient(180deg, var(--surface-hi), var(--surface));
-  border:1px solid rgba(255,255,255,.16) !important; border-radius:16px;
-  padding:18px 18px 22px 18px;
-  box-shadow: 0 24px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.45);
-  animation: csSlideIn .28s cubic-bezier(.22,.61,.36,1) both;
-  /* The drawer stays put and scrolls on its own. `overscroll-behavior:contain`
-     is what stops a wheel over the drawer from scrolling the page underneath
-     once the drawer reaches its end. */
-  position: sticky; top: 10px;
-  max-height: calc(100vh - 24px);
+/* ---------- inputs drawer ---------- */
+/* Sticky has to sit on the column itself: Streamlit's scroll container is the
+   main block, and a sticky element inside the bordered wrapper would scroll
+   away with it. `align-self:flex-start` stops the column stretching to the row
+   height, which would otherwise leave nothing to stick to. */
+div[data-testid="stColumn"]:has(.st-key-cs_drawer) {{
+  position: sticky; top: 8px; align-self: flex-start;
+  max-height: calc(100vh - 20px);
   overflow-y: auto; overscroll-behavior: contain;
-  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.22) transparent;
+  scrollbar-width: thin; scrollbar-color: rgba(20,20,19,.2) transparent;
 }}
-.st-key-cs_drawer::-webkit-scrollbar {{ width: 9px; }}
-.st-key-cs_drawer::-webkit-scrollbar-thumb {{
-  background: rgba(255,255,255,.18); border-radius: 999px;
+div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar {{ width: 8px; }}
+div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar-thumb {{
+  background: rgba(20,20,19,.18); border-radius: 999px;
 }}
-/* Checkboxes carry the state of the route, so they need to read clearly. */
-.st-key-cs_drawer label[data-baseweb="checkbox"] {{ font-size:.92rem; }}
-.st-key-cs_drawer details[data-testid="stExpander"] summary {{ font-weight:650; }}
-/* Nothing inside the drawer should draw its own second border. */
+.st-key-cs_drawer {{
+  background: var(--surface);
+  border: none !important; border-right: 1px solid var(--line) !important;
+  border-radius: 0; padding: 20px 22px 26px 20px;
+  animation: csSlideIn .26s cubic-bezier(.22,.61,.36,1) both;
+}}
 .st-key-cs_drawer div[data-testid="stVerticalBlockBorderWrapper"] {{ border:none !important; }}
 .cs-drawer-title {{
-  display:flex; align-items:center; gap:9px; font-weight:780; font-size:1.02rem;
-  letter-spacing:-.01em; color:var(--ink); margin-bottom:2px;
+  font-family: var(--serif); font-size:1.35rem; font-weight:400; letter-spacing:-.02em;
+  color:var(--ink); margin-bottom:2px;
 }}
-.cs-drawer-sub {{ color:var(--ink-soft); font-size:.85rem; margin:2px 0 14px 0; }}
-.cs-panel-art {{ width:100%; border-radius:12px; display:block; }}
+.cs-drawer-sub {{ color:var(--ink-soft); font-size:.86rem; margin:2px 0 16px 0; }}
+.cs-panel-art {{ width:100%; border-radius:4px; display:block; }}
 
-/* Graphs: full-width, one per screen, but without the dead air the old
-   72vh centred stage produced between them. */
-.cs-stage {{ padding: 2px 0 6px 0; }}
-.cs-stage h3 {{ margin-bottom:2px; }}
+.cs-stage {{ padding: 4px 0 8px 0; }}
+.cs-stage h3 {{ font-family: var(--serif); font-weight:400; letter-spacing:-.02em; margin-bottom:2px; }}
 
 .cs-chip {{
-  display:inline-block; padding:3px 11px; border-radius:999px;
-  font-size:.75rem; font-weight:650; background: rgba(47,127,181,.20); color: #7fc0ec;
+  display:inline-block; padding:2px 0; margin-right:16px;
+  font-size:.8rem; font-weight:600; color: var(--steel); background:none;
 }}
-.cs-chip-warn {{ background: rgba(232,160,32,.20); color:#f0bd5e; }}
-.cs-chip-good {{ background: rgba(31,138,95,.22); color:#5fd3a2; }}
-.cs-band {{ width:100%; height:56px; border-radius:12px 12px 0 0; display:block; }}
+.cs-chip-warn {{ color:#9a6f12; }}
+.cs-chip-good {{ color: var(--green); }}
+.cs-band {{ width:100%; height:44px; border-radius:0; display:block; }}
 .cs-band-title {{
-  margin-top:-56px; height:56px; display:flex; align-items:center; gap:10px;
-  padding:0 18px; color:#fff; font-weight:760; position:relative; letter-spacing:-.01em;
+  margin-top:-44px; height:44px; display:flex; align-items:center; gap:9px;
+  padding:0 14px; color:var(--ink); font-weight:600; position:relative; letter-spacing:-.01em;
 }}
-div[data-testid="stMetricValue"] {{ font-size: clamp(1.05rem, 1.6vw, 1.8rem); }}
-div[data-testid="stMetricLabel"] p {{ font-size: .82rem; color: var(--ink-soft); }}
 
 /* ---------- Streamlit widget polish ---------- */
-/* Sliders glide to a new value instead of snapping, which matters when
-   normalising moves seven of them at once. */
-div[data-testid="stSlider"] [role="slider"],
-div[data-testid="stSlider"] [data-baseweb="slider"] > div > div {{
-  transition: left .38s cubic-bezier(.22,.61,.36,1), transform .18s ease;
+h1, h2, h3, h4 {{ font-family: var(--serif); font-weight: 400; letter-spacing:-.02em; }}
+/* Streamlit's per-heading anchor link is noise on a page with no deep links. */
+.stMarkdown a[href^="#"] svg, [data-testid="stHeaderActionElements"] {{ display:none !important; }}
+.stButton button {{
+  border-radius: 6px; border:1px solid var(--line); font-weight:550;
+  transition: border-color .18s ease, color .18s ease;
 }}
-div[data-testid="stSlider"] [data-testid="stSliderThumbValue"] {{ color: var(--amber); font-weight:700; }}
+.stButton button:hover {{ border-color: var(--clay); color: var(--clay); }}
+div[data-testid="stSlider"] [data-testid="stSliderThumbValue"] {{ color: var(--clay); font-weight:600; }}
+div[data-testid="stSlider"] [data-baseweb="slider"] > div > div {{
+  transition: left .36s cubic-bezier(.22,.61,.36,1);
+}}
 
-/* The view switcher, styled to read like the database page's tab strip. */
+/* The view switcher, as a tab strip. */
 div[data-testid="stButtonGroup"] button {{
   border:none !important; background:transparent !important; border-radius:0 !important;
-  color: var(--ink-soft) !important; font-weight:650 !important;
-  padding: 8px 2px !important; margin-right: 26px !important;
-  border-bottom: 2px solid transparent !important;
+  color: var(--ink-soft) !important; font-weight:550 !important;
+  padding: 9px 2px !important; margin-right: 30px !important;
+  border-bottom: 1px solid transparent !important;
 }}
 div[data-testid="stButtonGroup"] button:hover {{ color: var(--ink) !important; }}
 div[data-testid="stButtonGroup"] button[aria-checked="true"],
-div[data-testid="stButtonGroup"] button[aria-pressed="true"],
-div[data-testid="stButtonGroup"] button[kind="segmented_controlActive"] {{
-  color: var(--ink) !important; border-bottom-color: var(--ember) !important;
+div[data-testid="stButtonGroup"] button[aria-pressed="true"] {{
+  color: var(--ink) !important; border-bottom-color: var(--clay) !important;
   background: transparent !important;
 }}
 div[data-testid="stButtonGroup"] {{
-  border-bottom: 1px solid var(--line); margin-bottom: 12px; gap: 0 !important;
+  border-bottom: 1px solid var(--line); margin-bottom: 14px; gap: 0 !important;
 }}
+button[data-baseweb="tab"] {{ font-weight:550; }}
+div[data-baseweb="tab-highlight"] {{ background-color: var(--clay) !important; }}
 
-/* Tabs, so the database page and the tool agree. */
-button[data-baseweb="tab"] {{ font-weight:650; }}
-div[data-baseweb="tab-highlight"] {{ background-color: var(--ember) !important; }}
-
-/* Expanders read as sections, not as boxes stacked on boxes. */
+/* Expanders read as rows in a list, not stacked boxes. */
 details[data-testid="stExpander"] {{
-  border:none !important; border-top:1px solid var(--line) !important;
+  border:none !important; border-bottom:1px solid var(--line) !important;
   border-radius:0 !important; background:transparent !important;
 }}
-details[data-testid="stExpander"] summary {{ padding-left:0 !important; }}
+details[data-testid="stExpander"] summary {{ padding-left:0 !important; font-weight:550; }}
 
-/* A long coefficient note is a scrollable block, not a page-wide text dump. */
 .cs-note {{
-  max-height: 320px; overflow-y: auto; padding: 14px 16px; border-radius: 12px;
-  background: rgba(255,255,255,.03); border:1px solid var(--line);
-  color: var(--ink-soft); font-size:.86rem; line-height:1.62;
+  max-height: 320px; overflow-y: auto; padding: 16px 18px; border-radius: 6px;
+  background: var(--surface); border:1px solid var(--line);
+  color: var(--ink-soft); font-size:.86rem; line-height:1.64;
   white-space: pre-wrap; overflow-wrap: anywhere;
 }}
 
 /* ---------- loading ---------- */
 .cs-splash {{ min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; }}
-.cs-splash h1 {{ font-size: clamp(2.2rem,5vw,3.4rem); font-weight:850; letter-spacing:-.04em; animation: csFade .8s ease both; color: var(--ink); }}
+.cs-splash h1 {{
+  font-family: var(--serif); font-size: clamp(2.4rem,5vw,3.6rem); font-weight:400;
+  letter-spacing:-.03em; animation: csFade .8s ease both; color: var(--ink);
+}}
 .cs-splash p {{ color: var(--ink-soft); animation: csFade .8s .3s ease both; }}
-.cs-loadbar {{ width:min(420px,70vw); height:5px; border-radius:999px; background: rgba(255,255,255,.10); overflow:hidden; }}
+.cs-loadbar {{ width:min(420px,70vw); height:3px; border-radius:999px; background: rgba(20,20,19,.10); overflow:hidden; }}
 .cs-loadbar i {{
-  display:block; width:34%; height:100%; border-radius:999px;
-  background: linear-gradient(90deg, var(--ember), var(--amber));
+  display:block; width:34%; height:100%; border-radius:999px; background: var(--clay);
   animation: csSweep 1s ease-in-out infinite;
 }}
 

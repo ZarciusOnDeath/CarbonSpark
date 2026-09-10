@@ -8,7 +8,7 @@ import streamlit as st
 from carbon_calc.model import Dataset
 
 from .state import go
-from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, gauge, hero_art, scope_bars, spark_mark
+from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, hero_art, scope_bars, spark_mark
 
 CHEVRON = """
 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -38,7 +38,7 @@ def _hero() -> None:
             f"""
 <div class="cs-hero">
   <div class="cs-rise cs-eyebrow">Carbon &amp; energy intelligence for steelmaking</div>
-  <h1 class="cs-rise">Carbon<span>Spark</span></h1>
+  <h1 class="cs-rise">Carbon<em>Spark</em></h1>
   <p class="cs-lede cs-rise-2">
     See what a tonne of stainless steel really costs in carbon — and find the
     combination of scrap, energy and process route that costs less.
@@ -68,13 +68,13 @@ def _info(dataset: Dataset) -> None:
         unsafe_allow_html=True,
     )
     cards = [
-        (EMBER, "\U0001f525", "Scope 1, 2 and 3",
+        (EMBER, "Accounting", "Scope 1, 2 and 3",
          "Direct combustion, purchased electricity and upstream Cat. 1-8, split out per "
          "department and per process step."),
-        (AMBER, "\u26a1", "Every lever, live",
+        (AMBER, "Control", "Every lever, live",
          "Scrap ratio, seven electricity sources, rail-versus-road haulage on each leg and "
          "the technology at each of 48 stages."),
-        (STEEL, "\U0001f9ed", "A lower-carbon answer",
+        (STEEL, "Search", "A lower-carbon answer",
          "An optimiser that searches the whole space under your own practical constraints "
          "and returns the route that costs least."),
     ]
@@ -83,8 +83,8 @@ def _info(dataset: Dataset) -> None:
         for colour, icon, title, body in cards:
             st.markdown(
                 f'<div class="cs-card cs-rise" style="--accent:{colour}">'
-                f'<div class="cs-card-icon" style="background:{colour}22;color:{colour}">'
-                f"{icon}</div><h3>{title}</h3><p>{body}</p></div>",
+                f'<div class="cs-card-icon">{icon}</div>'
+                f"<h3>{title}</h3><p>{body}</p></div>",
                 unsafe_allow_html=True,
             )
     with right:
@@ -179,12 +179,11 @@ def _why() -> None:
         (STEEL, 1.00, "48", "process stages you can reconfigure, from raw material handling "
                             "to despatch"),
     ]
-    for column, (colour, fraction, figure, label) in zip(st.columns(3, gap="large"), stats):
+    for column, (colour, _, figure, label) in zip(st.columns(3, gap="large"), stats):
         column.markdown(
             f'<div class="cs-stat-row cs-rise" style="--accent:{colour}">'
-            f'<div class="cs-stat-ring">{gauge(fraction, colour, label)}</div>'
-            f'<div><div class="cs-stat">{figure}</div>'
-            f'<p class="cs-stat-label">{label}</p></div></div>',
+            f'<div class="cs-stat">{figure}</div>'
+            f'<p class="cs-stat-label">{label}</p></div>',
             unsafe_allow_html=True,
         )
 

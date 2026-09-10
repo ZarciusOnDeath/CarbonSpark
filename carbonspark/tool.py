@@ -497,18 +497,35 @@ def _drawer(dataset: Dataset, stages) -> None:
 # --------------------------------------------------------------------------- #
 # Result views
 # --------------------------------------------------------------------------- #
+def _metric(label: str, value: str, unit: str, *, lead: bool = False) -> str:
+    """One figure in the readout. The number is the element; the unit recedes."""
+    classes = "cs-metric cs-metric-lead" if lead else "cs-metric"
+    return (
+        f'<div class="{classes}"><div class="cs-metric-label">{label}</div>'
+        f'<div class="cs-metric-value">{value}<span class="cs-unit">{unit}</span></div></div>'
+    )
+
+
 def _headline(result: Result, dataset: Dataset) -> None:
-    columns = st.columns(5)
-    columns[0].metric("Total CO₂e", f"{result.total_co2e:.3f} t/t")
-    columns[1].metric("Scope 1", f"{result.totals['scope1']:.3f} t/t")
-    columns[2].metric("Scope 2", f"{result.totals['scope2']:.3f} t/t")
-    columns[3].metric("Scope 3 upstream", f"{result.totals['scope3']:.3f} t/t")
-    columns[4].metric("Specific energy", f"{result.energy_gj:.1f} GJ/t")
+    """The scenario's figures, sized so they read before anything else does."""
     kwh = result.electricity_kwh
-    st.caption(
-        f"Scrap y = {result.scrap_ratio:.0%} · rail p = {result.train_share:.0%} · "
-        f"grid {result.grid_factor:.3f} kg CO₂e/kWh · "
-        f"electricity ≈ {'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}"
+    figures = "".join(
+        (
+            _metric("Total CO\u2082e", f"{result.total_co2e:.3f}", "t/t", lead=True),
+            _metric("Scope 1", f"{result.totals['scope1']:.3f}", "t/t"),
+            _metric("Scope 2", f"{result.totals['scope2']:.3f}", "t/t"),
+            _metric("Scope 3 upstream", f"{result.totals['scope3']:.3f}", "t/t"),
+            _metric("Specific energy", f"{result.energy_gj:.1f}", "GJ/t"),
+        )
+    )
+    st.markdown(
+        f'<div class="cs-readout">{figures}</div>'
+        f'<p class="cs-readout-note">scrap y = {result.scrap_ratio:.0%} '
+        f"\u00b7 rail p = {result.train_share:.0%} "
+        f"\u00b7 grid {result.grid_factor:.3f} kg CO\u2082e/kWh "
+        f"\u00b7 electricity \u2248 "
+        f"{'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}</p>",
+        unsafe_allow_html=True,
     )
 
 
@@ -541,6 +558,17 @@ def _profile_banner(stages) -> None:
         st.error(f"Profile could not be applied fully — {problem}")
 
 
+def _chart_key(name: str) -> str:
+    """A chart key that is stable while values change, but not across layouts.
+
+    A stable key is what lets Plotly tween the bars between renders instead of
+    repainting them. It also makes the component keep its measured width, so the
+    key carries the drawer state: opening or closing the drawer changes the
+    column width and must remount the chart, while moving a slider must not.
+    """
+    return f"{name}_{'open' if st.session_state.drawer_open else 'closed'}"
+
+
 def _dashboard(result: Result, dataset: Dataset, stages) -> None:
     _profile_banner(stages)
 
@@ -550,6 +578,7 @@ def _dashboard(result: Result, dataset: Dataset, stages) -> None:
         charts.scope_breakdown(result),
         use_container_width=True,
         config=charts.PLOT_CONFIG,
+        key=_chart_key("chart_scopes"),
     )
     st.markdown("</div>", unsafe_allow_html=True)
     st.markdown(
@@ -562,6 +591,7 @@ def _dashboard(result: Result, dataset: Dataset, stages) -> None:
         charts.department_breakdown(result),
         use_container_width=True,
         config=charts.PLOT_CONFIG,
+        key=_chart_key("chart_departments"),
     )
     st.markdown("</div>", unsafe_allow_html=True)
 

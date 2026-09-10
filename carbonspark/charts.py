@@ -1,9 +1,18 @@
 """Figures for CarbonSpark.
 
-Every figure is locked against zoom and pan: both axes are ``fixedrange``,
-``dragmode`` is off, and ``PLOT_CONFIG`` hides the mode bar and disables scroll
-zoom. Hover stays on, so a reader can still interrogate a value — what goes is
-the accidental zoom that made the charts confusing.
+Three decisions shape every figure here.
+
+*No zoom.* Both axes are ``fixedrange``, ``dragmode`` is off and ``PLOT_CONFIG``
+hides the mode bar, so the accidental zoom that made the charts confusing is
+gone. Hover stays, so a value can still be interrogated.
+
+*A fixed scale.* The x-axis is pinned to a reference span rather than rescaled
+to whatever the current bars happen to be. An axis that follows its own data
+makes every scenario look the same size; a fixed one lets a route that halves
+its carbon visibly halve.
+
+*Motion.* ``layout.transition`` plus a stable chart key means Plotly tweens the
+bars from their old values to their new ones, instead of repainting them.
 """
 
 from __future__ import annotations
@@ -14,7 +23,10 @@ import plotly.graph_objects as go
 
 from carbon_calc.model import SCOPES, Result
 
-from .theme import AMBER, GREEN, INK, SCOPE_COLOURS, SCOPE_NAMES, STEEL
+from .theme import AMBER, GREEN, INK, LINE, SCOPE_COLOURS, SCOPE_NAMES, STEEL
+
+#: Grid and zero lines, recessive against the paper ground.
+GRID = LINE
 
 #: Passed to every ``st.plotly_chart`` call.
 PLOT_CONFIG = {
@@ -27,11 +39,20 @@ PLOT_CONFIG = {
 
 _FONT = dict(family="Inter, Segoe UI, system-ui, sans-serif", color=INK, size=14)
 
+#: Bars tween to their new values rather than jumping there.
+_TRANSITION = dict(duration=520, easing="cubic-in-out")
+
+#: The x-axis span, in tCO2e/t, that the scope and department charts are drawn
+#: against. It is a little above the default route's own total so a heavier
+#: scenario still fits, and it never moves — that is the point of it.
+SCOPE_AXIS_MAX = 4.2
+DEPARTMENT_AXIS_MAX = 4.2
+
 
 def _lock(figure: go.Figure, height: int) -> go.Figure:
     """Disable zoom/pan and apply the shared chart styling."""
-    figure.update_xaxes(fixedrange=True)
-    figure.update_yaxes(fixedrange=True)
+    figure.update_xaxes(fixedrange=True, gridcolor=GRID, zerolinecolor=GRID)
+    figure.update_yaxes(fixedrange=True, gridcolor=GRID, zerolinecolor=GRID)
     figure.update_layout(
         dragmode=False,
         height=height,
@@ -40,6 +61,7 @@ def _lock(figure: go.Figure, height: int) -> go.Figure:
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=10, r=10, t=30, b=10),
         hoverlabel=dict(font_size=13),
+        transition=_TRANSITION,
     )
     return figure
 
@@ -60,9 +82,9 @@ def scope_breakdown(result: Result, height: int = 520) -> go.Figure:
         )
     )
     figure.update_layout(
-        xaxis_title="tCO2e per tonne of steel",
+        xaxis=dict(title="tCO2e per tonne of steel", range=[0, SCOPE_AXIS_MAX]),
         yaxis_title=None,
-        bargap=0.35,
+        bargap=0.42,
     )
     return _lock(figure, height)
 
@@ -85,10 +107,13 @@ def department_breakdown(result: Result, height: int = 520) -> go.Figure:
         )
     figure.update_layout(
         barmode="stack",
-        xaxis_title="tCO2e per tonne of steel",
-        legend=dict(orientation="h", yanchor="bottom", y=1.02, x=0),
+        bargap=0.34,
+        xaxis=dict(title="tCO2e per tonne of steel", range=[0, DEPARTMENT_AXIS_MAX]),
+        # Below the plot, anchored to the top of its own band: an overlay legend
+        # sat on the widest bar and hid the very numbers it was labelling.
+        legend=dict(orientation="h", yanchor="top", y=-0.14, x=0),
         legend_title_text="",
-        margin=dict(l=10, r=10, t=54, b=48),
+        margin=dict(l=10, r=10, t=18, b=96),
     )
     return _lock(figure, height)
 

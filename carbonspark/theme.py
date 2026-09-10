@@ -10,20 +10,22 @@ from __future__ import annotations
 # --------------------------------------------------------------------------- #
 # Palette
 # --------------------------------------------------------------------------- #
-# The palette is dark-first: CarbonSpark pins a dark Streamlit theme in
-# .streamlit/config.toml, so INK is the colour text is drawn *in* and PAPER is
-# the ground it sits on — not the other way round.
-INK = "#e8edf3"          # primary text
-INK_SOFT = "#93a1b1"     # secondary text
-PAPER = "#0b1017"        # page ground
-SURFACE = "#121a24"      # raised surface (drawer, panels)
-SURFACE_HI = "#1b2634"   # hover / selected surface
-LINE = "rgba(255,255,255,0.10)"
-EMBER = "#d94f2b"        # furnace / Scope 1
-AMBER = "#e8a020"        # electricity / Scope 2
-STEEL = "#2f7fb5"        # upstream / Scope 3
-GREEN = "#1f8a5f"        # savings
-SLATE = "#243447"
+# A warm, paper-like scheme: near-black ink on cream, one clay accent, and
+# hairline rules instead of panels. The three scope colours are a validated
+# categorical set — worst-pair CVD Delta E 17.7, normal-vision 24.1 on this
+# surface — so the charts stay readable to colour-blind readers.
+INK = "#141413"          # primary text
+INK_SOFT = "#6b6a63"     # secondary text
+PAPER = "#faf9f5"        # page ground
+SURFACE = "#f2f0e9"      # recessed surface (drawer, code, notes)
+SURFACE_HI = "#eae7dd"   # hover / selected surface
+LINE = "rgba(20,20,19,0.12)"
+CLAY = "#c1633f"         # the accent: links, focus, the brand mark
+EMBER = "#a8402a"        # furnace / Scope 1
+AMBER = "#d2a028"        # electricity / Scope 2
+STEEL = "#1f6e9e"        # upstream / Scope 3
+GREEN = "#3f7d58"        # savings
+SLATE = "#3a3833"
 
 SCOPE_COLOURS = {"scope1": EMBER, "scope2": AMBER, "scope3": STEEL}
 SCOPE_NAMES = {
@@ -53,49 +55,49 @@ def hero_art() -> str:
 <svg viewBox="0 0 720 420" class="cs-hero-art" role="img" aria-label="Stainless steel plant illustration">
   <defs>
     <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="{SLATE}"/><stop offset="100%" stop-color="#0b1119"/>
+      <stop offset="0%" stop-color="#efece3"/><stop offset="100%" stop-color="#e2ded1"/>
     </linearGradient>
     <radialGradient id="glow" cx="50%" cy="50%">
-      <stop offset="0%" stop-color="{AMBER}" stop-opacity="0.95"/>
-      <stop offset="55%" stop-color="{EMBER}" stop-opacity="0.45"/>
+      <stop offset="0%" stop-color="{AMBER}" stop-opacity="0.85"/>
+      <stop offset="55%" stop-color="{EMBER}" stop-opacity="0.30"/>
       <stop offset="100%" stop-color="{EMBER}" stop-opacity="0"/>
     </radialGradient>
     <linearGradient id="pour" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0%" stop-color="#fff2c4"/><stop offset="60%" stop-color="{AMBER}"/>
+      <stop offset="0%" stop-color="#f6dfa6"/><stop offset="60%" stop-color="{AMBER}"/>
       <stop offset="100%" stop-color="{EMBER}"/>
     </linearGradient>
   </defs>
   <rect width="720" height="420" fill="url(#sky)"/>
-  <path d="M0 300 H720" stroke="#54637a" stroke-width="1.5" opacity="0.35" fill="none"/>
+  <path d="M0 300 H720" stroke="{SLATE}" stroke-width="1.5" opacity="0.25" fill="none"/>
   <!-- mill housings -->
-  <g fill="#1b2735" stroke="#33455c" stroke-width="2">
+  <g fill="#ded8c7" stroke="#a89f8b" stroke-width="2">
     <rect x="70" y="196" width="86" height="104" rx="4"/>
     <rect x="565" y="214" width="78" height="86" rx="4"/>
   </g>
   <!-- coil -->
   <g transform="translate(604,257)">
-    <circle r="27" fill="#22303f" stroke="#4d6480" stroke-width="2"/>
-    <circle r="17" fill="none" stroke="#6d8095" stroke-width="2"/>
+    <circle r="27" fill="#ddd8c9" stroke="#b9b1a0" stroke-width="2"/>
+    <circle r="17" fill="none" stroke="#a79f8e" stroke-width="2"/>
     <circle r="8" fill="{STEEL}" opacity="0.65"/>
   </g>
   <!-- ladle glow -->
   <circle cx="330" cy="250" r="150" fill="url(#glow)" class="cs-pulse"/>
   <!-- ladle -->
   <g transform="translate(268,120)">
-    <path d="M4 0 h116 l-13 74 a52 52 0 0 1 -90 0 Z" fill="#2b3a4d" stroke="#54687f" stroke-width="3"/>
-    <rect x="-12" y="-8" width="140" height="14" rx="6" fill="#3c4f66"/>
+    <path d="M4 0 h116 l-13 74 a52 52 0 0 1 -90 0 Z" fill="#c8c0ad" stroke="{SLATE}" stroke-width="2.5"/>
+    <rect x="-12" y="-8" width="140" height="14" rx="6" fill="#b6ad99"/>
   </g>
   <!-- pour stream + sparks -->
   <path d="M330 190 q7 46 -3 84 q-8 30 3 26" stroke="url(#pour)" stroke-width="11"
         fill="none" stroke-linecap="round" class="cs-pour"/>
-  <ellipse cx="330" cy="302" rx="52" ry="12" fill="url(#pour)" opacity="0.85"/>
+  <ellipse cx="330" cy="302" rx="52" ry="12" fill="url(#pour)" opacity="0.95"/>
   <g fill="{AMBER}">
     <circle cx="300" cy="286" r="2.6" class="cs-spark cs-s1"/>
     <circle cx="356" cy="278" r="2.2" class="cs-spark cs-s2"/>
     <circle cx="341" cy="296" r="1.8" class="cs-spark cs-s3"/>
     <circle cx="313" cy="270" r="2.0" class="cs-spark cs-s2"/>
   </g>
-  <rect y="300" width="720" height="120" fill="#080d13"/>
+  <rect y="300" width="720" height="120" fill="#e0dbcb"/>
   <g stroke="{STEEL}" stroke-width="2" opacity="0.5" fill="none">
     <path d="M0 334 H720"/><path d="M0 352 H720"/>
   </g>
@@ -107,7 +109,7 @@ def panel_art(kind: str) -> str:
     if kind == "scrap":
         return f"""
 <svg viewBox="0 0 240 120" class="cs-panel-art" aria-hidden="true">
-  <rect width="240" height="120" rx="10" fill="#111b26"/>
+  <rect width="240" height="120" rx="10" fill="#efece3"/>
   <g opacity="0.9">
     <path d="M28 92 l26-34 22 20 20-30 24 26 22-40 26 34 18-16" fill="none"
           stroke="{STEEL}" stroke-width="4" stroke-linejoin="round" stroke-linecap="round"/>
@@ -123,14 +125,14 @@ def panel_art(kind: str) -> str:
     if kind == "grid":
         return f"""
 <svg viewBox="0 0 240 120" class="cs-panel-art" aria-hidden="true">
-  <rect width="240" height="120" rx="10" fill="#111b26"/>
+  <rect width="240" height="120" rx="10" fill="#efece3"/>
   <g transform="translate(62,60)" stroke="{GREEN}" stroke-width="5" stroke-linecap="round">
     <line x1="0" y1="0" x2="0" y2="-30" class="cs-spin-a"/>
     <line x1="0" y1="0" x2="26" y2="16" class="cs-spin-a"/>
     <line x1="0" y1="0" x2="-26" y2="16" class="cs-spin-a"/>
     <circle r="4" fill="{GREEN}" stroke="none"/>
   </g>
-  <line x1="62" y1="60" x2="62" y2="102" stroke="#3d5064" stroke-width="4"/>
+  <line x1="62" y1="60" x2="62" y2="102" stroke="#b3ab99" stroke-width="4"/>
   <g transform="translate(150,44)">
     <circle r="15" fill="{AMBER}" opacity="0.9"/>
     <g stroke="{AMBER}" stroke-width="3" stroke-linecap="round" opacity="0.75">
@@ -138,15 +140,15 @@ def panel_art(kind: str) -> str:
       <line x1="-24" y1="0" x2="-19" y2="0"/><line x1="19" y1="0" x2="24" y2="0"/>
     </g>
   </g>
-  <g fill="#1b2735" stroke="#41556c" stroke-width="2">
+  <g fill="#e2ded1" stroke="#b3ab99" stroke-width="2">
     <rect x="176" y="70" width="42" height="30" rx="3"/>
   </g>
-  <path d="M186 70 v-16 M198 70 v-22 M210 70 v-12" stroke="#5d7086" stroke-width="3"
+  <path d="M186 70 v-16 M198 70 v-22 M210 70 v-12" stroke="#a79f8e" stroke-width="3"
         stroke-linecap="round" fill="none"/>
 </svg>"""
     return f"""
 <svg viewBox="0 0 240 120" class="cs-panel-art" aria-hidden="true">
-  <rect width="240" height="120" rx="10" fill="#111b26"/>
+  <rect width="240" height="120" rx="10" fill="#efece3"/>
   <g fill="none" stroke="{STEEL}" stroke-width="3">
     <rect x="24" y="42" width="38" height="38" rx="5"/>
     <rect x="96" y="30" width="38" height="38" rx="5"/>
@@ -171,7 +173,7 @@ def scope_bars() -> str:
         f'<g transform="translate(0,{index * 46})">'
         f'<text x="0" y="14" fill="{INK_SOFT}" font-size="12" font-family="Inter,sans-serif">'
         f"{name}</text>"
-        f'<rect x="0" y="22" width="340" height="12" rx="6" fill="rgba(255,255,255,.06)"/>'
+        f'<rect x="0" y="22" width="340" height="12" rx="6" fill="rgba(20,20,19,.07)"/>'
         f'<rect x="0" y="22" width="{int(340 * width)}" height="12" rx="6" fill="{colour}"/>'
         "</g>"
         for index, (name, colour, width) in enumerate(rows)
@@ -181,21 +183,6 @@ def scope_bars() -> str:
         'aria-label="Scope 1, 2 and 3 shown as bars">'
         f"{bars}</svg>"
     )
-
-
-def gauge(fraction: float, colour: str, label: str) -> str:
-    """A ring showing one figure as a proportion of the whole."""
-    radius, circumference = 34.0, 2 * 3.14159 * 34.0
-    filled = max(0.0, min(1.0, fraction)) * circumference
-    return f"""
-<svg viewBox="0 0 88 88" width="88" height="88" role="img" aria-label="{label}">
-  <circle cx="44" cy="44" r="{radius}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/>
-  <circle cx="44" cy="44" r="{radius}" fill="none" stroke="{colour}" stroke-width="9"
-          stroke-linecap="round" stroke-dasharray="{filled:.1f} {circumference:.1f}"
-          transform="rotate(-90 44 44)"/>
-  <text x="44" y="49" text-anchor="middle" fill="{INK}" font-size="17" font-weight="700"
-        font-family="Inter,sans-serif">{fraction:.0%}</text>
-</svg>"""
 
 
 def section_band(kind: str) -> str:
@@ -213,7 +200,7 @@ def section_band(kind: str) -> str:
     colour, path = motifs.get(kind, (STEEL, "M20 40 h160"))
     return f"""
 <svg viewBox="0 0 240 80" preserveAspectRatio="none" class="cs-band" aria-hidden="true">
-  <rect width="240" height="80" fill="#0e1620"/>
+  <rect width="240" height="80" fill="#efece3"/>
   <path d="{path}" fill="none" stroke="{colour}" stroke-width="4"
         stroke-linecap="round" opacity="0.75"/>
 </svg>"""
@@ -223,6 +210,6 @@ def spark_mark(size: int = 34) -> str:
     """The CarbonSpark mark: a spark struck off a steel arc."""
     return f"""
 <svg viewBox="0 0 48 48" width="{size}" height="{size}" class="cs-mark" aria-hidden="true">
-  <circle cx="24" cy="24" r="21" fill="none" stroke="{STEEL}" stroke-width="3" opacity="0.65"/>
-  <path d="M26 6 L14 26 h9 l-3 16 L36 21 h-10 Z" fill="{AMBER}"/>
+  <circle cx="24" cy="24" r="20" fill="none" stroke="{INK}" stroke-width="1.5" opacity="0.35"/>
+  <path d="M26 6 L14 26 h9 l-3 16 L36 21 h-10 Z" fill="{CLAY}"/>
 </svg>"""
