@@ -8,7 +8,7 @@ import streamlit as st
 from carbon_calc.model import Dataset
 
 from .state import go
-from .theme import DEPARTMENT_ICONS, hero_art, spark_mark
+from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, gauge, hero_art, scope_bars, spark_mark
 
 CHEVRON = """
 <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor"
@@ -68,17 +68,33 @@ def _info(dataset: Dataset) -> None:
         unsafe_allow_html=True,
     )
     cards = [
-        ("Scope 1, 2 and 3", "Direct combustion, purchased electricity and upstream Cat. 1-8, "
-                             "split out per department and per process step."),
-        ("Every lever, live", "Scrap ratio, seven electricity sources, rail-versus-road haulage "
-                              "and the technology at each of 48 stages."),
-        ("A lower-carbon answer", "An optimiser that searches the whole space under your own "
-                                  "practical constraints and returns the route that costs least."),
+        (EMBER, "\U0001f525", "Scope 1, 2 and 3",
+         "Direct combustion, purchased electricity and upstream Cat. 1-8, split out per "
+         "department and per process step."),
+        (AMBER, "\u26a1", "Every lever, live",
+         "Scrap ratio, seven electricity sources, rail-versus-road haulage on each leg and "
+         "the technology at each of 48 stages."),
+        (STEEL, "\U0001f9ed", "A lower-carbon answer",
+         "An optimiser that searches the whole space under your own practical constraints "
+         "and returns the route that costs least."),
     ]
-    columns = st.columns(3, gap="medium")
-    for column, (title, body) in zip(columns, cards):
-        column.markdown(
-            f'<div class="cs-card cs-rise"><h3>{title}</h3><p>{body}</p></div>',
+    left, right = st.columns([1.25, 1], gap="large")
+    with left:
+        for colour, icon, title, body in cards:
+            st.markdown(
+                f'<div class="cs-card cs-rise" style="--accent:{colour}">'
+                f'<div class="cs-card-icon" style="background:{colour}22;color:{colour}">'
+                f"{icon}</div><h3>{title}</h3><p>{body}</p></div>",
+                unsafe_allow_html=True,
+            )
+    with right:
+        st.markdown(
+            '<div class="cs-figure cs-rise-2">'
+            '<div class="cs-figure-label">A default route, by scope</div>'
+            f"{scope_bars()}"
+            '<p class="cs-figure-note">Scope 2 dominates on today\u2019s Indian grid \u2014 '
+            "which is why the electricity mix is the biggest lever in the tool.</p>"
+            "</div>",
             unsafe_allow_html=True,
         )
 
@@ -157,14 +173,18 @@ def _why() -> None:
         unsafe_allow_html=True,
     )
     stats = [
-        ("~6.1", "tCO₂e per tonne on a default route at 40% scrap, today's Indian grid"),
-        ("Up to 72%", "lower under a practical constraint set the optimiser finds"),
-        ("48", "process stages you can reconfigure, from raw material handling to despatch"),
+        (EMBER, 0.56, "~6.1", "tCO\u2082e per tonne on a default route at 40% scrap, "
+                              "today\u2019s Indian grid"),
+        (AMBER, 0.72, "72%", "lower under a practical constraint set the optimiser finds"),
+        (STEEL, 1.00, "48", "process stages you can reconfigure, from raw material handling "
+                            "to despatch"),
     ]
-    columns = st.columns(3, gap="medium")
-    for column, (figure, label) in zip(columns, stats):
+    for column, (colour, fraction, figure, label) in zip(st.columns(3, gap="large"), stats):
         column.markdown(
-            f'<div class="cs-card"><div class="cs-stat">{figure}</div><p>{label}</p></div>',
+            f'<div class="cs-stat-row cs-rise" style="--accent:{colour}">'
+            f'<div class="cs-stat-ring">{gauge(fraction, colour, label)}</div>'
+            f'<div><div class="cs-stat">{figure}</div>'
+            f'<p class="cs-stat-label">{label}</p></div></div>',
             unsafe_allow_html=True,
         )
 

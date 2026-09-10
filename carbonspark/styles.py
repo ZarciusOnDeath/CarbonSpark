@@ -67,7 +67,13 @@ html {{ scroll-behavior: smooth; }}
 .cs-nav .cs-spacer {{ flex: 1; }}
 
 /* ---------- hero ---------- */
-.cs-hero {{ min-height: 72vh; display:flex; flex-direction:column; justify-content:center; padding: 24px 0 8px 0; }}
+.cs-hero::before {{
+  content:""; position:absolute; inset:0 auto auto 0; width:min(62vw,900px); height:520px;
+  background: radial-gradient(60% 60% at 20% 30%, rgba(217,79,43,.16), transparent 70%),
+              radial-gradient(50% 50% at 70% 10%, rgba(232,160,32,.12), transparent 70%);
+  pointer-events:none; z-index:-1; filter: blur(6px);
+}}
+.cs-hero {{ position:relative; min-height: 72vh; display:flex; flex-direction:column; justify-content:center; padding: 24px 0 8px 0; }}
 .cs-hero h1 {{
   font-size: clamp(3rem, 8vw, 5.8rem); font-weight: 850; letter-spacing:-.045em;
   line-height:.95; margin:.1em 0; color: var(--ink);
@@ -96,16 +102,36 @@ html {{ scroll-behavior: smooth; }}
 
 /* A "card" is now just a left accent rule and space — no floating panel. */
 .cs-card {{
-  border-left: 2px solid var(--line); padding: 4px 0 4px 18px; height:100%;
-  transition: border-color .22s ease;
+  border-left: 2px solid var(--accent, var(--line)); padding: 4px 0 14px 18px;
+  margin-bottom: 20px; position: relative;
+  transition: border-color .22s ease, transform .22s ease;
 }}
-.cs-card:hover {{ border-left-color: var(--ember); }}
+.cs-card:hover {{ transform: translateX(3px); }}
+.cs-card-icon {{
+  display:inline-flex; align-items:center; justify-content:center;
+  width:34px; height:34px; border-radius:10px; font-size:1rem; margin-bottom:8px;
+}}
+
+/* A figure sitting beside the copy, so a text section is never only text. */
+.cs-figure {{
+  border:1px solid var(--line); border-radius:16px; padding:20px 22px;
+  background: radial-gradient(120% 100% at 100% 0%, rgba(232,160,32,.08), transparent 60%);
+}}
+.cs-figure-label {{
+  font-size:.74rem; letter-spacing:.16em; text-transform:uppercase;
+  color:var(--ink-soft); font-weight:700; margin-bottom:14px;
+}}
+.cs-figure-note {{ font-size:.86rem; color:var(--ink-soft); margin:12px 0 0 0; line-height:1.6; }}
+
+/* Stats read as a figure plus a ring, not a number in a box. */
+.cs-stat-row {{ display:flex; align-items:center; gap:16px; }}
+.cs-stat-ring {{ flex:0 0 auto; filter: drop-shadow(0 0 18px var(--accent)); opacity:.95; }}
+.cs-stat-label {{ font-size:.9rem; color:var(--ink-soft); margin:2px 0 0 0; line-height:1.5; }}
 .cs-card h3 {{ margin:.1rem 0 .45rem 0; font-size:1.04rem; font-weight:720; color: var(--ink); }}
 .cs-card p {{ font-size:.94rem; margin:0; color: var(--ink-soft); line-height:1.62; }}
 .cs-stat {{
-  font-size:2.6rem; font-weight:840; letter-spacing:-.035em; line-height:1;
-  background: linear-gradient(96deg, var(--ember), var(--amber));
-  -webkit-background-clip:text; background-clip:text; color:transparent; margin-bottom:6px;
+  font-size:2.3rem; font-weight:840; letter-spacing:-.035em; line-height:1;
+  color: var(--accent, var(--amber)); margin-bottom:2px;
 }}
 .cs-shot {{ border-radius:16px; overflow:hidden; border:1px solid var(--line); }}
 
@@ -133,7 +159,21 @@ html {{ scroll-behavior: smooth; }}
   padding:18px 18px 22px 18px;
   box-shadow: 0 24px 64px rgba(0,0,0,.6), 0 0 0 1px rgba(0,0,0,.45);
   animation: csSlideIn .28s cubic-bezier(.22,.61,.36,1) both;
+  /* The drawer stays put and scrolls on its own. `overscroll-behavior:contain`
+     is what stops a wheel over the drawer from scrolling the page underneath
+     once the drawer reaches its end. */
+  position: sticky; top: 10px;
+  max-height: calc(100vh - 24px);
+  overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.22) transparent;
 }}
+.st-key-cs_drawer::-webkit-scrollbar {{ width: 9px; }}
+.st-key-cs_drawer::-webkit-scrollbar-thumb {{
+  background: rgba(255,255,255,.18); border-radius: 999px;
+}}
+/* Checkboxes carry the state of the route, so they need to read clearly. */
+.st-key-cs_drawer label[data-baseweb="checkbox"] {{ font-size:.92rem; }}
+.st-key-cs_drawer details[data-testid="stExpander"] summary {{ font-weight:650; }}
 /* Nothing inside the drawer should draw its own second border. */
 .st-key-cs_drawer div[data-testid="stVerticalBlockBorderWrapper"] {{ border:none !important; }}
 .cs-drawer-title {{

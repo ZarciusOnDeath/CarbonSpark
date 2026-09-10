@@ -66,12 +66,17 @@ class PlantProfile:
     summary: str
     grid_preset: str
     scrap_ratio: float
-    train_share: float
+    #: Rail share of the inbound and outbound legs — a site can rail its raw
+    #: material in and truck its coil out, so the two are separate.
+    inbound_rail: float
+    outbound_rail: float
     #: (stage process name, [variation names]) — variations are matched by name,
     #: so an unmatched entry is reported rather than silently ignored.
     route_choices: Tuple[Tuple[str, Tuple[str, ...]], ...] = ()
     #: Departments the site does not run at all.
     excluded_departments: Tuple[str, ...] = ()
+    #: Individual techniques the site does not run, by process name.
+    excluded_techniques: Tuple[str, ...] = ()
     sources: Tuple[Tuple[str, str], ...] = ()
     estimated: Tuple[str, ...] = ()
 
@@ -85,7 +90,8 @@ CUSTOM = PlantProfile(
     ),
     grid_preset="India grid today",
     scrap_ratio=0.40,
-    train_share=0.50,
+    inbound_rail=0.50,
+    outbound_rail=0.50,
 )
 
 JAJPUR = PlantProfile(
@@ -98,12 +104,22 @@ JAJPUR = PlantProfile(
     ),
     grid_preset="JSL Jajpur (estimated)",
     scrap_ratio=0.35,
-    train_share=0.65,
+    inbound_rail=0.70,
+    outbound_rail=0.55,
     route_choices=(
+        ("Inspection", ("Ferroalloy", "Scrap")),
         ("Primary Melting", ("Electric Arc Furnace (EAF)",)),
         ("Decarburization / Alloying", ("AOD",)),
         ("Secondary Refining / Homogenization", ("Ladle Furnace (LF)",)),
-        ("Continuous Casting (CCM)", ("Curved Mold Caster",)),
+        (
+            "Continuous Casting (CCM)",
+            ("Curved Mold Caster", "Submerged Entry Nozzle (SEN)", "Argon Shrouding"),
+        ),
+    ),
+    excluded_techniques=(
+        # The specialty remelting shops are Hisar's, not Jajpur's integrated line.
+        "18-High Sendzimir Cluster Mill",
+        "6-High Universal Crown-Control Mill (UC Mill)",
     ),
     sources=(
         (
@@ -120,7 +136,7 @@ JAJPUR = PlantProfile(
             "https://www.jindalstainless.com/press-releases/accelerating-its-esg-goals-jindal-stainless-partners-with-renew-power-to-set-up-300-mw-renewable-energy-project/",
         ),
     ),
-    estimated=("energy mix percentages", "scrap ratio", "rail/road split"),
+    estimated=("energy mix percentages", "scrap ratio", "rail/road splits"),
 )
 
 HISAR = PlantProfile(
@@ -134,12 +150,27 @@ HISAR = PlantProfile(
     ),
     grid_preset="JSL Hisar (estimated)",
     scrap_ratio=0.45,
-    train_share=0.35,
+    inbound_rail=0.40,
+    outbound_rail=0.25,
     route_choices=(
-        ("Primary Melting", ("Electric Arc Furnace (EAF)",)),
-        ("Decarburization / Alloying", ("AOD",)),
-        ("Secondary Refining / Homogenization", ("Ladle Furnace (LF)",)),
-        ("Continuous Casting (CCM)", ("Curved Mold Caster",)),
+        ("Inspection", ("Scrap",)),
+        (
+            "Primary Melting",
+            ("Electric Arc Furnace (EAF)", "Vacuum / Special Induction (VIM)"),
+        ),
+        ("Decarburization / Alloying", ("AOD", "VOD")),
+        (
+            "Secondary Refining / Homogenization",
+            ("Ladle Furnace (LF)", "VD / RH Degasser"),
+        ),
+        ("Continuous Casting (CCM)", ("Curved Mold Caster", "Argon Shrouding")),
+    ),
+    excluded_techniques=(
+        # The published Hisar cold-rolling complex is Sendzimir 20-Hi plus the
+        # anneal-and-pickle lines; it does not run a tandem cold mill.
+        "Continuous Tandem Cold Mill (TCM)",
+        "18-High Sendzimir Cluster Mill",
+        "6-High Universal Crown-Control Mill (UC Mill)",
     ),
     sources=(
         (
@@ -155,7 +186,7 @@ HISAR = PlantProfile(
             "https://www.jindalstainless.com/press-releases/jindal-stainless-invests-over-120-crores-to-install-rooftop-solar-plants-at-its-jajpur-and-hisar-units/",
         ),
     ),
-    estimated=("energy mix percentages", "scrap ratio", "rail/road split"),
+    estimated=("energy mix percentages", "scrap ratio", "rail/road splits"),
 )
 
 PLANT_PROFILES: Dict[str, PlantProfile] = {
@@ -174,7 +205,10 @@ def profile_route(profile: PlantProfile, stages: Sequence[Stage]) -> Tuple[Route
     problems: List[str] = []
 
     for stage in stages:
-        if stage.department in profile.excluded_departments:
+        if (
+            stage.department in profile.excluded_departments
+            or stage.process in profile.excluded_techniques
+        ):
             route[stage.key] = {}
             continue
         names = wanted.pop(stage.process, None)

@@ -25,6 +25,7 @@ from carbon_calc.optimize import Constraints, InfeasibleError, optimise
 from carbon_calc.route import (
     Stage,
     apply_haulage,
+    rail_shares,
     default_route,
     even_mix,
     normalise_mix,
@@ -39,19 +40,23 @@ from .state import (
     PRESET_W,
     PROFILE_W,
     SCRAP_W,
-    TRAIN_W,
+    TRAIN_IN_W,
+    TRAIN_OUT_W,
     apply_grid_preset,
     apply_plant_profile,
     current_mix,
     go,
+    inbound_rail,
     inbound_share,
     mix_total,
     mix_widget,
     on_inbound_change,
     on_mix_change,
     on_scrap_change,
-    on_train_change,
+    on_train_in_change,
+    on_train_out_change,
     rescale_mix,
+    outbound_rail,
     scrap_ratio,
     set_stage_mix,
     train_share,
@@ -64,9 +69,14 @@ PANELS = [
     ("plant", "Plant customisation", "Departments, techniques and variations"),
 ]
 
+#: Glyphs used in the drill-down titles, kept out of the f-strings that use them.
+ALL_ON, SOME_ON, ALL_OFF = "\u2713", "\u2013", "\u00d7"
+BULLET, MIDDOT, DASH = "\u2022", "\u00b7", "\u2014"
+
 #: Slider labels, shared with the live-readout chips that follow them.
 SCRAP_LABEL = "Scrap steel ratio  y"
-RAIL_LABEL = "Rail share  p"
+INBOUND_RAIL_LABEL = "Rail share of the inbound leg  p"
+OUTBOUND_RAIL_LABEL = "Rail share of the outbound leg  p"
 INBOUND_LABEL = "Inbound share of haulage"
 
 #: The tool's result views, shown as a tab strip matching the database page.
@@ -143,23 +153,6 @@ def _panel_scrap(dataset: Dataset) -> None:
     )
     st.divider()
     st.markdown("#### Inbound / outbound haulage")
-    train = st.slider(
-        RAIL_LABEL,
-        min_value=0,
-        max_value=100,
-        value=st.session_state.train,
-        key=TRAIN_W,
-        on_change=on_train_change,
-        format="%d%%",
-        help="Share of material moved by rail. Road share q = 1 − p. Applies to the two "
-        "transport rows: RMHS unloading and outbound despatch.",
-    )
-    st.markdown(
-        live.rendered_chip(RAIL_LABEL, "rail p = {v}%", train)
-        + " "
-        + live.rendered_chip(RAIL_LABEL, "road q = {inv}%", train, tone="cs-chip-warn"),
-        unsafe_allow_html=True,
-    )
     inbound = st.slider(
         INBOUND_LABEL,
         min_value=0,
@@ -179,6 +172,10 @@ def _panel_scrap(dataset: Dataset) -> None:
         + " "
         + live.rendered_chip(INBOUND_LABEL, "outbound = {inv}%", inbound, tone="cs-chip-warn"),
         unsafe_allow_html=True,
+    )
+    st.caption(
+        "Rail versus road is set on each leg separately, with the transport step itself \u2014 "
+        "under Plant customisation, in RMHS and Outbound."
     )
     carbon_share, energy_share = _workbook_haulage_split(dataset)
     st.caption(
@@ -262,15 +259,168 @@ def _panel_grid(dataset: Dataset) -> None:
 
 
 def _variation_label(variation: str) -> str:
-    """Display name for a workbook variation.
+    """Display name for a workbook variation."""
+    return "General estimate" if _is_general(variation) else variation
 
-    The workbook writes "General (all types)" wherever a step has no
-    interchangeable technologies. That reads like a selectable option among
-    others, when it is really the step's single general estimate.
+
+def _is_general(variation: str) -> bool:
+    """True for the workbook's catch-all "General (all types)" variation.
+
+    A step with only this variation has nothing to choose between, so the tool
+    shows it as a single checkbox rather than a menu containing one item.
     """
-    if variation.strip().lower().startswith("general"):
-        return "General estimate"
-    return variation
+    return variation.strip().lower().startswith("general")
+
+
+def _single_option(stage: Stage) -> bool:
+    return len(stage.options) == 1
+
+
+def _stage_on(route, stage: Stage) -> bool:
+    return bool(normalise_mix(route.get(stage.key, {})))
+
+
+def _toggle_stage(stage: Stage) -> None:
+    """Checkbox callback for a step with nothing to choose between."""
+    route = st.session_state.route
+    route[stage.key] = {stage.default_id: 1.0} if st.session_state[f"on_{stage.key}"] else {}
+
+
+def _toggle_variation(stage: Stage, process_id: int) -> None:
+    """Checkbox callback for one variation of a step."""
+    route = st.session_state.route
+    chosen = [
+        pid
+        for pid in stage.option_ids
+        if st.session_state.get(f"pick_{stage.key}_{pid}", False)
+    ]
+    if not chosen:
+        route[stage.key] = {}
+        return
+    kept = normalise_mix({pid: route.get(stage.key, {}).get(pid, 0.0) for pid in chosen})
+    route[stage.key] = kept if len(kept) == len(chosen) else even_mix(chosen)
+
+
+def _transport_controls(stage: Stage) -> None:
+    """The rail/road split for a transport step, shown with the step itself.
+
+    The workbook has two transport rows and they are independent choices: a
+    plant can rail its raw material in and truck its coil out. Each row's slider
+    therefore lives with the row, not in a single global setting.
+    """
+    inbound = stage.department == "RMHS"
+    label = INBOUND_RAIL_LABEL if inbound else OUTBOUND_RAIL_LABEL
+    widget, callback, value = (
+        (TRAIN_IN_W, on_train_in_change, st.session_state.train_in)
+        if inbound
+        else (TRAIN_OUT_W, on_train_out_change, st.session_state.train_out)
+    )
+    leg = "arriving" if inbound else "leaving"
+    st.caption(f"How the tonnes {leg} are moved. Road is the remainder.")
+    share = st.slider(
+        label,
+        min_value=0,
+        max_value=100,
+        value=value,
+        key=widget,
+        on_change=callback,
+        format="%d%%",
+    )
+    st.markdown(
+        live.rendered_chip(label, "rail p = {v}%", share)
+        + " "
+        + live.rendered_chip(label, "road q = {inv}%", share, tone="cs-chip-warn"),
+        unsafe_allow_html=True,
+    )
+
+
+def _stage_controls(stage: Stage, route) -> None:
+    """The variation picker for one technique, as checkboxes."""
+    current = normalise_mix(route.get(stage.key, {}))
+    for pid in stage.option_ids:
+        st.checkbox(
+            _variation_label(stage.option_by_id(pid).variation),
+            value=pid in current,
+            key=f"pick_{stage.key}_{pid}",
+            on_change=_toggle_variation,
+            args=(stage, pid),
+        )
+    picked = [pid for pid in stage.option_ids if pid in normalise_mix(route.get(stage.key, {}))]
+    if not picked:
+        st.caption("Nothing ticked — this technique is out of the route.")
+        return
+    if len(picked) > 1:
+        st.caption("Share of this stage's tonne through each:")
+        raw: Dict[int, float] = {}
+        for pid in picked:
+            previous = current.get(pid, 1.0 / len(picked))
+            raw[pid] = st.slider(
+                _variation_label(stage.option_by_id(pid).variation),
+                min_value=0.0,
+                max_value=100.0,
+                value=float(round(previous * 100, 1)),
+                step=1.0,
+                format="%.0f%%",
+                key=f"share_{stage.key}_{pid}",
+            )
+        set_stage_mix(stage, normalise_mix(raw) or even_mix(picked))
+    if stage.options[0].transport:
+        st.divider()
+        _transport_controls(stage)
+
+
+def _panel_plant(dataset: Dataset, stages) -> None:
+    """Department → technique → variation, as one drill-down of checkboxes.
+
+    Every level is a tick: a department shows how many of its techniques run, a
+    technique with nothing to choose between is a single checkbox, and a
+    technique with real alternatives opens into its variations.
+    """
+    st.markdown("#### Plant customisation")
+    st.caption("Tick what the plant runs. Untick to take it out of the route.")
+    route = st.session_state.route
+
+    for department in dataset.departments:
+        dept_stages = [stage for stage in stages if stage.department == department]
+        running = [stage for stage in dept_stages if _stage_on(route, stage)]
+        mark = ALL_ON if len(running) == len(dept_stages) else (SOME_ON if running else ALL_OFF)
+        icon = DEPARTMENT_ICONS.get(department, BULLET)
+        title = f"{mark}  {icon}  {department}  {MIDDOT}  {len(running)}/{len(dept_stages)}"
+        with st.expander(title, expanded=False):
+            band = section_band(department)
+            st.markdown(
+                f'{band}<div class="cs-band-title">{icon} {department}</div>',
+                unsafe_allow_html=True,
+            )
+            head = st.columns(2)
+            head[0].button(
+                "Tick all",
+                key=f"all_{department}",
+                use_container_width=True,
+                on_click=_set_department,
+                args=(dept_stages, True),
+            )
+            head[1].button(
+                "Untick all",
+                key=f"none_{department}",
+                use_container_width=True,
+                on_click=_set_department,
+                args=(dept_stages, False),
+            )
+            for stage in dept_stages:
+                if _single_option(stage) and _is_general(stage.options[0].variation):
+                    # Nothing to choose between: the technique is the checkbox.
+                    st.checkbox(
+                        stage.process,
+                        value=_stage_on(route, stage),
+                        key=f"on_{stage.key}",
+                        on_change=_toggle_stage,
+                        args=(stage,),
+                    )
+                    continue
+                summary = _stage_summary(stage, route.get(stage.key, {}))
+                with st.expander(f"{stage.process}  {DASH}  {summary}", expanded=False):
+                    _stage_controls(stage, route)
 
 
 def _stage_summary(stage: Stage, mix) -> str:
@@ -278,114 +428,11 @@ def _stage_summary(stage: Stage, mix) -> str:
     live_mix = normalise_mix(mix)
     if not live_mix:
         return "off"
-    parts = [
-        f"{_variation_label(stage.option_by_id(pid).variation)}"
+    return " + ".join(
+        _variation_label(stage.option_by_id(pid).variation)
         + (f" {share:.0%}" if len(live_mix) > 1 else "")
         for pid, share in sorted(live_mix.items(), key=lambda item: -item[1])
-    ]
-    return " + ".join(parts)
-
-
-def _stage_controls(stage: Stage, route) -> None:
-    """The variation picker for one technique."""
-    current = normalise_mix(route.get(stage.key, {}))
-    picked = st.multiselect(
-        "Variations in use",
-        options=list(stage.option_ids),
-        default=[pid for pid in stage.option_ids if pid in current],
-        format_func=lambda pid, s=stage: _variation_label(s.option_by_id(pid).variation),
-        key=f"vars_{stage.key}",
-        help="Pick as many as the plant actually runs — the stage's tonne is split "
-        "between them.",
     )
-    if not picked:
-        route[stage.key] = {}
-        st.caption("Nothing selected — this technique is out of the route.")
-        return
-    if len(picked) == 1:
-        set_stage_mix(stage, {picked[0]: 1.0})
-        return
-
-    # Adding or removing a variation resets the split to even, so a new
-    # selection never inherits a lopsided share from the previous set.
-    signature = tuple(sorted(picked))
-    signature_key = f"sig_{stage.key}"
-    if st.session_state.get(signature_key) != signature:
-        st.session_state[signature_key] = signature
-        current = even_mix(picked)
-        for pid in picked:
-            st.session_state.pop(f"share_{stage.key}_{pid}", None)
-
-    st.caption("Share of this stage's tonne through each variation:")
-    raw: Dict[int, float] = {}
-    for pid in picked:
-        previous = current.get(pid, 1.0 / len(picked))
-        raw[pid] = st.slider(
-            _variation_label(stage.option_by_id(pid).variation),
-            min_value=0.0,
-            max_value=100.0,
-            value=float(round(previous * 100, 1)),
-            step=1.0,
-            format="%.0f%%",
-            key=f"share_{stage.key}_{pid}",
-        )
-    normalised = normalise_mix(raw) or even_mix(picked)
-    set_stage_mix(stage, normalised)
-    st.markdown(
-        " ".join(
-            f'<span class="cs-chip">{_variation_label(stage.option_by_id(pid).variation)} '
-            f"{share:.0%}</span>"
-            for pid, share in normalised.items()
-        ),
-        unsafe_allow_html=True,
-    )
-
-
-def _panel_plant(dataset: Dataset, stages) -> None:
-    """Department → technique → variation, as one drill-down.
-
-    Every level works the same way: open the level, see what is running, turn
-    things on or off. There is no separate "which techniques" list sitting
-    beside the department picker — a technique is on when it has a variation
-    selected, exactly as a variation is on when it is ticked.
-    """
-    st.markdown("#### Plant customisation")
-    route = st.session_state.route
-
-    for department in dataset.departments:
-        dept_stages = [stage for stage in stages if stage.department == department]
-        running = [
-            stage for stage in dept_stages if normalise_mix(route.get(stage.key, {}))
-        ]
-        with st.expander(
-            f"{DEPARTMENT_ICONS.get(department, '•')}  {department}"
-            f"  ·  {len(running)}/{len(dept_stages)} techniques",
-            expanded=False,
-        ):
-            st.markdown(
-                f'{section_band(department)}<div class="cs-band-title">'
-                f'{DEPARTMENT_ICONS.get(department, "•")} {department}</div>',
-                unsafe_allow_html=True,
-            )
-            head = st.columns([1, 1])
-            head[0].button(
-                "Run every technique",
-                key=f"all_{department}",
-                use_container_width=True,
-                on_click=_set_department,
-                args=(dept_stages, True),
-            )
-            head[1].button(
-                "Skip this department",
-                key=f"none_{department}",
-                use_container_width=True,
-                on_click=_set_department,
-                args=(dept_stages, False),
-            )
-            for stage in dept_stages:
-                summary = _stage_summary(stage, route.get(stage.key, {}))
-                with st.expander(f"{stage.process}  —  {summary}", expanded=False):
-                    _stage_controls(stage, route)
 
 
 def _set_department(dept_stages, on: bool) -> None:
@@ -397,7 +444,15 @@ def _set_department(dept_stages, on: bool) -> None:
                 route[stage.key] = {stage.default_id: 1.0}
         else:
             route[stage.key] = {}
-        st.session_state.pop(f"vars_{stage.key}", None)
+        _forget_stage_widgets(stage)
+
+
+def _forget_stage_widgets(stage: Stage) -> None:
+    """Drop the checkbox state for a stage so it re-reads from the route."""
+    st.session_state.pop(f"on_{stage.key}", None)
+    for pid in stage.option_ids:
+        st.session_state.pop(f"pick_{stage.key}_{pid}", None)
+        st.session_state.pop(f"share_{stage.key}_{pid}", None)
 
 
 def _drawer(dataset: Dataset, stages) -> None:
@@ -539,8 +594,11 @@ def _baseline(result: Result, dataset: Dataset, stages) -> None:
             "route": {key: dict(value) for key, value in st.session_state.route.items()},
             "train": train_share(),
             "inbound": inbound_share(),
-            "label": f"Captured: y={st.session_state.scrap}%, p={st.session_state.train}%, "
-            f"inbound={st.session_state.inbound}%",
+            "rail_in": inbound_rail(),
+            "rail_out": outbound_rail(),
+            "label": f"Captured: y={st.session_state.scrap}%, "
+            f"inbound={st.session_state.inbound}%, rail {st.session_state.train_in}% in / "
+            f"{st.session_state.train_out}% out",
         }
     if controls[2].button("Reset baseline", use_container_width=True):
         st.session_state.baseline = None
@@ -563,6 +621,11 @@ def _baseline(result: Result, dataset: Dataset, stages) -> None:
         dataset,
         apply_haulage(route_weights(saved["route"]), dataset, saved.get("inbound", 0.50)),
         saved["train"],
+        rail_shares(
+            dataset,
+            saved.get("rail_in", saved["train"]),
+            saved.get("rail_out", saved["train"]),
+        ),
     )
 
     def delta(current: float, base: float) -> str:
@@ -763,7 +826,7 @@ def render(dataset: Dataset, stages) -> None:
     # The drawer mutates the route as it renders, so the result is computed
     # afterwards — otherwise every reading would lag one interaction behind.
     if st.session_state.drawer_open:
-        drawer, main = st.columns([3, 7], gap="large")
+        drawer, main = st.columns([4.5, 5.5], gap="large")
         with drawer:
             # A keyed container gets its own CSS class, so the drawer's raised
             # surface wraps its contents instead of an unclosed <div> leaving an
@@ -781,14 +844,21 @@ def render(dataset: Dataset, stages) -> None:
             )
             st.button("\u2699\ufe0f  Open inputs", on_click=_toggle_drawer, type="primary")
         return
-    result = calculate(scrap_ratio(), current_mix(), dataset, weights, train_share())
+    result = calculate(
+        scrap_ratio(),
+        current_mix(),
+        dataset,
+        weights,
+        train_share(),
+        rail_shares(dataset, inbound_rail(), outbound_rail()),
+    )
 
     with main:
         # The inputs button sits with the readings it changes, not in a far
         # corner of the page.
         opener, headline = st.columns([1.15, 6], gap="medium")
         opener.button(
-            "\u2715  Close inputs" if st.session_state.drawer_open else "\u2699\ufe0f  Customise inputs",
+            "\u2715 Close" if st.session_state.drawer_open else "\u2699\ufe0f Customise",
             on_click=_toggle_drawer,
             use_container_width=True,
             type="secondary" if st.session_state.drawer_open else "primary",

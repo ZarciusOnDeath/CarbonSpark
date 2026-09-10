@@ -133,6 +133,20 @@ def transport_ids(dataset: Dataset) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
     return inbound, outbound
 
 
+def rail_shares(
+    dataset: Dataset, inbound_rail: float, outbound_rail: float
+) -> Dict[int, float]:
+    """Per-row rail share ``p`` for the two transport legs.
+
+    The legs are independent: ore, ferroalloy and scrap may arrive by rail while
+    finished coil leaves by road, so each row gets its own ``p``.
+    """
+    inbound, outbound = transport_ids(dataset)
+    shares = {process_id: float(inbound_rail) for process_id in inbound}
+    shares.update({process_id: float(outbound_rail) for process_id in outbound})
+    return shares
+
+
 def apply_haulage(
     weights: Mapping[int, float],
     dataset: Dataset,

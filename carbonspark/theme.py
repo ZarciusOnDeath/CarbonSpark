@@ -160,6 +160,44 @@ def panel_art(kind: str) -> str:
 </svg>"""
 
 
+def scope_bars() -> str:
+    """A small three-scope bar motif, in the same colours the charts use."""
+    rows = (
+        ("Scope 1", EMBER, 0.30),
+        ("Scope 2", AMBER, 0.62),
+        ("Scope 3", STEEL, 0.46),
+    )
+    bars = "".join(
+        f'<g transform="translate(0,{index * 46})">'
+        f'<text x="0" y="14" fill="{INK_SOFT}" font-size="12" font-family="Inter,sans-serif">'
+        f"{name}</text>"
+        f'<rect x="0" y="22" width="340" height="12" rx="6" fill="rgba(255,255,255,.06)"/>'
+        f'<rect x="0" y="22" width="{int(340 * width)}" height="12" rx="6" fill="{colour}"/>'
+        "</g>"
+        for index, (name, colour, width) in enumerate(rows)
+    )
+    return (
+        '<svg viewBox="0 0 340 140" width="100%" role="img" '
+        'aria-label="Scope 1, 2 and 3 shown as bars">'
+        f"{bars}</svg>"
+    )
+
+
+def gauge(fraction: float, colour: str, label: str) -> str:
+    """A ring showing one figure as a proportion of the whole."""
+    radius, circumference = 34.0, 2 * 3.14159 * 34.0
+    filled = max(0.0, min(1.0, fraction)) * circumference
+    return f"""
+<svg viewBox="0 0 88 88" width="88" height="88" role="img" aria-label="{label}">
+  <circle cx="44" cy="44" r="{radius}" fill="none" stroke="rgba(255,255,255,.08)" stroke-width="9"/>
+  <circle cx="44" cy="44" r="{radius}" fill="none" stroke="{colour}" stroke-width="9"
+          stroke-linecap="round" stroke-dasharray="{filled:.1f} {circumference:.1f}"
+          transform="rotate(-90 44 44)"/>
+  <text x="44" y="49" text-anchor="middle" fill="{INK}" font-size="17" font-weight="700"
+        font-family="Inter,sans-serif">{fraction:.0%}</text>
+</svg>"""
+
+
 def section_band(kind: str) -> str:
     """A slim decorative band used as a department/section header background."""
     motifs = {

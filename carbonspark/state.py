@@ -22,7 +22,8 @@ from .presets import GRID_PRESETS, PLANT_PROFILES, profile_route
 
 #: Widget keys, kept distinct from the truth keys they mirror.
 SCRAP_W = "w_scrap"
-TRAIN_W = "w_train"
+TRAIN_IN_W = "w_train_in"
+TRAIN_OUT_W = "w_train_out"
 INBOUND_W = "w_inbound"
 PROFILE_W = "w_plant_profile"
 PRESET_W = "w_grid_preset"
@@ -49,7 +50,20 @@ def scrap_ratio() -> float:
 
 
 def train_share() -> float:
-    return st.session_state.train / 100.0
+    """The tonne-weighted rail share, for headline reporting only."""
+    inbound = st.session_state.inbound / 100.0
+    return (
+        st.session_state.train_in / 100.0 * inbound
+        + st.session_state.train_out / 100.0 * (1.0 - inbound)
+    )
+
+
+def inbound_rail() -> float:
+    return st.session_state.train_in / 100.0
+
+
+def outbound_rail() -> float:
+    return st.session_state.train_out / 100.0
 
 
 def inbound_share() -> float:
@@ -106,8 +120,12 @@ def on_scrap_change() -> None:
     st.session_state.scrap = st.session_state[SCRAP_W]
 
 
-def on_train_change() -> None:
-    st.session_state.train = st.session_state[TRAIN_W]
+def on_train_in_change() -> None:
+    st.session_state.train_in = st.session_state[TRAIN_IN_W]
+
+
+def on_train_out_change() -> None:
+    st.session_state.train_out = st.session_state[TRAIN_OUT_W]
 
 
 def on_inbound_change() -> None:
@@ -134,20 +152,31 @@ def apply_plant_profile(stages) -> None:
     st.session_state.profile_problems = problems
 
     st.session_state.scrap = int(round(profile.scrap_ratio * 100))
-    st.session_state.train = int(round(profile.train_share * 100))
+    st.session_state.train_in = int(round(profile.inbound_rail * 100))
+    st.session_state.train_out = int(round(profile.outbound_rail * 100))
     if SCRAP_W in st.session_state:
         st.session_state[SCRAP_W] = st.session_state.scrap
-    if TRAIN_W in st.session_state:
-        st.session_state[TRAIN_W] = st.session_state.train
+    for widget, value in (
+        (TRAIN_IN_W, st.session_state.train_in),
+        (TRAIN_OUT_W, st.session_state.train_out),
+    ):
+        if widget in st.session_state:
+            st.session_state[widget] = value
 
     st.session_state.grid_preset = profile.grid_preset
     if PRESET_W in st.session_state:
         st.session_state[PRESET_W] = profile.grid_preset
     write_mix(GRID_PRESETS[profile.grid_preset])
 
-    # A profile replaces the route wholesale, so the per-department technique
-    # pickers must be rebuilt rather than kept from the previous selection.
-    for key in [k for k in st.session_state if k.startswith(("techniques_", "vars_", "share_"))]:
+    # A profile replaces the route wholesale, so every route widget is dropped
+    # and rebuilt from the new route. Without this the checkboxes would keep
+    # showing the previous plant's selections while the model used the new one.
+    stale = [
+        key
+        for key in st.session_state
+        if key.startswith(("techniques_", "vars_", "share_", "on_", "pick_", "sig_"))
+    ]
+    for key in stale:
         del st.session_state[key]
 
 
@@ -165,7 +194,8 @@ def init_state(dataset: Dataset) -> tuple:
     st.session_state.initialised = True
     st.session_state.page = "landing"
     st.session_state.scrap = 40
-    st.session_state.train = 50
+    st.session_state.train_in = 50
+    st.session_state.train_out = 50
     st.session_state.inbound = 50
     st.session_state.mix = {}
     st.session_state.grid_preset = "India grid today"

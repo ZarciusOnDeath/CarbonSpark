@@ -7,7 +7,7 @@ lower-carbon combinations that stay practical.
 
 Every figure comes from evaluating the formula definitions in
 `Stainless Steel Carbon Accounting Grid (4).xlsx` — **67 process steps × 11 metrics** — at
-the chosen scrap ratio (`y`), grid shares (`a`–`g`) and rail/road haulage split (`p`/`q`).
+the chosen scrap ratio (`y`), grid shares (`a`–`g`) and per-leg rail/road split (`p`/`q`).
 No coefficients are re-derived or hard-coded in application code.
 
 ## Running it
@@ -59,10 +59,11 @@ split wherever a profile is shown.
 * **Grid-mix driven** — Scope 2 is
   `(x·kWh_virgin + y·kWh_scrap) × (a·EF_coal + … + g·EF_nuclear) / 1000`.
 * **Haulage-driven** — the two transport rows (RMHS unloading, outbound despatch) blend
-  rail and road as `p` and `q = 1 − p`, and a second slider splits the tonne-movement
-  between the inbound and outbound legs. Both rows are stated per tonne moved, so 50%
-  is the workbook as published; the panel reports the split the workbook's own rows
-  imply (54% of transport carbon, 59% of transport energy on the inbound leg).
+  rail and road as `p` and `q = 1 − p`. Each leg carries its own `p`, set on the transport
+  step itself, because a plant can rail its raw material in and truck its coil out. A
+  further slider splits the tonne-movement between the two legs: both rows are stated per
+  tonne moved, so 50% is the workbook as published, and the panel reports the split the
+  workbook's own rows imply (54% of transport carbon, 59% of transport energy inbound).
 
 **Total CO₂e/t = Scope 1 + Scope 2 + Scope 3 (upstream, Cat. 1-8).** The gas-by-gas columns
 are a disaggregation of the same footprint, reported separately and never added into the

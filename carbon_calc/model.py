@@ -226,6 +226,7 @@ def calculate(
     dataset: Dataset | None = None,
     weights: Mapping[int, float] | None = None,
     train_share: float = DEFAULT_TRAIN_SHARE,
+    train_shares: Mapping[int, float] | None = None,
 ) -> Result:
     """Evaluate the selected process steps and aggregate the results.
 
@@ -233,9 +234,19 @@ def calculate(
     A stage where two technologies are both selected splits its tonne between
     them (0.6 EAF + 0.4 IF), so the result stays a true per-tonne figure instead
     of double-counting the stage. ``None`` runs every row at full weight.
+
+    ``train_shares`` overrides ``p`` for individual rows. The inbound and
+    outbound legs are independent choices — a plant can rail its ore in and
+    truck its coil out — so each transport row can carry its own rail share.
+    Rows without an override use ``train_share``.
     """
     dataset = dataset or load_dataset()
     variables = build_variables(scrap_ratio, mix, train_share)
+    overrides = {int(pid): float(share) for pid, share in (train_shares or {}).items()}
+    # One binding per distinct rail share, rather than one per row.
+    by_share: Dict[float, Dict[str, float]] = {}
+    for share in set(overrides.values()):
+        by_share[share] = build_variables(scrap_ratio, mix, share)
     if weights is None:
         weights = {proc.id: 1.0 for proc in dataset.processes}
 
@@ -247,7 +258,8 @@ def calculate(
         weight = float(weights.get(proc.id, 0.0))
         if weight <= 0:
             continue
-        values = {key: value * weight for key, value in proc.evaluate(variables).items()}
+        binding = by_share.get(overrides.get(proc.id), variables)
+        values = {key: value * weight for key, value in proc.evaluate(binding).items()}
         row = {
             "id": proc.id,
             "Department": proc.department,
