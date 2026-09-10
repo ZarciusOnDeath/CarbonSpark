@@ -65,8 +65,20 @@ DEPARTMENT_AXIS_MAX = 4.2
 
 def _lock(figure: go.Figure, height: int) -> go.Figure:
     """Disable zoom/pan and apply the shared chart styling."""
-    figure.update_xaxes(fixedrange=True, gridcolor=_grid(), zerolinecolor=_grid())
-    figure.update_yaxes(fixedrange=True, gridcolor=_grid(), zerolinecolor=_grid())
+    # Plotly falls back to its own dark greys for ticks, titles, legends and
+    # hover labels unless each is told otherwise, which is why the charts were
+    # unreadable on a dark ground even with layout.font set.
+    ink, soft = _ink(), tokens(_mode())["ink_soft"]
+    axis = dict(
+        fixedrange=True,
+        gridcolor=_grid(),
+        zerolinecolor=_grid(),
+        linecolor=_grid(),
+        tickfont=dict(color=soft, size=13, family=_FONT_FAMILY),
+        title_font=dict(color=soft, size=13, family=_FONT_FAMILY),
+    )
+    figure.update_xaxes(**axis)
+    figure.update_yaxes(**axis)
     figure.update_layout(
         dragmode=False,
         height=height,
@@ -74,7 +86,12 @@ def _lock(figure: go.Figure, height: int) -> go.Figure:
         paper_bgcolor="rgba(0,0,0,0)",
         plot_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=10, r=10, t=30, b=10),
-        hoverlabel=dict(font_size=13),
+        legend=dict(font=dict(color=ink, size=13, family=_FONT_FAMILY)),
+        hoverlabel=dict(
+            font=dict(color=tokens(_mode())["paper"], size=13, family=_FONT_FAMILY),
+            bgcolor=ink,
+            bordercolor=ink,
+        ),
         transition=_TRANSITION,
     )
     return figure
@@ -91,7 +108,9 @@ def scope_breakdown(result: Result, height: int = 520) -> go.Figure:
             marker_color=[scope_colours(_mode())[scope] for scope in SCOPES],
             text=[f"{value:.3f}" for value in values],
             textposition="auto",
-            textfont=dict(size=16),
+            textfont=dict(size=16, color=tokens(_mode())["paper"], family=_FONT_FAMILY),
+            insidetextanchor="end",
+            cliponaxis=False,
             hovertemplate="%{y}<br><b>%{x:.4f} tCO2e/t</b><extra></extra>",
         )
     )
@@ -192,6 +211,6 @@ def mix_donut(mix: Mapping[str, float], sources: Mapping[str, object], height: i
         paper_bgcolor="rgba(0,0,0,0)",
         margin=dict(l=0, r=0, t=0, b=0),
         showlegend=True,
-        legend=dict(orientation="v", font=dict(size=11)),
+        legend=dict(orientation="v", font=dict(size=11, color=_ink(), family=_FONT_FAMILY)),
     )
     return figure

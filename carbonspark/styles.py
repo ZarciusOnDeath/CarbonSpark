@@ -222,8 +222,17 @@ div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar-thumb {{
 }}
 .stButton button[kind="primary"]:hover {{ color: var(--paper); opacity:.92; }}
 .stButton button:disabled, .stButton button:disabled p {{ opacity:.45; }}
+/* This Streamlit build renders selects as react-aria comboboxes, and their
+   ground comes from the pinned theme's secondaryBackgroundColor — a light value
+   — so in dark mode the control has to be re-stated by structure. */
+.stSelectbox div:has(> input[role="combobox"]),
+.stMultiSelect div:has(> input[role="combobox"]),
+.stSelectbox [data-baseweb="select"],
+.stMultiSelect [data-baseweb="select"],
 .stSelectbox div[data-baseweb="select"] div,
 .stMultiSelect div[data-baseweb="select"] div,
+.stTextInput div[data-baseweb="input"],
+.stNumberInput div[data-baseweb="input"],
 [data-baseweb="input"] input, [data-baseweb="input"], textarea,
 [data-baseweb="popover"] li, [data-baseweb="menu"], [role="listbox"] {{
   background-color: var(--surface) !important; color: var(--ink) !important;
@@ -233,6 +242,13 @@ div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar-thumb {{
 }}
 [data-baseweb="tag"] {{ background: var(--surface-hi) !important; color: var(--ink) !important; }}
 [data-testid="stAlertContainer"] {{ background: var(--surface); color: var(--ink); }}
+/* Tooltips are painted from the same pinned theme, so they invert too. */
+[data-baseweb="tooltip"], [role="tooltip"], [data-testid="stTooltipContent"] {{
+  background-color: var(--ink) !important; color: var(--paper) !important;
+}}
+[data-baseweb="tooltip"] *, [role="tooltip"] *, [data-testid="stTooltipContent"] * {{
+  color: var(--paper) !important; background-color: transparent !important;
+}}
 hr, [data-testid="stDivider"] hr {{ border-color: var(--line); }}
 
 /* ---------- Streamlit widget polish ---------- */
@@ -277,7 +293,43 @@ div[data-testid="stExpander"] details {{
   border-radius:0 !important; background:transparent !important;
 }}
 div[data-testid="stExpander"] details summary {{
-  padding-left:0 !important; padding-right:0 !important; font-weight:550;
+  padding: 12px 4px !important; font-weight:550;
+  background: transparent !important; color: var(--ink) !important;
+  border-radius: 6px;
+}}
+/* Streamlit paints its own hover/open background on the summary, which came out
+   as a white slab on the dark ground. Both states are re-stated here. */
+div[data-testid="stExpander"] details summary:hover,
+div[data-testid="stExpander"] details[open] summary,
+div[data-testid="stExpander"] details summary:focus,
+div[data-testid="stExpander"] details summary > div,
+div[data-testid="stExpander"] details summary * {{
+  background: transparent !important;
+}}
+div[data-testid="stExpander"] details summary:hover {{ background: var(--surface-hi) !important; }}
+div[data-testid="stExpander"] details summary p {{ color: var(--ink) !important; }}
+div[data-testid="stExpander"] details summary svg {{ fill: var(--ink-soft) !important; }}
+
+/* A technique with no alternatives is a row like any other: same box, same
+   padding, same rule underneath — it simply has nothing to open. */
+div[class*="st-key-csrow_"] {{
+  border-bottom: 1px solid var(--line);
+  padding: 4px 4px 4px 4px;
+  transition: background .16s ease;
+}}
+div[class*="st-key-csrow_"]:hover {{ background: var(--surface-hi); border-radius: 6px; }}
+div[class*="st-key-csrow_"] label {{ padding: 6px 0 !important; }}
+
+/* Menus: an option list has to state both its ground and its ink, or the
+   options render as dark text on a dark popover. */
+[data-baseweb="popover"] div, [data-baseweb="menu"], [role="listbox"] {{
+  background-color: var(--surface) !important;
+}}
+[role="option"], [data-baseweb="menu"] li, [role="option"] * {{
+  background-color: transparent !important; color: var(--ink) !important;
+}}
+[role="option"][aria-selected="true"], [role="option"]:hover {{
+  background-color: var(--surface-hi) !important;
 }}
 div[data-testid="stExpander"] details [data-testid="stVerticalBlockBorderWrapper"] {{
   border:none !important;

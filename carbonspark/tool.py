@@ -457,14 +457,17 @@ def _panel_plant(dataset: Dataset, stages) -> None:
             )
             for stage in dept_stages:
                 if _single_option(stage) and _is_general(stage.options[0].variation):
-                    # Nothing to choose between: the technique is the checkbox.
-                    st.checkbox(
-                        stage.process,
-                        value=_stage_on(route, stage),
-                        key=route_key("on", stage.key),
-                        on_change=_toggle_stage,
-                        args=(stage,),
-                    )
+                    # Nothing to choose between, so the technique is the
+                    # checkbox — but it still gets the same row treatment as the
+                    # ones that open, so the list reads as one list.
+                    with st.container(key=f"csrow_{route_key('row', stage.key)}"):
+                        st.checkbox(
+                            stage.process,
+                            value=_stage_on(route, stage),
+                            key=route_key("on", stage.key),
+                            on_change=_toggle_stage,
+                            args=(stage,),
+                        )
                     continue
                 summary = _stage_summary(stage, route.get(stage.key, {}))
                 with st.expander(
