@@ -814,19 +814,19 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
     # from under its. Nothing about a comparison lives anywhere else on the page.
     picker = st.columns(2, gap="large")
 
-    # Both sides may name the scenario on screen. Its controls are then drawn
-    # once, under the first of them: a second "Save as…" box would carry the
-    # same widget key as the first and Streamlit refuses to draw it at all.
-    drawn_current = []
+    # Both sides may name the scenario on screen. Editing it is offered under
+    # either — the buttons carry per-side keys — but the Save-as name box is
+    # read back by name from session state, so it has one fixed key and can
+    # only be drawn once; the second side gets Edit inputs alone.
+    saving_drawn = []
 
     def side(column, key: str, index: int, caption: str) -> str:
         with column:
             name = st.selectbox(caption, options, index=index, key=key)
-            if name == CURRENT and drawn_current:
-                st.caption("The same scenario as on the other side.")
-            elif name == CURRENT:
-                drawn_current.append(key)
-                actions = st.columns([1, 1])
+            if name == CURRENT:
+                first = not saving_drawn
+                saving_drawn.append(key)
+                actions = st.columns([1, 1]) if first else [st.container()]
                 actions[0].button(
                     "\u2699  Edit inputs",
                     on_click=_toggle_drawer,
@@ -834,19 +834,20 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                     key=f"edit_{key}",
                     help="Scrap ratio, energy grid mix and the plant's process route",
                 )
-                actions[1].button(
-                    "Save as\u2026",
-                    on_click=save_scenario,
-                    use_container_width=True,
-                    key=f"save_{key}",
-                    help="Keep this scenario under the name typed below",
-                )
-                st.text_input(
-                    "Name for the saved scenario",
-                    placeholder="e.g. Jajpur with 60% scrap",
-                    key=SAVE_NAME_W,
-                    label_visibility="collapsed",
-                )
+                if first:
+                    actions[1].button(
+                        "Save as\u2026",
+                        on_click=save_scenario,
+                        use_container_width=True,
+                        key=f"save_{key}",
+                        help="Keep this scenario under the name typed below",
+                    )
+                    st.text_input(
+                        "Name for the saved scenario",
+                        placeholder="e.g. Jajpur with 60% scrap",
+                        key=SAVE_NAME_W,
+                        label_visibility="collapsed",
+                    )
             elif name in saved:
                 st.button(
                     "Delete this scenario",
