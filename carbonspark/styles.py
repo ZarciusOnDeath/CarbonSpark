@@ -222,6 +222,17 @@ div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar-thumb {{
 }}
 .stButton button[kind="primary"]:hover {{ color: var(--paper); opacity:.92; }}
 .stButton button:disabled, .stButton button:disabled p {{ opacity:.45; }}
+/* The control's ground and its text are set separately — fixing only the ground
+   left near-black type on a near-black select in dark mode. */
+.stSelectbox input, .stMultiSelect input,
+.stTextInput input, .stNumberInput input, textarea,
+[role="combobox"], [role="combobox"] * {{
+  color: var(--ink) !important;
+}}
+.stSelectbox input::placeholder, .stMultiSelect input::placeholder,
+.stTextInput input::placeholder {{ color: var(--ink-soft) !important; }}
+.stSelectbox svg, .stMultiSelect svg {{ fill: var(--ink-soft) !important; }}
+
 /* This Streamlit build renders selects as react-aria comboboxes, and their
    ground comes from the pinned theme's secondaryBackgroundColor — a light value
    — so in dark mode the control has to be re-stated by structure. */

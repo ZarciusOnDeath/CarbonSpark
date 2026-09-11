@@ -149,7 +149,7 @@ def _how() -> None:
          "tonnes travel — rail or road, arriving or leaving."),
         ("02", "Set the supply",
          "Move the seven grid shares, or start from the Indian grid, a half-renewable "
-         "position, near-zero supply or either JSL site."),
+         "position or near-zero supply."),
         ("03", "Read the consequence",
          "Scope 1, 2 and 3 per tonne, split by department and by gas, against a baseline "
          "you captured — and the lowest-carbon route the optimiser can find."),
@@ -206,8 +206,8 @@ def _tool_door() -> None:
   <div class="cs-eyebrow">Use Tool</div>
   <h2>Open the calculator</h2>
   <p>
-    A live model of the plant: pick a starting point — a custom route or one of the two
-    JSL site profiles — then move the levers and watch the scope breakdown, the
+    A live model of the plant: pick a starting point — a custom route or one of the
+    built-in site profiles — then move the levers and watch the scope breakdown, the
     department split and the gas-by-gas table respond.
   </p>
 </div>""",

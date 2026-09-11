@@ -84,9 +84,9 @@ ALL_ON, SOME_ON, ALL_OFF = "\u2713", "\u2013", "\u00d7"
 BULLET, MIDDOT, DASH = "\u2022", "\u00b7", "\u2014"
 
 #: Slider labels, shared with the live-readout chips that follow them.
-SCRAP_LABEL = "Scrap steel ratio  y"
-INBOUND_RAIL_LABEL = "Rail share of the inbound leg  p"
-OUTBOUND_RAIL_LABEL = "Rail share of the outbound leg  p"
+SCRAP_LABEL = "Scrap steel ratio"
+INBOUND_RAIL_LABEL = "Rail share of the inbound leg"
+OUTBOUND_RAIL_LABEL = "Rail share of the outbound leg"
 INBOUND_LABEL = "Inbound share of haulage"
 
 #: The tool's result views, shown as a tab strip matching the database page.
@@ -153,12 +153,12 @@ def _panel_scrap(dataset: Dataset) -> None:
         key=SCRAP_W,
         on_change=on_scrap_change,
         format="%d%%",
-        help="Share of the metallic charge that is recycled scrap. Virgin ratio x = 1 − y.",
+        help="Share of the metallic charge that is recycled scrap. The workbook calls this y; the virgin ratio x is the remainder.",
     )
     st.markdown(
-        live.rendered_chip(SCRAP_LABEL, "virgin x = {inv}%", scrap)
+        live.rendered_chip(SCRAP_LABEL, "virgin {inv}%", scrap)
         + " "
-        + live.rendered_chip(SCRAP_LABEL, "scrap y = {v}%", scrap, tone="cs-chip-good"),
+        + live.rendered_chip(SCRAP_LABEL, "scrap {v}%", scrap, tone="cs-chip-good"),
         unsafe_allow_html=True,
     )
     st.divider()
@@ -178,9 +178,9 @@ def _panel_scrap(dataset: Dataset) -> None:
         "unchanged.",
     )
     st.markdown(
-        live.rendered_chip(INBOUND_LABEL, "inbound = {v}%", inbound)
+        live.rendered_chip(INBOUND_LABEL, "inbound {v}%", inbound)
         + " "
-        + live.rendered_chip(INBOUND_LABEL, "outbound = {inv}%", inbound, tone="cs-chip-warn"),
+        + live.rendered_chip(INBOUND_LABEL, "outbound {inv}%", inbound, tone="cs-chip-warn"),
         unsafe_allow_html=True,
     )
     st.caption(
@@ -373,9 +373,9 @@ def _transport_controls(stage: Stage) -> None:
         format="%d%%",
     )
     st.markdown(
-        live.rendered_chip(label, "rail p = {v}%", share)
+        live.rendered_chip(label, "rail {v}%", share)
         + " "
-        + live.rendered_chip(label, "road q = {inv}%", share, tone="cs-chip-warn"),
+        + live.rendered_chip(label, "road {inv}%", share, tone="cs-chip-warn"),
         unsafe_allow_html=True,
     )
 
@@ -591,8 +591,8 @@ def _headline(result: Result, dataset: Dataset) -> None:
     with st.container(key="cs_readout"):
         st.markdown(
             f'<div class="cs-readout">{figures}</div>'
-            f'<p class="cs-readout-note">scrap y = {result.scrap_ratio:.0%} '
-            f"\u00b7 rail p = {result.train_share:.0%} "
+            f'<p class="cs-readout-note">scrap {result.scrap_ratio:.0%} '
+            f"\u00b7 rail {result.train_share:.0%} "
             f"\u00b7 grid {result.grid_factor:.3f} kg CO\u2082e/kWh "
             f"\u00b7 electricity \u2248 "
             f"{'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}</p>",
@@ -704,8 +704,8 @@ def _baseline(result: Result, dataset: Dataset, stages) -> None:
             "inbound": inbound_share(),
             "rail_in": inbound_rail(),
             "rail_out": outbound_rail(),
-            "label": f"Captured: y={st.session_state.scrap}%, "
-            f"inbound={st.session_state.inbound}%, rail {st.session_state.train_in}% in / "
+            "label": f"Captured: scrap {st.session_state.scrap}%, inbound "
+            f"{st.session_state.inbound}%, rail {st.session_state.train_in}% in / "
             f"{st.session_state.train_out}% out",
         }
     if controls[2].button("Reset baseline", use_container_width=True):
@@ -719,7 +719,7 @@ def _baseline(result: Result, dataset: Dataset, stages) -> None:
             "route": default_route(stages),
             "train": 0.50,
             "inbound": 0.50,
-            "label": "Default baseline: y=40%, India grid today, first-listed technologies",
+            "label": "Default baseline: scrap 40%, India grid today, first-listed technologies",
         }
     st.info(saved["label"])
 
