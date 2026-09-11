@@ -173,9 +173,9 @@ def apply_haulage(
 def coefficient_model(dataset: Dataset, weights: Mapping[int, float]) -> Dict[str, object]:
     """Reduce the selected route to coefficients a browser can evaluate.
 
-    Streamlit only learns a slider's value when it is released, so the figures
-    cannot follow a drag from the server. They can follow it in the page, because
-    the model is simple in the variables a drag changes:
+    Streamlit only learns a slider's value when it is released, so neither the
+    figures nor the charts can follow a drag from the server. They can follow it
+    in the page, because the model is simple in the variables a drag changes:
 
     * every metric is linear in the charge — ``M = A·x + B·y``;
     * the two transport rows are additionally linear in their own rail share, so
@@ -185,11 +185,14 @@ def coefficient_model(dataset: Dataset, weights: Mapping[int, float]) -> Dict[st
 
     Evaluating each row at the basis values of (x, y) and (p, q) therefore
     captures it exactly — this is a re-arrangement of the same formulas, not an
-    approximation of them.
+    approximation of them. The same block is exported per department, so the
+    department chart can be redrawn in the page as well.
     """
     inbound_ids, outbound_ids = transport_ids(dataset)
+    transport = set(inbound_ids) | set(outbound_ids)
     coal = dataset.factor("a")
     metrics = ("scope1", "scope3", "sec")
+    keys = (*metrics, "kwh")
 
     def binding(x: float, p: float) -> Dict[str, float]:
         """Variables with a unit coal mix, so Scope 2 comes back as kWh × EF."""
@@ -198,7 +201,7 @@ def coefficient_model(dataset: Dataset, weights: Mapping[int, float]) -> Dict[st
         return values
 
     def evaluate(procs, x: float, p: float) -> Dict[str, float]:
-        totals = {key: 0.0 for key in (*metrics, "kwh")}
+        totals = {key: 0.0 for key in keys}
         variables = binding(x, p)
         for proc in procs:
             weight = float(weights.get(proc.id, 0.0))
@@ -211,24 +214,31 @@ def coefficient_model(dataset: Dataset, weights: Mapping[int, float]) -> Dict[st
             totals["kwh"] += values["scope2"] * weight * 1000.0 / coal
         return totals
 
-    by_id = {proc.id: proc for proc in dataset.processes}
-    plain = [
-        proc
-        for proc in dataset.processes
-        if proc.id not in set(inbound_ids) | set(outbound_ids)
-    ]
+    def block(procs) -> Dict[str, object]:
+        """The coefficients for one set of rows: plain, inbound and outbound."""
+        plain = [proc for proc in procs if proc.id not in transport]
+        virgin, scrap = evaluate(plain, 1.0, 0.5), evaluate(plain, 0.0, 0.5)
 
-    def quad(ids) -> Dict[str, List[float]]:
-        """A transport row at (virgin, rail), (virgin, road), (scrap, rail), (scrap, road)."""
-        procs = [by_id[pid] for pid in ids]
-        corners = [evaluate(procs, x, p) for x, p in ((1.0, 1.0), (1.0, 0.0), (0.0, 1.0), (0.0, 0.0))]
-        return {key: [corner[key] for corner in corners] for key in (*metrics, "kwh")}
+        def quad(ids) -> Dict[str, List[float]]:
+            chosen = [proc for proc in procs if proc.id in set(ids)]
+            corners = [
+                evaluate(chosen, x, p)
+                for x, p in ((1.0, 1.0), (1.0, 0.0), (0.0, 1.0), (0.0, 0.0))
+            ]
+            return {key: [corner[key] for corner in corners] for key in keys}
 
-    virgin = evaluate(plain, 1.0, 0.5)
-    scrap = evaluate(plain, 0.0, 0.5)
-    return {
-        "base": {key: [virgin[key], scrap[key]] for key in (*metrics, "kwh")},
-        "inbound": quad(inbound_ids),
-        "outbound": quad(outbound_ids),
-        "factors": {var: dataset.factor(var) for var in MIX_VARIABLES},
+        return {
+            "base": {key: [virgin[key], scrap[key]] for key in keys},
+            "inbound": quad(inbound_ids),
+            "outbound": quad(outbound_ids),
+        }
+
+    live = [proc for proc in dataset.processes if float(weights.get(proc.id, 0.0)) > 0]
+    departments = sorted({proc.department for proc in live})
+    model: Dict[str, object] = block(dataset.processes)
+    model["departments"] = {
+        name: block([proc for proc in live if proc.department == name])
+        for name in departments
     }
+    model["factors"] = {var: dataset.factor(var) for var in MIX_VARIABLES}
+    return model

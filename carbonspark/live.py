@@ -111,12 +111,66 @@ _SCRIPT = """
       const value = figures[node.getAttribute('data-cs-metric')];
       if (value !== undefined && node.textContent !== value) node.textContent = value;
     });
+    redrawCharts(model, { x: x, y: y, share: share, railIn: railIn, railOut: railOut });
+
     const note = doc.querySelector('[data-cs-conditions]');
     if (note) {
       const railBlend = railIn * share + railOut * (1 - share);
       note.textContent =
         'scrap ' + Math.round(y * 100) + '% \u00b7 rail ' + Math.round(railBlend * 100) + '%';
     }
+  };
+
+  // --- the charts follow the drag too --------------------------------------
+  // Plotly is on the page, and each figure carries a `meta.live` tag saying
+  // what it draws, so the bars can be moved to the values just computed. The
+  // server still redraws on release; this keeps the picture honest in between.
+  const blockValue = (block, key, at) => {
+    const leg = (quad, p) => {
+      const q = 1 - p;
+      return quad[0] * at.x * p + quad[1] * at.x * q + quad[2] * at.y * p + quad[3] * at.y * q;
+    };
+    return (
+      block.base[key][0] * at.x +
+      block.base[key][1] * at.y +
+      2 * at.share * leg(block.inbound[key], at.railIn) +
+      2 * (1 - at.share) * leg(block.outbound[key], at.railOut)
+    );
+  };
+
+  const scopesOf = (block, model, at) => ({
+    scope1: blockValue(block, 'scope1', at),
+    scope2: blockValue(block, 'kwh', at) * model.gridFactor / 1000,
+    scope3: blockValue(block, 'scope3', at),
+  });
+
+  const redrawCharts = (model, at) => {
+    const Plotly = window.parent.Plotly;
+    if (!Plotly || !model.departments) return;
+    doc.querySelectorAll('.js-plotly-plot').forEach((gd) => {
+      const meta = gd.layout && gd.layout.meta;
+      if (!meta || !meta.live) return;
+      try {
+        if (meta.live === 'scopes') {
+          const values = scopesOf(model, model, at);
+          const x = meta.scopes.map((scope) => values[scope]);
+          Plotly.restyle(gd, {
+            x: [x],
+            text: [x.map((value) => value.toFixed(3))],
+          }, [0]);
+        } else if (meta.live === 'departments') {
+          const perDept = meta.departments.map((name) => {
+            const block = model.departments[name];
+            return block ? scopesOf(block, model, at) : { scope1: 0, scope2: 0, scope3: 0 };
+          });
+          meta.order.forEach((scope, index) => {
+            Plotly.restyle(gd, { x: [perDept.map((row) => row[scope])] }, [index]);
+          });
+        }
+      } catch (error) {
+        /* a chart mid-render is not worth interrupting the drag for */
+      }
+    });
   };
 
   const paint = () => {

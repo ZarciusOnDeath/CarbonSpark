@@ -432,3 +432,42 @@ def test_coefficient_model_matches_the_server(scrap, inbound_share, rail_in, rai
     assert live["scope2"] == pytest.approx(served.totals["scope2"], rel=1e-9)
     assert live["scope3"] == pytest.approx(served.totals["scope3"], rel=1e-9)
     assert live["sec"] == pytest.approx(served.energy_gj, rel=1e-9)
+
+
+@pytest.mark.parametrize("scrap,inbound_share,rail_in,rail_out", [(0.35, 0.5, 0.7, 0.55)])
+def test_per_department_coefficients_match_the_server(scrap, inbound_share, rail_in, rail_out):
+    """The department chart is redrawn from these, so each block must be exact."""
+    from carbon_calc.route import (
+        apply_haulage,
+        build_stages,
+        coefficient_model,
+        default_route,
+        rail_shares,
+        route_weights,
+    )
+
+    dataset = load_dataset()
+    weights = route_weights(default_route(build_stages(dataset)))
+    model = coefficient_model(dataset, weights)
+    served = calculate(
+        scrap,
+        INDIA_GRID_MIX,
+        dataset,
+        apply_haulage(weights, dataset, inbound_share),
+        rail_in,
+        rail_shares(dataset, rail_in, rail_out),
+    )
+
+    for name, block in model["departments"].items():
+        live = _evaluate_coefficients(
+            {**block, "factors": model["factors"]},
+            scrap,
+            inbound_share,
+            rail_in,
+            rail_out,
+            INDIA_GRID_MIX,
+        )
+        for metric in ("scope1", "scope2", "scope3"):
+            assert live[metric] == pytest.approx(
+                served.by_department[name][metric], rel=1e-9, abs=1e-12
+            ), f"{name} {metric}"

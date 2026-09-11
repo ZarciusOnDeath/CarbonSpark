@@ -704,8 +704,11 @@ def _dashboard(result: Result, dataset: Dataset, stages) -> None:
 
     st.markdown("### Greenhouse gases")
     st.caption(
-        "A gas-by-gas view of the same footprint, reported alongside the scopes in the "
-        "workbook — not a fourth scope, so it is never added into the total above."
+        "The workbook's gas-by-gas columns, reported alongside the scopes and never "
+        "added into the total above. They track **Scope 1 only** \u2014 summed across the "
+        "route they come to about a tenth of the scope total, and row by row they sit "
+        "close to that row's Scope 1 \u2014 so read them as a breakdown of what the plant "
+        "burns, not of the whole footprint."
     )
     gases = pd.DataFrame(
         [{"Gas": METRIC_LABELS[gas], "tCO₂e/t": result.totals[gas]} for gas in TRACE_GASES]

@@ -115,6 +115,9 @@ def scope_breakdown(result: Result, height: int = 520) -> go.Figure:
         )
     )
     figure.update_layout(
+        # `meta` travels into the page, where the script uses it to find this
+        # figure and redraw its bars while a slider is being dragged.
+        meta=dict(live="scopes", scopes=list(SCOPES)),
         xaxis=dict(title="tCO2e per tonne of steel", range=[0, SCOPE_AXIS_MAX]),
         yaxis_title=None,
         bargap=0.42,
@@ -142,6 +145,7 @@ def department_breakdown(result: Result, height: int = 520) -> go.Figure:
             hovertemplate="%{y} · %{fullData.name}<br><b>%{x:.4f} tCO2e/t</b><extra></extra>",
         )
     figure.update_layout(
+        meta=dict(live="departments", departments=list(departments), order=list(STACK_ORDER)),
         barmode="stack",
         bargap=0.34,
         xaxis=dict(title="tCO2e per tonne of steel", range=[0, DEPARTMENT_AXIS_MAX]),
