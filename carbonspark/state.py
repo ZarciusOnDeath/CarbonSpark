@@ -293,6 +293,41 @@ def save_scenario() -> None:
     st.session_state[SAVE_NAME_W] = ""
 
 
+def load_scenario(name: str) -> None:
+    """Put a saved scenario back into the inputs, so it can be edited further.
+
+    Without this a saved scenario is a dead end: the inputs only ever hold the
+    one scenario on screen, so building a *second* custom scenario meant
+    entering every slider again from scratch. Loading one back makes the
+    natural workflow — save A, adjust it, save that as B — actually possible.
+    """
+    scenario = st.session_state.scenarios.get(name)
+    if scenario is None:
+        return
+
+    st.session_state.scrap = int(round(scenario["scrap"] * 100))
+    st.session_state.train_in = int(round(scenario["rail_in"] * 100))
+    st.session_state.train_out = int(round(scenario["rail_out"] * 100))
+    st.session_state.inbound = int(round(scenario["inbound"] * 100))
+    for widget, value in (
+        (SCRAP_W, st.session_state.scrap),
+        (TRAIN_IN_W, st.session_state.train_in),
+        (TRAIN_OUT_W, st.session_state.train_out),
+        (INBOUND_W, st.session_state.inbound),
+    ):
+        if widget in st.session_state:
+            st.session_state[widget] = value
+
+    write_mix(scenario["mix"])
+    apply_mix()
+
+    st.session_state.route = {key: dict(value) for key, value in scenario["route"].items()}
+    st.session_state.route_draft = {
+        key: dict(value) for key, value in scenario["route"].items()
+    }
+    forget_route_widgets()
+
+
 def delete_scenario(name: str) -> None:
     """Forget a saved scenario."""
     st.session_state.scenarios.pop(name, None)

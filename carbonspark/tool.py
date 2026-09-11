@@ -37,6 +37,7 @@ from carbon_calc.route import (
 from . import charts, live
 from .presets import AMBITIONS, GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
 from .state import (
+    load_scenario,
     COMPARE_RIGHT_W,
     INBOUND_W,
     PRESET_W,
@@ -799,6 +800,12 @@ def _describe(scenario) -> str:
 def _comparison(result: Result, dataset: Dataset, stages) -> None:
     """Two scenarios side by side — either of them the one on screen or a saved one."""
     st.markdown("### Compare two scenarios")
+    st.caption(
+        "Either side can be the scenario on screen, the default baseline, or one you "
+        "have saved. To compare two of your own: set the inputs, save that as one "
+        "scenario, adjust the inputs again, and save that as another \u2014 then name "
+        "both here. **Load into inputs** brings a saved scenario back for editing."
+    )
 
     saved = st.session_state.scenarios
     options = [CURRENT, DEFAULT_BASELINE, *saved]
@@ -849,8 +856,18 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                         label_visibility="collapsed",
                     )
             elif name in saved:
-                st.button(
-                    "Delete this scenario",
+                actions = st.columns([1, 1])
+                actions[0].button(
+                    "\u21a9  Load into inputs",
+                    on_click=load_scenario,
+                    args=(name,),
+                    use_container_width=True,
+                    key=f"load_{key}",
+                    help="Put this scenario back in the inputs so you can adjust it "
+                    "and save the result as another scenario",
+                )
+                actions[1].button(
+                    "Delete",
                     on_click=delete_scenario,
                     args=(name,),
                     use_container_width=True,
