@@ -854,7 +854,7 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                     )
                     st.text_input(
                         "Name for the saved scenario",
-                        placeholder="e.g. Jajpur with 60% scrap",
+                        placeholder="e.g. 60% scrap on a renewable grid",
                         key=SAVE_NAME_W,
                         label_visibility="collapsed",
                     )
