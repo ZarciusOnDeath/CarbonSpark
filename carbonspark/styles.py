@@ -79,9 +79,15 @@ html {{ scroll-behavior: smooth; }}
 .cs-nav .cs-spacer {{ flex: 1; }}
 
 /* ---------- hero ---------- */
-.cs-hero {{ min-height: 70vh; display:flex; flex-direction:column; justify-content:center; padding: 24px 0 8px 0; }}
+/* The hero holds the wordmark, one sentence and the way in — it does not need
+   to fill the screen, and filling it pushed the calculator button below the
+   fold on a laptop. */
+.cs-hero {{
+  min-height: auto; display:flex; flex-direction:column; justify-content:flex-start;
+  padding: clamp(18px, 5vh, 54px) 0 4px 0;
+}}
 .cs-hero h1 {{
-  font-family: var(--serif); font-size: clamp(3.2rem, 8vw, 6rem); font-weight: 400;
+  font-family: var(--serif); font-size: clamp(3rem, 7vw, 5.4rem); font-weight: 400;
   letter-spacing:-.03em; line-height:.98; margin:.06em 0; color: var(--ink);
 }}
 .cs-hero h1 em {{ font-style: italic; color: var(--clay); }}
@@ -376,6 +382,34 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
   transition: font-size .3s cubic-bezier(.22,.61,.36,1), margin .3s ease;
 }}
 .cs-readout-note {{ transition: opacity .25s ease, max-height .3s ease; overflow:hidden; }}
+
+/* The inputs control rides with the readout it changes. Quiet by default — a
+   hairline pill, not a slab of colour — and it picks up the accent on hover so
+   it still reads as the thing to press. */
+.st-key-open_inputs {{ display:flex; align-items:center; height:100%; }}
+.st-key-open_inputs button {{
+  background: transparent !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 999px !important;
+  color: var(--ink-soft) !important;
+  font-weight: 600 !important;
+  letter-spacing: .04em;
+  font-size: .82rem !important;
+  padding: 8px 16px !important;
+  transition: border-color .18s ease, color .18s ease, background .18s ease;
+}}
+.st-key-open_inputs button:hover {{
+  border-color: var(--clay) !important; color: var(--clay) !important;
+  background: transparent !important;
+}}
+.st-key-open_inputs button p {{ color: inherit !important; font-size: .82rem !important; }}
+.cs-condensed .st-key-open_inputs button {{ padding: 5px 13px !important; font-size:.76rem !important; }}
+
+/* The hero's way into the calculator. */
+.st-key-cs_hero_cta {{ margin: 4px 0 6px 0; }}
+.st-key-cs_hero_cta button {{ border-radius: 999px !important; padding: 12px 22px !important; }}
+.cs-hero-foot {{ display:flex; justify-content:flex-start; }}
+.cs-hero-foot .cs-scroll-hint {{ align-items:flex-start; margin-top: clamp(18px, 4vh, 42px); }}
 .cs-condensed .cs-metric-value {{ font-size: 1.3rem !important; }}
 .cs-condensed .cs-metric-lead .cs-metric-value {{ font-size: 1.85rem !important; }}
 .cs-condensed .cs-metric-label {{ font-size:.6rem; margin-bottom:0; }}

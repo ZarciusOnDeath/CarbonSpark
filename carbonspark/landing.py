@@ -55,8 +55,25 @@ def _hero() -> None:
     See what a tonne of stainless steel really costs in carbon — and find the
     combination of scrap, energy and process route that costs less.
   </p>
-  <div class="cs-scroll-hint cs-rise-3">{CHEVRON}<span>Scroll to explore</span></div>
 </div>""",
+            unsafe_allow_html=True,
+        )
+        # The calculator is the point of the page, so the way in sits in the
+        # hero rather than five sections below it.
+        with st.container(key="cs_hero_cta"):
+            action, _ = st.columns([1.05, 1.4])
+            action.button(
+                "Open the calculator  \u2192",
+                on_click=go,
+                args=("loading",),
+                type="primary",
+                use_container_width=True,
+                key="hero_launch",
+            )
+        st.markdown(
+            f'<div class="cs-hero-foot">'
+            f'<div class="cs-scroll-hint cs-rise-3">{CHEVRON}'
+            f"<span>or read what it does</span></div></div>",
             unsafe_allow_html=True,
         )
     with right:

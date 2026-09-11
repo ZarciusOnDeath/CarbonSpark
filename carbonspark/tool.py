@@ -594,7 +594,18 @@ def _headline(result: Result, dataset: Dataset) -> None:
     # markdown block is exactly its own height, and a sticky element with no
     # room to move never moves.
     with st.container(key="cs_readout"):
-        st.markdown(
+        # The control that changes the figures rides with the figures: the
+        # readout is already pinned to the top of the page, so this is the one
+        # place it is always reachable without being a slab of colour.
+        readings, action = st.columns([6.2, 1.25], gap="small")
+        action.button(
+            "\u2715  Close" if st.session_state.drawer_open else "\u2699  Inputs",
+            on_click=_toggle_drawer,
+            use_container_width=True,
+            help="Scrap ratio, energy grid mix and the plant's process route",
+            key="open_inputs",
+        )
+        readings.markdown(
             f'<div class="cs-readout">{figures}</div>'
             f'<p class="cs-readout-note"><span data-cs-conditions>scrap '
             f"{result.scrap_ratio:.0%} \u00b7 rail {result.train_share:.0%}</span> "
@@ -954,29 +965,21 @@ def _process_grid(result: Result, dataset: Dataset) -> None:
 # --------------------------------------------------------------------------- #
 def render(dataset: Dataset, stages) -> None:
     live.enable("tool", _live_model(dataset))
-    bar = st.columns([2.6, 1.2, 0.7, 1.2, 1.2])
+    bar = st.columns([3.8, 0.7, 1.2, 1.2])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
         f'font-size:1.1rem">{spark_mark(24, st.session_state.dark)} CarbonSpark <span class="cs-chip">tool</span></div>',
         unsafe_allow_html=True,
     )
     bar[1].button(
-        "\u2715 Close inputs" if st.session_state.drawer_open else "\u2699\ufe0f Customise",
-        on_click=_toggle_drawer,
-        use_container_width=True,
-        type="secondary" if st.session_state.drawer_open else "primary",
-        help="Scrap ratio, energy grid mix and the plant's process route",
-        key="open_inputs",
-    )
-    bar[2].button(
         "\u2600\ufe0f" if st.session_state.dark else "\u263e",
         on_click=toggle_dark,
         use_container_width=True,
         help="Switch to light mode" if st.session_state.dark else "Switch to dark mode",
         key="dark_toggle_tool",
     )
-    bar[3].button("Database", on_click=go, args=("database",), use_container_width=True)
-    bar[4].button("\u2190 Back to site", on_click=go, args=("landing",), use_container_width=True)
+    bar[2].button("Database", on_click=go, args=("database",), use_container_width=True)
+    bar[3].button("\u2190 Back to site", on_click=go, args=("landing",), use_container_width=True)
     st.markdown('<div class="cs-rule"></div>', unsafe_allow_html=True)
 
     # The drawer mutates the route as it renders, so the result is computed
