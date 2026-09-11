@@ -32,24 +32,16 @@ GRID_PRESETS: Dict[str, Dict[str, float]] = {
 }
 
 GRID_PRESET_NOTES: Dict[str, str] = {
-    "India grid today": (
-        "The mix quoted in the workbook's reference note (~70% coal, 4% gas, 12% hydro, "
-        "4% wind, 5% solar, 2% nuclear, 2% oil), which blends to ~0.71 kg CO2e/kWh."
-    ),
+    "India grid today": "The workbook's reference mix \u2014 ~70% coal, blending to ~0.71 kg CO2e/kWh.",
     "50% renewable": "Half the supply from hydro, wind and solar — a mid-transition PPA position.",
     "Near-zero carbon": "Entirely non-fossil supply: hydro, wind, solar and nuclear only.",
     "JSL Jajpur (estimated)": (
-        "Coal-dominated Odisha supply with a captive solar contribution. Jindal Stainless "
-        "commissioned Odisha's largest single-campus captive solar plant at Jajpur — over "
-        "30 MWp (a 7.324 MW floating array plus 23.02 MWp rooftop) generating ~44.3 million "
-        "units a year — and has contracted a 700 million-unit/year wind-solar hybrid with "
-        "ReNew. The solar and wind capacity is published; the percentage split below is an "
-        "ESTIMATE, since the site's source-wise consumption mix is not disclosed."
+        "Coal-dominated Odisha supply plus 30+ MWp captive solar and a contracted "
+        "wind-solar hybrid. Capacities are published; the split below is an ESTIMATE."
     ),
     "JSL Hisar (estimated)": (
-        "Haryana grid supply alongside the site's 250 MW captive power plant and rooftop "
-        "solar. The captive capacity is published; the percentage split below is an "
-        "ESTIMATE, since the site's source-wise consumption mix is not disclosed."
+        "Haryana grid plus a 250 MW captive plant and rooftop solar. Capacity is "
+        "published; the split below is an ESTIMATE."
     ),
 }
 
@@ -91,10 +83,7 @@ class PlantProfile:
 CUSTOM = PlantProfile(
     name="Custom",
     tagline="Start from the workbook's default route",
-    summary=(
-        "Every stage runs its first-listed technology at a 40% scrap charge on today's "
-        "Indian grid. Change anything you like — this is the blank sheet."
-    ),
+    summary="Every stage on its first-listed technology, 40% scrap, today's Indian grid.",
     grid_preset="India grid today",
     scrap_ratio=0.40,
     inbound_rail=0.50,
@@ -104,11 +93,7 @@ CUSTOM = PlantProfile(
 JAJPUR = PlantProfile(
     name="JSL Jajpur",
     tagline="Integrated melting to hot rolling, Odisha",
-    summary=(
-        "India's largest stainless plant at ~2.2 MTPA. Ferrochrome from submerged arc "
-        "furnaces feeds an EAF, liquid steel is decarburised in an AOD converter, refined "
-        "in a ladle furnace, and cast on a single-strand slab caster before hot rolling."
-    ),
+    summary="~2.2 MTPA. SAF ferrochrome \u2192 EAF \u2192 AOD \u2192 ladle furnace \u2192 slab caster \u2192 hot rolling.",
     grid_preset="JSL Jajpur (estimated)",
     scrap_ratio=0.35,
     inbound_rail=0.70,
@@ -169,10 +154,8 @@ HISAR = PlantProfile(
     name="JSL Hisar",
     tagline="Melting plus the specialty finishing complex, Haryana",
     summary=(
-        "The group's original site, ~0.8 MTPA, running a stainless melt shop alongside the "
-        "cold-rolling complex: four 20-Hi Sendzimir mills, three continuous anneal-and-pickle "
-        "lines (three with electrolytic pickling), a bright annealing line, and slitting and "
-        "cut-to-length finishing."
+        "~0.8 MTPA. Melt shop plus the cold-rolling complex: four 20-Hi mills, three "
+        "anneal-and-pickle lines, bright annealing and finishing."
     ),
     grid_preset="JSL Hisar (estimated)",
     scrap_ratio=0.45,
@@ -343,11 +326,9 @@ DREAM = Ambition(
     name="Theoretical floor",
     summary="Every lever at its physical limit, with no regard for what can be bought or built.",
     rationale=(
-        "Charge up to 100% scrap, ignoring that stainless grades need virgin "
-        "chromium and nickel that scrap alone cannot supply.",
-        "Assume a grid that can be made entirely non-fossil on demand.",
-        "Allow any technology in the workbook, including vacuum and remelting "
-        "routes that carry a negligible share of world tonnage.",
+        "**Scrap up to 100%**, ignoring that stainless needs virgin chromium and nickel.",
+        "**Any non-fossil grid** on demand.",
+        "**Any technology** in the workbook, vacuum and remelting included.",
     ),
     scrap_max=1.0,
     rail_max=1.0,
@@ -358,16 +339,11 @@ PRACTICAL = Ambition(
     name="Buildable today",
     summary="Only what a plant could contract or commission inside a year.",
     rationale=(
-        "Scrap is capped at 60% of the charge: stainless needs its alloying "
-        "elements, and high-grade scrap is both scarce and priced against "
-        "demand from every other producer.",
-        "Coal stays at 45% of supply or more. A plant buys from the grid it is "
-        "connected to, and that grid is coal-fired; captive solar and open-access "
-        "wind displace part of it, not all of it.",
-        "Hydro and nuclear are capped near their share of that grid — an "
-        "industrial consumer cannot contract unlimited amounts of either.",
-        "Melting stays on the routes that carry world stainless production; "
-        "the vacuum and remelting furnaces are excluded.",
+        "**Scrap \u2264 60%** \u2014 stainless needs its alloying elements, and graded scrap is scarce.",
+        "**Coal \u2265 45%** \u2014 the grid a plant is connected to is coal-fired; captive "
+        "renewables displace part of it, not all.",
+        "**Hydro and nuclear** capped near their real grid share.",
+        "**No vacuum or remelting** \u2014 a negligible share of world tonnage.",
     ),
     scrap_max=0.60,
     rail_max=0.80,
@@ -385,13 +361,10 @@ STRETCH = Ambition(
     name="Stretch, but reachable",
     summary="A decade of procurement and scrap-supply work, not a change of physics.",
     rationale=(
-        "Scrap up to 80% of the charge, which needs a secured supply of sorted "
-        "grade-specific scrap and some loss of grade flexibility.",
-        "Renewables up to 70% of supply, which assumes firmed round-the-clock "
-        "contracts or storage that is procurable but not yet cheap.",
-        "Coal down to 10-30%, the rest carried by firmed renewables, gas and "
-        "what hydro and nuclear the grid can actually allocate.",
-        "Melting still limited to the routes the industry actually runs.",
+        "**Scrap \u2264 80%** \u2014 needs secured grade-specific supply and less grade flexibility.",
+        "**Renewables \u2264 70%** \u2014 assumes firmed round-the-clock contracts or storage.",
+        "**Coal 10\u201330%**, the rest firmed renewables, gas, hydro and nuclear.",
+        "**No vacuum or remelting.**",
     ),
     scrap_max=0.80,
     rail_max=0.90,

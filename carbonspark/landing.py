@@ -88,24 +88,20 @@ def _info(dataset: Dataset) -> None:
   <div class="cs-eyebrow">Info</div>
   <h2>What CarbonSpark does</h2>
   <p>
-    It turns a carbon accounting spreadsheet into something you can actually steer.
-    Set the scrap-to-virgin ratio, the electricity mix and the process route, and every
-    number on screen recomputes from the plant's own formulas — {len(dataset.processes)}
-    process steps, eleven metrics each, evaluated live.
+    It turns a carbon accounting spreadsheet into something you can steer. Set the scrap
+    ratio, the electricity mix and the process route; {len(dataset.processes)} process steps
+    recompute live from the plant's own formulas.
   </p>
 </div>""",
         unsafe_allow_html=True,
     )
     cards = [
         (EMBER, "Accounting", "Scope 1, 2 and 3",
-         "Direct combustion, purchased electricity and upstream Cat. 1-8, split out per "
-         "department and per process step."),
+         "Direct, purchased electricity and upstream Cat. 1-8 \u2014 per department and per step."),
         (AMBER, "Control", "Every lever, live",
-         "Scrap ratio, seven electricity sources, rail-versus-road haulage on each leg and "
-         "the technology at each of 48 stages."),
+         "Scrap ratio, seven energy sources, rail vs road per leg, technology at 48 stages."),
         (STEEL, "Search", "A lower-carbon answer",
-         "An optimiser that searches the whole space under your own practical constraints "
-         "and returns the route that costs least."),
+         "An optimiser that searches the whole space under practical limits."),
     ]
     left, right = st.columns([1.25, 1], gap="large")
     with left:
@@ -122,7 +118,7 @@ def _info(dataset: Dataset) -> None:
             '<div class="cs-figure-label">A default route, by scope</div>'
             f"{scope_bars()}"
             '<p class="cs-figure-note">Scope 2 dominates on today\u2019s Indian grid \u2014 '
-            "which is why the electricity mix is the biggest lever in the tool.</p>"
+            "the electricity mix is the biggest lever.</p>"
             "</div>",
             unsafe_allow_html=True,
         )
@@ -140,10 +136,8 @@ def _route_strip(dataset: Dataset) -> None:
   <div class="cs-eyebrow">The route</div>
   <h2>Raw material in, finished coil out</h2>
   <p>
-    Eight departments, {len(dataset.processes)} process steps and every interchangeable
-    technology the workbook records between them — melting by arc furnace or induction,
-    decarburising by AOD or VOD, annealing bright or open, rail or road at both ends.
-    Every one of them is yours to switch.
+    Eight departments, {len(dataset.processes)} process steps, and every interchangeable
+    technology the workbook records between them — all of it yours to switch.
   </p>
   <div class="cs-strip">{steps}</div>
 </div>""",
@@ -187,26 +181,21 @@ def _why() -> None:
   <div class="cs-eyebrow">Why it matters</div>
   <h2>Carbon intensity is decided long before it is measured</h2>
   <p>
-    Stainless steelmaking is energy- and emissions-intensive, and the intensity of any
-    given tonne is set by choices made upstream of the meter: how much scrap goes into
-    the charge, where the electricity comes from, which furnace and casting route the
-    metal takes. Those decisions are usually made without anyone seeing their carbon
-    consequence at the moment of choosing.
+    A tonne's intensity is set upstream of the meter — by the scrap charged, the
+    electricity bought and the route the metal takes. Those choices are usually made
+    without anyone seeing their carbon consequence.
   </p>
   <p>
-    With a net-zero-by-2050 commitment on the table, the gap that matters is not
-    measurement — it is visibility while the decision is still open. CarbonSpark closes
-    that gap: every option is priced in tCO<sub>2</sub>e per tonne before you pick it.
+    The gap is not measurement; it is visibility while the decision is still open.
+    Every option here is priced in tCO<sub>2</sub>e per tonne before you pick it.
   </p>
 </div>""",
         unsafe_allow_html=True,
     )
     stats = [
-        (EMBER, 0.56, "~6.1", "tCO\u2082e per tonne on a default route at 40% scrap, "
-                              "today\u2019s Indian grid"),
-        (AMBER, 0.72, "72%", "lower under a practical constraint set the optimiser finds"),
-        (STEEL, 1.00, "48", "process stages you can reconfigure, from raw material handling "
-                            "to despatch"),
+        (EMBER, 0.56, "~6.1", "tCO\u2082e per tonne on the default route"),
+        (AMBER, 0.72, "72%", "lower under the optimiser\u2019s practical limits"),
+        (STEEL, 1.00, "48", "process stages you can reconfigure"),
     ]
     for column, (colour, _, figure, label) in zip(st.columns(3, gap="large"), stats):
         column.markdown(
@@ -224,9 +213,8 @@ def _tool_door() -> None:
   <div class="cs-eyebrow">Use Tool</div>
   <h2>Open the calculator</h2>
   <p>
-    A live model of the plant: pick a starting point — a custom route or one of the
-    built-in site profiles — then move the levers and watch the scope breakdown, the
-    department split and the gas-by-gas table respond.
+    Pick a starting point — a custom route or a built-in site profile — then move the
+    levers and watch every breakdown respond.
   </p>
 </div>""",
         unsafe_allow_html=True,
@@ -280,10 +268,9 @@ def _database_door(dataset: Dataset) -> None:
   <div class="cs-eyebrow">Database</div>
   <h2>Look at the data behind it</h2>
   <p>
-    Nothing here is a black box. The database view is the accounting grid itself —
-    all {len(dataset.processes)} process rows with their formula definitions and
-    coefficient notes, the seven grid emission factors and their basis, and the
-    downstream Scope 3 categories — exactly as they appear in the workbook.
+    No black box. All {len(dataset.processes)} process rows with their formulas and
+    coefficient notes, the seven grid factors and the Scope 3 categories — as the
+    workbook has them.
   </p>
 </div>""",
         unsafe_allow_html=True,
@@ -348,11 +335,9 @@ def render(dataset: Dataset) -> None:
         """
 <div class="cs-section" style="padding-bottom:40px">
   <p style="font-size:.86rem;opacity:.75">
-    <b>Disclaimer.</b> The coefficients in the source workbook are illustrative values
-    chosen to demonstrate a working, formula-linked model. They are not measured or
-    independently verified for any specific plant or grid connection. Replace them with
-    verified plant data and your utility's disclosed emission factors before using any
-    output for regulatory disclosure (BRSR, CBAM, EPD).
+    <b>Disclaimer.</b> The workbook's coefficients are illustrative, not measured or
+    verified for any specific plant. Replace them with verified plant data before using
+    any output for regulatory disclosure (BRSR, CBAM, EPD).
   </p>
 </div>""",
         unsafe_allow_html=True,

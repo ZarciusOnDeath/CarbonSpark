@@ -160,7 +160,7 @@ def _panel_scrap(dataset: Dataset) -> None:
         key=SCRAP_W,
         on_change=on_scrap_change,
         format="%d%%",
-        help="Share of the metallic charge that is recycled scrap. The workbook calls this y; the virgin ratio x is the remainder.",
+        help="Share of the metallic charge that is recycled scrap.",
     )
     st.markdown(
         live.rendered_chip(SCRAP_LABEL, "virgin {inv}%", scrap)
@@ -178,11 +178,8 @@ def _panel_scrap(dataset: Dataset) -> None:
         key=INBOUND_W,
         on_change=on_inbound_change,
         format="%d%%",
-        help="How the material movement splits between the inbound leg (raw material and "
-        "scrap arriving at RMHS) and the outbound leg (finished coil despatched). Both "
-        "workbook rows are stated per tonne moved, so 50% is the workbook as published; "
-        "moving the slider shifts movement from one leg to the other and leaves the total "
-        "unchanged.",
+        help="Inbound is raw material arriving; outbound is finished coil leaving. "
+        "50% is the workbook as published.",
     )
     st.markdown(
         live.rendered_chip(INBOUND_LABEL, "inbound {v}%", inbound)
@@ -190,16 +187,9 @@ def _panel_scrap(dataset: Dataset) -> None:
         + live.rendered_chip(INBOUND_LABEL, "outbound {inv}%", inbound, tone="cs-chip-warn"),
         unsafe_allow_html=True,
     )
-    st.caption(
-        "Rail versus road is set on each leg separately, with the transport step itself \u2014 "
-        "under Plant customisation, in RMHS and Outbound."
-    )
-    carbon_share, energy_share = _workbook_haulage_split(dataset)
-    st.caption(
-        f"At an even split the workbook's two haulage rows put {carbon_share:.0%} of the "
-        f"transport carbon and {energy_share:.0%} of the transport energy on the inbound "
-        "leg — inbound moves bulk ore, ferroalloy and scrap, outbound moves finished coil."
-    )
+    st.caption("Rail vs road is set per leg, under Plant \u2192 RMHS and Outbound.")
+    carbon_share, _ = _workbook_haulage_split(dataset)
+    st.caption(f"At an even split, {carbon_share:.0%} of transport carbon sits on the inbound leg.")
 
 
 def _action_bar(dirty: bool, apply_label: str, on_apply, on_revert, dirty_note: str) -> None:
@@ -241,8 +231,7 @@ def _panel_grid(dataset: Dataset) -> None:
         index=presets.index(st.session_state.grid_preset),
         key=PRESET_W,
         on_change=apply_grid_preset,
-        help="A preset is a single decision, so choosing one moves the sliders and "
-        "applies straight away.",
+        help="Moves the sliders and applies straight away.",
     )
     note = GRID_PRESET_NOTES.get(st.session_state.grid_preset)
     if note:
@@ -260,8 +249,7 @@ def _panel_grid(dataset: Dataset) -> None:
         on_click=rescale_mix,
         use_container_width=True,
         disabled=off_by <= 0.05,
-        help="Rescales every share proportionally. The sliders glide to the rescaled "
-        "values rather than jumping.",
+        help="Rescales every share proportionally.",
     )
 
     for var in MIX_VARIABLES:
@@ -650,14 +638,10 @@ def _profile_banner(stages) -> None:
         args=(stages,),
     )
     profile = PLANT_PROFILES[st.session_state.plant_profile]
-    st.caption(profile.summary)
+    note = profile.summary
     if profile.restricted_departments:
-        st.caption(
-            "This profile switches on only the equipment publicly described for the "
-            "site \u2014 it is not an inventory of the plant. Anything left unticked is "
-            "unevidenced rather than known to be absent, so tick it back on if you "
-            "know the site runs it."
-        )
+        note += "  \u00b7  Only publicly described equipment is ticked \u2014 add what you know it runs."
+    st.caption(note)
     if profile.sources:
         with st.expander("Where this profile comes from", expanded=False):
             st.markdown(
@@ -737,13 +721,7 @@ def _dashboard(result: Result, dataset: Dataset, stages) -> None:
     st.markdown("</div>", unsafe_allow_html=True)
 
     st.markdown("### Greenhouse gases")
-    st.caption(
-        "The workbook's gas-by-gas columns, reported alongside the scopes and never "
-        "added into the total above. They track **Scope 1 only** \u2014 summed across the "
-        "route they come to about a tenth of the scope total, and row by row they sit "
-        "close to that row's Scope 1 \u2014 so read them as a breakdown of what the plant "
-        "burns, not of the whole footprint."
-    )
+    st.caption("**Scope 1 only** \u2014 what the plant burns, not the whole footprint. Never added to the total above.")
     gases = pd.DataFrame(
         [{"Gas": METRIC_LABELS[gas], "tCO₂e/t": result.totals[gas]} for gas in TRACE_GASES]
     )
@@ -800,12 +778,7 @@ def _describe(scenario) -> str:
 def _comparison(result: Result, dataset: Dataset, stages) -> None:
     """Two scenarios side by side — either of them the one on screen or a saved one."""
     st.markdown("### Compare two scenarios")
-    st.caption(
-        "Either side can be the scenario on screen, the default baseline, or one you "
-        "have saved. To compare two of your own: set the inputs, save that as one "
-        "scenario, adjust the inputs again, and save that as another \u2014 then name "
-        "both here. **Load into inputs** brings a saved scenario back for editing."
-    )
+    st.caption("Save two scenarios, then name one on each side. **Load into inputs** reopens a saved one for editing.")
 
     saved = st.session_state.scenarios
     options = [CURRENT, DEFAULT_BASELINE, *saved]
@@ -863,8 +836,7 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                     args=(name,),
                     use_container_width=True,
                     key=f"load_{key}",
-                    help="Put this scenario back in the inputs so you can adjust it "
-                    "and save the result as another scenario",
+                    help="Reopen this scenario in the inputs",
                 )
                 actions[1].button(
                     "Delete",
@@ -948,12 +920,7 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
     not a form.
     """
     st.markdown("### Lowest-carbon path")
-    st.caption(
-        "The search keeps the plant you are running \u2014 the same departments and the "
-        "same techniques \u2014 and looks for the best scrap ratio, grid mix, haulage "
-        "split and technology within each stage. Change the scenario itself from "
-        "**Inputs**; change how hard the search may push here."
-    )
+    st.caption("Best scrap, grid, haulage and technology for the plant you are running. Change the plant from **Inputs**.")
 
     names = list(AMBITIONS)
     chosen = st.segmented_control(
@@ -1040,11 +1007,7 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
     with st.expander("Why these limits", expanded=False):
         for reason in level.rationale:
             st.markdown(f"- {reason}")
-        st.caption(
-            "These bounds are judgements about what is procurable, not figures from "
-            "the workbook. They are the arguable part of the answer \u2014 change them in "
-            "presets.py if your view of what is buildable differs."
-        )
+        st.caption("Judgements about what is procurable, not workbook figures.")
 
     grid_rows = [
         {
