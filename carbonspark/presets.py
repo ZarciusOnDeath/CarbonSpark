@@ -118,10 +118,10 @@ JAJPUR = PlantProfile(
         ("Primary Melting", ("Electric Arc Furnace (EAF)",)),
         ("Decarburization / Alloying", ("AOD",)),
         ("Secondary Refining / Homogenization", ("Ladle Furnace (LF)",)),
-        (
-            "Continuous Casting (CCM)",
-            ("Curved Mold Caster", "Submerged Entry Nozzle (SEN)", "Argon Shrouding"),
-        ),
+        # One caster, not three: SEN and argon shrouding are practices applied
+        # *with* a caster, not alternative casters. Listing them here would send
+        # a third of every tonne "through" a nozzle instead of through the mould.
+        ("Continuous Casting (CCM)", ("Curved Mold Caster",)),
     ),
     # Jajpur is the integrated melt-to-coil line: the publicly described route is
     # EAF → AOD → LF → single-strand slab caster → hot strip. Its finishing end is
@@ -180,16 +180,15 @@ HISAR = PlantProfile(
     outbound_rail=0.25,
     route_choices=(
         ("Inspection", ("Scrap",)),
-        (
-            "Primary Melting",
-            ("Electric Arc Furnace (EAF)", "Vacuum / Special Induction (VIM)"),
-        ),
-        ("Decarburization / Alloying", ("AOD", "VOD")),
-        (
-            "Secondary Refining / Homogenization",
-            ("Ladle Furnace (LF)", "VD / RH Degasser"),
-        ),
-        ("Continuous Casting (CCM)", ("Curved Mold Caster", "Argon Shrouding")),
+        # Selecting two variations splits the tonne evenly between them, so
+        # listing VIM beside the EAF claimed half of Hisar's output is vacuum
+        # remelted. The specialty routes are a small fraction of a stainless
+        # plant's tonnage, and the profile is the main line: one melting route,
+        # one decarburiser, one refiner, one caster.
+        ("Primary Melting", ("Electric Arc Furnace (EAF)",)),
+        ("Decarburization / Alloying", ("AOD",)),
+        ("Secondary Refining / Homogenization", ("Ladle Furnace (LF)",)),
+        ("Continuous Casting (CCM)", ("Curved Mold Caster",)),
     ),
     # Hisar is the specialty end: four 20-Hi Sendzimir mills, three continuous
     # anneal-and-pickle lines, a bright annealing line, slitting and cut-to-length
