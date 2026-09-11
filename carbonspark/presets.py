@@ -291,3 +291,121 @@ def preset_matching(mix: Mapping[str, float], tolerance: float = 0.005) -> str |
         ):
             return name
     return None
+
+
+# --------------------------------------------------------------------------- #
+# Optimiser ambition levels
+# --------------------------------------------------------------------------- #
+@dataclass(frozen=True)
+class Ambition:
+    """How practical the lowest-carbon answer is asked to be.
+
+    The problem statement asks for a *feasible* path, and the unconstrained
+    optimum is not one: it will happily charge 100% scrap on a zero-carbon grid
+    and remelt everything in a vacuum furnace. Each level below fixes what the
+    search may assume, and says why — so the answer can be argued for rather
+    than just displayed.
+    """
+
+    name: str
+    summary: str
+    #: Why these limits, in the reader's terms.
+    rationale: Tuple[str, ...]
+    scrap_max: float
+    rail_max: float
+    #: Caps on individual sources, as shares of supply.
+    max_coal: float = 1.0
+    max_wind: float = 1.0
+    max_solar: float = 1.0
+    max_gas: float = 1.0
+    max_hydro: float = 1.0
+    max_nuclear: float = 1.0
+    #: A floor on coal. Capping coal does not *force* any: without a floor the
+    #: search buys a grid with none, which is not a grid anyone in India can
+    #: contract. The floor is what makes "buildable" mean something.
+    min_coal: float = 0.0
+    min_renewable: float = 0.0
+    min_non_fossil: float = 0.0
+    excluded_variations: Tuple[str, ...] = ()
+
+
+#: Melting routes that exist in the workbook but carry a negligible share of
+#: world stainless tonnage — vacuum and remelting furnaces are for aerospace and
+#: tool steels in tonne-scale batches, not for a 2 MTPA line. Letting the search
+#: pick them produces an answer no plant could run.
+SPECIALTY_MELTING = (
+    "Vacuum / Special Induction (VIM)",
+    "Vacuum Arc Remelting (VAR)",
+    "ESR Remelting",
+)
+
+DREAM = Ambition(
+    name="Theoretical floor",
+    summary="Every lever at its physical limit, with no regard for what can be bought or built.",
+    rationale=(
+        "Charge up to 100% scrap, ignoring that stainless grades need virgin "
+        "chromium and nickel that scrap alone cannot supply.",
+        "Assume a grid that can be made entirely non-fossil on demand.",
+        "Allow any technology in the workbook, including vacuum and remelting "
+        "routes that carry a negligible share of world tonnage.",
+    ),
+    scrap_max=1.0,
+    rail_max=1.0,
+    min_non_fossil=1.0,
+)
+
+PRACTICAL = Ambition(
+    name="Buildable today",
+    summary="Only what a plant could contract or commission inside a year.",
+    rationale=(
+        "Scrap is capped at 60% of the charge: stainless needs its alloying "
+        "elements, and high-grade scrap is both scarce and priced against "
+        "demand from every other producer.",
+        "Coal stays at 45% of supply or more. A plant buys from the grid it is "
+        "connected to, and that grid is coal-fired; captive solar and open-access "
+        "wind displace part of it, not all of it.",
+        "Hydro and nuclear are capped near their share of that grid — an "
+        "industrial consumer cannot contract unlimited amounts of either.",
+        "Melting stays on the routes that carry world stainless production; "
+        "the vacuum and remelting furnaces are excluded.",
+    ),
+    scrap_max=0.60,
+    rail_max=0.80,
+    min_coal=0.45,
+    max_coal=0.75,
+    max_wind=0.25,
+    max_solar=0.30,
+    max_gas=0.10,
+    max_hydro=0.12,
+    max_nuclear=0.04,
+    excluded_variations=SPECIALTY_MELTING,
+)
+
+STRETCH = Ambition(
+    name="Stretch, but reachable",
+    summary="A decade of procurement and scrap-supply work, not a change of physics.",
+    rationale=(
+        "Scrap up to 80% of the charge, which needs a secured supply of sorted "
+        "grade-specific scrap and some loss of grade flexibility.",
+        "Renewables up to 70% of supply, which assumes firmed round-the-clock "
+        "contracts or storage that is procurable but not yet cheap.",
+        "Coal down to 10-30%, the rest carried by firmed renewables, gas and "
+        "what hydro and nuclear the grid can actually allocate.",
+        "Melting still limited to the routes the industry actually runs.",
+    ),
+    scrap_max=0.80,
+    rail_max=0.90,
+    min_coal=0.10,
+    max_coal=0.30,
+    max_wind=0.45,
+    max_solar=0.45,
+    max_gas=0.15,
+    max_hydro=0.25,
+    max_nuclear=0.10,
+    min_renewable=0.35,
+    excluded_variations=SPECIALTY_MELTING,
+)
+
+AMBITIONS: Dict[str, Ambition] = {
+    level.name: level for level in (PRACTICAL, STRETCH, DREAM)
+}

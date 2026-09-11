@@ -293,9 +293,9 @@ def save_scenario() -> None:
     st.session_state[SAVE_NAME_W] = ""
 
 
-def delete_scenario() -> None:
-    """Forget the scenario currently selected on the right of the comparison."""
-    st.session_state.scenarios.pop(st.session_state.get(COMPARE_RIGHT_W), None)
+def delete_scenario(name: str) -> None:
+    """Forget a saved scenario."""
+    st.session_state.scenarios.pop(name, None)
 
 
 def toggle_dark() -> None:

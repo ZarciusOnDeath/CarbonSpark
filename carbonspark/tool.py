@@ -35,7 +35,7 @@ from carbon_calc.route import (
 )
 
 from . import charts, live
-from .presets import GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
+from .presets import AMBITIONS, GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
 from .state import (
     COMPARE_RIGHT_W,
     INBOUND_W,
@@ -583,6 +583,19 @@ def _metric(label: str, value: str, unit: str, *, key: str, lead: bool = False) 
     )
 
 
+def _readout_figures(figures: str, result: Result, kwh: float) -> None:
+    """The figures alone, for a view that supplies its own controls."""
+    st.markdown(
+        f'<div class="cs-readout">{figures}</div>'
+        f'<p class="cs-readout-note"><span data-cs-conditions>scrap '
+        f"{result.scrap_ratio:.0%} \u00b7 rail {result.train_share:.0%}</span> "
+        f"\u00b7 grid {result.grid_factor:.3f} kg CO\u2082e/kWh "
+        f"\u00b7 electricity \u2248 "
+        f"{'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}</p>",
+        unsafe_allow_html=True,
+    )
+
+
 def _headline(result: Result, dataset: Dataset) -> None:
     """The scenario's figures, sized so they read before anything else does."""
     kwh = result.electricity_kwh
@@ -601,7 +614,11 @@ def _headline(result: Result, dataset: Dataset) -> None:
     with st.container(key="cs_readout"):
         # The control that changes the figures rides with the figures: the
         # readout is already pinned to the top of the page, so this is the one
-        # place it is always reachable without being a slab of colour.
+        # place it is always reachable without being a slab of colour. The
+        # comparison view is the exception — there each side carries its own.
+        if st.session_state.get("tool_view") == "Compare":
+            _readout_figures(figures, result, kwh)
+            return
         action, readings = st.columns([1.25, 6.2], gap="small")
         action.button(
             "\u2715  Close" if st.session_state.drawer_open else "\u2699  Inputs",
@@ -792,34 +809,53 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
         scenario = saved.get(name) or _default_baseline(stages)
         return scenario, _evaluate_scenario(scenario, dataset)
 
-    picker = st.columns([1, 1, 1.5], gap="medium")
-    left_name = picker[0].selectbox("Compare", options, index=1, key="cmp_left")
-    right_name = picker[1].selectbox("against", options, index=0, key=COMPARE_RIGHT_W)
-    with picker[2]:
-        # Saving the scenario on screen is what makes custom-versus-custom
-        # possible: park one plant, change everything, then set them against
-        # each other.
-        st.text_input(
-            "Save the current scenario as",
-            placeholder="e.g. Jajpur with 60% scrap",
-            key=SAVE_NAME_W,
-        )
-        buttons = st.columns([1, 1])
-        buttons[0].button(
-            "Save current",
-            on_click=save_scenario,
-            use_container_width=True,
-            key="cmp_save",
-        )
-        buttons[1].button(
-            "Delete",
-            on_click=delete_scenario,
-            use_container_width=True,
-            disabled=right_name not in saved,
-            help=f"Remove the saved scenario {right_name!r}" if right_name in saved else
-            "Pick a saved scenario on the right to delete it",
-            key="cmp_delete",
-        )
+    # Each side carries its own controls: the scenario on screen is edited
+    # through Inputs and saved from under its own picker, a saved one is deleted
+    # from under its. Nothing about a comparison lives anywhere else on the page.
+    picker = st.columns(2, gap="large")
+
+    def side(column, key: str, index: int, caption: str) -> str:
+        with column:
+            name = st.selectbox(caption, options, index=index, key=key)
+            if name == CURRENT:
+                actions = st.columns([1, 1])
+                actions[0].button(
+                    "\u2699  Edit inputs",
+                    on_click=_toggle_drawer,
+                    use_container_width=True,
+                    key=f"edit_{key}",
+                    help="Scrap ratio, energy grid mix and the plant's process route",
+                )
+                actions[1].button(
+                    "Save as\u2026",
+                    on_click=save_scenario,
+                    use_container_width=True,
+                    key=f"save_{key}",
+                    help="Keep this scenario under the name typed below",
+                )
+                st.text_input(
+                    "Name for the saved scenario",
+                    placeholder="e.g. Jajpur with 60% scrap",
+                    key=SAVE_NAME_W,
+                    label_visibility="collapsed",
+                )
+            elif name in saved:
+                st.button(
+                    "Delete this scenario",
+                    on_click=delete_scenario,
+                    args=(name,),
+                    use_container_width=True,
+                    key=f"del_{key}",
+                )
+            else:
+                st.caption(
+                    "40% scrap, today's Indian grid, and the workbook's first-listed "
+                    "technology at every stage."
+                )
+        return name
+
+    left_name = side(picker[0], "cmp_left", 1, "Compare")
+    right_name = side(picker[1], COMPARE_RIGHT_W, 0, "against")
 
     left, left_result = resolve(left_name)
     right, right_result = resolve(right_name)
@@ -878,41 +914,44 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
 
 
 def _optimiser(result: Result, dataset: Dataset, stages) -> None:
+    """The lowest-carbon path, set against the scenario on screen.
+
+    There is nothing to configure here. The scenario being improved is whatever
+    the inputs drawer currently holds, and how hard the search is allowed to
+    push is one of three named ambition levels — so the answer is a comparison,
+    not a form.
+    """
     st.markdown("### Lowest-carbon path")
     st.caption(
-        "The search covers the scrap ratio, the seven grid shares, the rail/road split and "
-        "the technology at every stage. Set the limits that make the answer practical."
+        "The search keeps the plant you are running \u2014 the same departments and the "
+        "same techniques \u2014 and looks for the best scrap ratio, grid mix, haulage "
+        "split and technology within each stage. Change the scenario itself from "
+        "**Inputs**; change how hard the search may push here."
     )
-    left, right = st.columns(2, gap="large")
-    with left:
-        scrap_range = st.slider("Allowed scrap ratio (%)", 0, 100, (0, 80), key="opt_scrap")
-        rail_range = st.slider("Allowed rail share (%)", 0, 100, (0, 100), key="opt_rail")
-        optimise_route = st.checkbox("Let it change technologies", value=True, key="opt_route")
-        lockable = [stage.key for stage in stages if stage.has_choice]
-        locked = st.multiselect(
-            "Keep these stages as they are",
-            options=lockable,
-            format_func=lambda key: key.replace(" :: ", " — "),
-            disabled=not optimise_route,
-            key="opt_locked",
-        )
-    with right:
-        max_coal = st.slider("Maximum coal (%)", 0, 100, 40, key="opt_coal") / 100
-        min_renewable = st.slider("Minimum renewables (%)", 0, 100, 30, key="opt_ren") / 100
-        min_non_fossil = st.slider("Minimum non-fossil (%)", 0, 100, 30, key="opt_nf") / 100
-        caps = st.columns(2)
-        max_wind = caps[0].slider("Max wind (%)", 0, 100, 40, key="opt_wind") / 100
-        max_solar = caps[1].slider("Max solar (%)", 0, 100, 40, key="opt_solar") / 100
+
+    names = list(AMBITIONS)
+    chosen = st.segmented_control(
+        "Ambition", names, key="opt_ambition", label_visibility="collapsed"
+    ) or names[0]
+    level = AMBITIONS[chosen]
+    st.markdown(f"**{level.name}** \u2014 {level.summary}")
 
     constraints = Constraints(
-        scrap_min=scrap_range[0] / 100,
-        scrap_max=scrap_range[1] / 100,
-        mix_bounds={"a": (0.0, max_coal), "e": (0.0, max_wind), "f": (0.0, max_solar)},
-        min_renewable=min_renewable,
-        min_non_fossil=min_non_fossil,
-        locked_stages=tuple(locked),
-        train_min=rail_range[0] / 100,
-        train_max=rail_range[1] / 100,
+        scrap_min=0.0,
+        scrap_max=level.scrap_max,
+        mix_bounds={
+            "a": (level.min_coal, level.max_coal),
+            "c": (0.0, level.max_gas),
+            "d": (0.0, level.max_hydro),
+            "e": (0.0, level.max_wind),
+            "f": (0.0, level.max_solar),
+            "g": (0.0, level.max_nuclear),
+        },
+        min_renewable=level.min_renewable,
+        min_non_fossil=level.min_non_fossil,
+        train_min=0.0,
+        train_max=level.rail_max,
+        excluded_variations=level.excluded_variations,
     )
     try:
         optimum = optimise(
@@ -920,62 +959,99 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
             stages,
             constraints,
             st.session_state.route,
-            optimise_route=optimise_route,
             inbound_share=inbound_share(),
         )
     except InfeasibleError as error:
         st.error(f"No feasible scenario: {error}")
         return
 
+    def delta(new: float, old: float) -> str:
+        return "n/a" if old == 0 else f"{(new - old) / old:+.1%}"
+
+    pairs = [
+        ("Total CO\u2082e", optimum.result.total_co2e, result.total_co2e, "{:.3f} t/t"),
+        ("Scope 1", optimum.result.totals["scope1"], result.totals["scope1"], "{:.3f} t/t"),
+        ("Scope 2", optimum.result.totals["scope2"], result.totals["scope2"], "{:.3f} t/t"),
+        ("Scope 3", optimum.result.totals["scope3"], result.totals["scope3"], "{:.3f} t/t"),
+        ("Energy", optimum.result.energy_gj, result.energy_gj, "{:.1f} GJ/t"),
+    ]
+    for column, (label, new, old, fmt) in zip(st.columns(5), pairs):
+        column.metric(label, fmt.format(new), delta(new, old), delta_color="inverse")
+
     saving = result.total_co2e - optimum.result.total_co2e
-    headline = st.columns(4)
-    headline[0].metric(
-        "Optimised total",
-        f"{optimum.result.total_co2e:.3f} t/t",
-        f"{-saving:+.3f} vs current",
-        delta_color="inverse",
-    )
-    headline[1].metric("Scrap ratio", f"{optimum.scrap_ratio:.0%}")
-    headline[2].metric("Rail share", f"{optimum.train_share:.0%}")
-    headline[3].metric(
-        "Reduction", f"{saving / result.total_co2e:.1%}" if result.total_co2e else "n/a"
-    )
     if saving > 1e-9:
         st.success(
-            f"Cutting {saving:.3f} tCO₂e/t against your current settings — "
-            f"{saving * 1000:,.0f} kt CO₂e a year at 1 Mt of output."
+            f"**{saving:.3f} tCO\u2082e/t below your current scenario** "
+            f"({saving / result.total_co2e:.1%}) \u2014 {saving * 1000:,.0f} kt CO\u2082e a "
+            f"year at 1 Mt of output."
         )
     else:
-        st.info("Your current scenario is already optimal for these constraints.")
+        st.info("Your current scenario is already the best this ambition level allows.")
 
-    st.markdown("**Recommended grid mix**")
+    st.plotly_chart(
+        charts.comparison_bars(
+            ["Current scenario", level.name], [result, optimum.result]
+        ),
+        use_container_width=True,
+        config=charts.PLOT_CONFIG,
+    )
+
+    st.markdown("#### What it would take")
+    settings = st.columns(3)
+    settings[0].metric(
+        "Scrap ratio", f"{optimum.scrap_ratio:.0%}", delta(optimum.scrap_ratio, scrap_ratio())
+    )
+    settings[1].metric(
+        "Rail share", f"{optimum.train_share:.0%}", delta(optimum.train_share, train_share())
+    )
+    settings[2].metric(
+        "Grid factor",
+        f"{optimum.grid_factor:.3f} kg/kWh",
+        delta(optimum.grid_factor, result.grid_factor),
+        delta_color="inverse",
+    )
+
+    with st.expander("Why these limits", expanded=False):
+        for reason in level.rationale:
+            st.markdown(f"- {reason}")
+        st.caption(
+            "These bounds are judgements about what is procurable, not figures from "
+            "the workbook. They are the arguable part of the answer \u2014 change them in "
+            "presets.py if your view of what is buildable differs."
+        )
+
+    grid_rows = [
+        {
+            "Source": dataset.source_by_var[var].source,
+            "Now": current_mix()[var],
+            level.name: optimum.mix[var],
+            "kg CO\u2082e/kWh": dataset.source_by_var[var].ef,
+        }
+        for var in MIX_VARIABLES
+    ]
+    st.markdown("**Grid mix it would buy**")
     st.dataframe(
-        pd.DataFrame(
-            [
-                {
-                    "Source": dataset.source_by_var[var].source,
-                    "Current": current_mix()[var],
-                    "Optimised": optimum.mix[var],
-                    "kg CO₂e/kWh": dataset.source_by_var[var].ef,
-                }
-                for var in MIX_VARIABLES
-            ]
-        ).style.format({"Current": "{:.1%}", "Optimised": "{:.1%}", "kg CO₂e/kWh": "{:.3f}"}),
+        pd.DataFrame(grid_rows).style.format(
+            {"Now": "{:.1%}", level.name: "{:.1%}", "kg CO\u2082e/kWh": "{:.3f}"}
+        ),
         use_container_width=True,
         hide_index=True,
     )
+
     if optimum.stage_changes:
-        st.markdown("**Technology changes recommended**")
+        st.markdown("**Technology it would change**")
         st.dataframe(
             pd.DataFrame(
                 [
-                    {"Stage": key.replace(" :: ", " — "), "Current": before, "Recommended": after}
+                    {"Stage": key.replace(" :: ", " \u2014 "), "Now": before, "Change to": after}
                     for key, before, after in optimum.stage_changes
                 ]
             ),
             use_container_width=True,
             hide_index=True,
         )
+    else:
+        st.caption("No technology change needed \u2014 the gain is all in the charge and the grid.")
 
 
 def _process_grid(result: Result, dataset: Dataset) -> None:

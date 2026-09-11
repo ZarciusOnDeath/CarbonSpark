@@ -33,7 +33,14 @@ from .model import (
     calculate,
     mix_factor,
 )
-from .route import NEUTRAL_INBOUND_SHARE, RouteMix, Stage, apply_haulage, route_weights
+from .route import (
+    NEUTRAL_INBOUND_SHARE,
+    RouteMix,
+    Stage,
+    apply_haulage,
+    normalise_mix,
+    route_weights,
+)
 
 
 class InfeasibleError(ValueError):
@@ -52,6 +59,10 @@ class Constraints:
     locked_stages: Tuple[str, ...] = ()
     train_min: float = 0.0
     train_max: float = 1.0
+    #: Variation names the search may not pick. A route the world barely runs is
+    #: not an answer to "what should this plant do", however little carbon it
+    #: would emit on paper.
+    excluded_variations: Tuple[str, ...] = ()
 
     def bounds_for(self, var: str) -> Tuple[float, float]:
         if not self.mix_bounds:
@@ -127,6 +138,7 @@ def _best_route(
     variables: Mapping[str, float],
     locked: Mapping[str, Mapping[int, float]],
     enabled: Mapping[str, bool] | None,
+    excluded: Tuple[str, ...] = (),
 ) -> Tuple[RouteMix, float]:
     """Pick the lowest-total-CO2e variation at every unlocked stage.
 
@@ -146,8 +158,14 @@ def _best_route(
                 total += share * sum(values[scope] for scope in SCOPES)
             route[stage.key] = stage_mix
             continue
+        # A technology the constraints exclude is not an option, but a stage
+        # whose every option is excluded keeps what it is running rather than
+        # vanishing from the route.
+        options = [
+            option for option in stage.options if option.variation not in excluded
+        ] or list(stage.options)
         best_id, best_value = None, float("inf")
-        for option in stage.options:
+        for option in options:
             values = option.evaluate(variables)
             value = sum(values[scope] for scope in SCOPES)
             if value < best_value:
@@ -180,7 +198,17 @@ def optimise(
     optimise_route: bool = True,
     inbound_share: float = NEUTRAL_INBOUND_SHARE,
 ) -> Optimum:
-    """Find the lowest-carbon scenario allowed by ``constraints``."""
+    """Find the lowest-carbon scenario allowed by ``constraints``.
+
+    ``enabled`` defaults to the stages the baseline route actually runs. Without
+    it the search switched on every stage in the workbook — a Jajpur route of 29
+    stages came back "optimised" as all 48 — so the answer described a different
+    plant from the one it was being compared with.
+    """
+    if enabled is None:
+        enabled = {
+            key: bool(normalise_mix(mix)) for key, mix in baseline_route.items()
+        }
     scrap_min = max(0.0, min(1.0, constraints.scrap_min))
     scrap_max = max(0.0, min(1.0, constraints.scrap_max))
     if scrap_max < scrap_min:
@@ -213,7 +241,9 @@ def optimise(
         scrap_best: Tuple[float, RouteMix, float] | None = None
         for train_share in train_options:
             variables = build_variables(scrap, mix, train_share)
-            route, total = _best_route(stages, variables, locked, enabled)
+            route, total = _best_route(
+                stages, variables, locked, enabled, constraints.excluded_variations
+            )
             if scrap_best is None or total < scrap_best[0] - 1e-15:
                 scrap_best = (total, route, train_share)
         assert scrap_best is not None
