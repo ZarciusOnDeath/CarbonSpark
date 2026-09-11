@@ -25,6 +25,7 @@ from carbon_calc.optimize import Constraints, InfeasibleError, optimise
 from carbon_calc.route import (
     Stage,
     apply_haulage,
+    coefficient_model,
     rail_shares,
     default_route,
     even_mix,
@@ -564,12 +565,16 @@ def _drawer(dataset: Dataset, stages) -> None:
 # --------------------------------------------------------------------------- #
 # Result views
 # --------------------------------------------------------------------------- #
-def _metric(label: str, value: str, unit: str, *, lead: bool = False) -> str:
-    """One figure in the readout. The number is the element; the unit recedes."""
+def _metric(label: str, value: str, unit: str, *, key: str, lead: bool = False) -> str:
+    """One figure in the readout. The number is the element; the unit recedes.
+
+    ``key`` names the figure for the in-page script that follows a slider drag.
+    """
     classes = "cs-metric cs-metric-lead" if lead else "cs-metric"
     return (
         f'<div class="{classes}"><div class="cs-metric-label">{label}</div>'
-        f'<div class="cs-metric-value">{value}<span class="cs-unit">{unit}</span></div></div>'
+        f'<div class="cs-metric-value"><span data-cs-metric="{key}">{value}</span>'
+        f'<span class="cs-unit">{unit}</span></div></div>'
     )
 
 
@@ -578,11 +583,11 @@ def _headline(result: Result, dataset: Dataset) -> None:
     kwh = result.electricity_kwh
     figures = "".join(
         (
-            _metric("Total CO\u2082e", f"{result.total_co2e:.3f}", "t/t", lead=True),
-            _metric("Scope 1", f"{result.totals['scope1']:.3f}", "t/t"),
-            _metric("Scope 2", f"{result.totals['scope2']:.3f}", "t/t"),
-            _metric("Scope 3 upstream", f"{result.totals['scope3']:.3f}", "t/t"),
-            _metric("Specific energy", f"{result.energy_gj:.1f}", "GJ/t"),
+            _metric("Total CO\u2082e", f"{result.total_co2e:.3f}", "t/t", key="total", lead=True),
+            _metric("Scope 1", f"{result.totals['scope1']:.3f}", "t/t", key="scope1"),
+            _metric("Scope 2", f"{result.totals['scope2']:.3f}", "t/t", key="scope2"),
+            _metric("Scope 3 upstream", f"{result.totals['scope3']:.3f}", "t/t", key="scope3"),
+            _metric("Specific energy", f"{result.energy_gj:.1f}", "GJ/t", key="energy"),
         )
     )
     # A keyed container, so the sticky rule has a tall parent to travel in: a
@@ -591,8 +596,8 @@ def _headline(result: Result, dataset: Dataset) -> None:
     with st.container(key="cs_readout"):
         st.markdown(
             f'<div class="cs-readout">{figures}</div>'
-            f'<p class="cs-readout-note">scrap {result.scrap_ratio:.0%} '
-            f"\u00b7 rail {result.train_share:.0%} "
+            f'<p class="cs-readout-note"><span data-cs-conditions>scrap '
+            f"{result.scrap_ratio:.0%} \u00b7 rail {result.train_share:.0%}</span> "
             f"\u00b7 grid {result.grid_factor:.3f} kg CO\u2082e/kWh "
             f"\u00b7 electricity \u2248 "
             f"{'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}</p>",
@@ -634,6 +639,30 @@ def _profile_banner(stages) -> None:
             )
     for problem in st.session_state.get("profile_problems", []):
         st.error(f"Profile could not be applied fully — {problem}")
+
+
+def _live_model(dataset: Dataset) -> dict:
+    """What the page needs to follow a slider drag without the server.
+
+    The charts still wait for the release — redrawing them is the server's job —
+    but the figures a reader steers by follow the thumb.
+    """
+    model = coefficient_model(dataset, route_weights(st.session_state.route))
+    mix = current_mix()
+    model["gridFactor"] = sum(model["factors"][var] * mix[var] for var in MIX_VARIABLES)
+    model["labels"] = {
+        "scrap": SCRAP_LABEL,
+        "inbound": INBOUND_LABEL,
+        "railIn": INBOUND_RAIL_LABEL,
+        "railOut": OUTBOUND_RAIL_LABEL,
+    }
+    model["values"] = {
+        "scrap": scrap_ratio(),
+        "inbound": inbound_share(),
+        "railIn": inbound_rail(),
+        "railOut": outbound_rail(),
+    }
+    return model
 
 
 def _chart_key(name: str) -> str:
@@ -898,9 +927,10 @@ def _process_grid(result: Result, dataset: Dataset) -> None:
         columns={**METRIC_LABELS, "total_co2e": "Total CO₂e (tCO₂e/t)"}
     ).drop(columns=["id"])
     departments = st.multiselect(
-        "Departments", dataset.departments, default=dataset.departments, key="grid_depts"
+        "Departments", dataset.departments, default=[], key="grid_depts",
+        placeholder="All departments",
     )
-    view = frame[frame["Department"].isin(departments)]
+    view = frame[frame["Department"].isin(departments)] if departments else frame
     numeric = [column for column in view.columns if view[column].dtype.kind == "f"]
     st.dataframe(
         view.style.format({column: "{:.5f}" for column in numeric}),
@@ -920,7 +950,7 @@ def _process_grid(result: Result, dataset: Dataset) -> None:
 # Page
 # --------------------------------------------------------------------------- #
 def render(dataset: Dataset, stages) -> None:
-    live.enable()
+    live.enable("tool", _live_model(dataset))
     bar = st.columns([2.6, 1.2, 0.7, 1.2, 1.2])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'

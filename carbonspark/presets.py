@@ -239,6 +239,9 @@ PLANT_PROFILES: Dict[str, PlantProfile] = {
     profile.name: profile for profile in (CUSTOM, JAJPUR, HISAR)
 }
 
+#: The profile the app opens on — the larger of the two sites.
+OPENING_PROFILE = JAJPUR.name
+
 
 def profile_route(profile: PlantProfile, stages: Sequence[Stage]) -> Tuple[RouteMix, List[str]]:
     """Build a route for a profile, reporting any choice that did not match.

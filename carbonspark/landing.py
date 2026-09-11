@@ -7,6 +7,7 @@ import streamlit as st
 
 from carbon_calc.model import Dataset
 
+from . import live
 from .state import go, toggle_dark
 from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, hero_art, scope_bars, spark_mark
 
@@ -316,6 +317,7 @@ def _database_door(dataset: Dataset) -> None:
 
 
 def render(dataset: Dataset) -> None:
+    live.enable("landing")
     _nav()
     _mode_toggle()
     _hero()

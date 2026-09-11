@@ -323,3 +323,112 @@ def test_all_haulage_inbound_drops_the_outbound_transport_row():
     weights = apply_haulage({proc.id: 1.0 for proc in dataset.processes}, dataset, 1.0)
     result = calculate(0.4, INDIA_GRID_MIX, dataset, weights)
     assert not any(row["id"] == outbound[0] for row in result.per_process)
+
+
+def test_note_parser_keeps_transport_modes_apart():
+    """Train and Road coefficients must not merge into one another.
+
+    The transport rows list both modes in one note. An earlier parser dropped
+    coefficient names containing spaces, which re-attached the "_s=" that
+    followed one to the coefficient before it — reporting a kWh figure as a
+    Scope 1 factor.
+    """
+    from carbonspark.notes import parse
+
+    dataset = load_dataset()
+    inbound = next(p for p in dataset.processes if p.transport and p.department == "RMHS")
+    _, rows = parse(inbound.notes)
+    by_name = {row["Coefficient"]: row for row in rows}
+
+    assert by_name["Train · EF_S1"]["Virgin"] == "0.015"
+    assert by_name["Train · EF_S1"]["Scrap"] == "0.02"
+    assert by_name["Road · EF_S1"]["Virgin"] == "0.022"
+    assert by_name["Road · EF_S1"]["Scrap"] == "0.028"
+    assert by_name["Train · EF_S2(kWh/t at 0.77kg/kWh ref)"]["Scrap"] == "10.38961"
+
+
+def test_note_parser_keeps_prose_out_of_the_table():
+    """A sentence containing "=" is prose, not a pair of coefficients."""
+    from carbonspark.notes import parse
+
+    paragraphs, rows = parse(
+        "Combined route: blends the rows using p = train share, q = road share.\n"
+        "EF_S1_v=0.015, EF_S1_s=0.02 tCO2e/t"
+    )
+    assert paragraphs == ["Combined route: blends the rows using p = train share, q = road share."]
+    assert rows == [
+        {"Coefficient": "EF_S1", "Virgin": "0.015", "Scrap": "0.02", "Unit": "tCO2e/t"}
+    ]
+
+
+def test_every_note_yields_a_table():
+    from carbonspark.notes import parse
+
+    for proc in load_dataset().processes:
+        _, rows = parse(proc.notes)
+        assert rows, f"no coefficients parsed for {proc.label}"
+
+
+def _evaluate_coefficients(model, scrap, inbound_share, rail_in, rail_out, mix):
+    """The arithmetic the browser does, written out in Python for testing."""
+    y, x = scrap, 1.0 - scrap
+    w_in, w_out = 2.0 * inbound_share, 2.0 * (1.0 - inbound_share)
+
+    def leg(quad, p):
+        q = 1.0 - p
+        return quad[0] * x * p + quad[1] * x * q + quad[2] * y * p + quad[3] * y * q
+
+    out = {}
+    for key in ("scope1", "scope3", "sec", "kwh"):
+        base = model["base"][key]
+        out[key] = (
+            base[0] * x
+            + base[1] * y
+            + w_in * leg(model["inbound"][key], rail_in)
+            + w_out * leg(model["outbound"][key], rail_out)
+        )
+    factor = sum(model["factors"][var] * mix[var] for var in MIX_VARIABLES)
+    out["scope2"] = out["kwh"] * factor / 1000.0
+    return out
+
+
+@pytest.mark.parametrize(
+    "scrap,inbound_share,rail_in,rail_out",
+    [(0.4, 0.5, 0.5, 0.5), (0.0, 0.5, 1.0, 0.0), (1.0, 0.8, 0.25, 0.9), (0.65, 0.2, 0.0, 1.0)],
+)
+def test_coefficient_model_matches_the_server(scrap, inbound_share, rail_in, rail_out):
+    """The browser's re-arrangement must reproduce the model, not approximate it."""
+    from carbon_calc.route import (
+        apply_haulage,
+        build_stages,
+        coefficient_model,
+        default_route,
+        rail_shares,
+        route_weights,
+    )
+
+    dataset = load_dataset()
+    route = default_route(build_stages(dataset))
+    weights = route_weights(route)
+
+    live = _evaluate_coefficients(
+        coefficient_model(dataset, weights),
+        scrap,
+        inbound_share,
+        rail_in,
+        rail_out,
+        INDIA_GRID_MIX,
+    )
+    served = calculate(
+        scrap,
+        INDIA_GRID_MIX,
+        dataset,
+        apply_haulage(weights, dataset, inbound_share),
+        rail_in,
+        rail_shares(dataset, rail_in, rail_out),
+    )
+
+    assert live["scope1"] == pytest.approx(served.totals["scope1"], rel=1e-9)
+    assert live["scope2"] == pytest.approx(served.totals["scope2"], rel=1e-9)
+    assert live["scope3"] == pytest.approx(served.totals["scope3"], rel=1e-9)
+    assert live["sec"] == pytest.approx(served.energy_gj, rel=1e-9)

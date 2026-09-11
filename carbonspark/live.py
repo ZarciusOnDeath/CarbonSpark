@@ -21,6 +21,9 @@ through ``window.parent.document``.
 
 from __future__ import annotations
 
+import json
+from typing import Mapping
+
 import streamlit as st
 import streamlit.components.v1 as components
 
@@ -51,6 +54,71 @@ _SCRIPT = """
     return NaN;
   };
 
+  // --- the figures follow the drag ----------------------------------------
+  // The server only learns a slider's value on release, so the readout is
+  // recomputed in the page from the coefficient model the route exports. It is
+  // the same arithmetic, re-arranged — see route.coefficient_model.
+  const readModel = () => {
+    const node = doc.querySelector('[data-cs-model]');
+    if (!node) return null;
+    try { return JSON.parse(node.getAttribute('data-cs-model')); } catch (e) { return null; }
+  };
+
+  const sliderValue = (label, fallback) => {
+    const sliders = [...doc.querySelectorAll('div[data-testid="stSlider"]')];
+    for (const slider of sliders) {
+      if (labelOf(slider) === label) {
+        const value = valueOf(slider);
+        if (!Number.isNaN(value)) return value / 100;
+      }
+    }
+    return fallback;
+  };
+
+  const recompute = () => {
+    const model = readModel();
+    if (!model) return;
+    const y = sliderValue(model.labels.scrap, model.values.scrap);
+    const x = 1 - y;
+    const share = sliderValue(model.labels.inbound, model.values.inbound);
+    const railIn = sliderValue(model.labels.railIn, model.values.railIn);
+    const railOut = sliderValue(model.labels.railOut, model.values.railOut);
+    const wIn = 2 * share;
+    const wOut = 2 * (1 - share);
+
+    const leg = (quad, p) => {
+      const q = 1 - p;
+      return quad[0] * x * p + quad[1] * x * q + quad[2] * y * p + quad[3] * y * q;
+    };
+    const totalOf = (key) =>
+      model.base[key][0] * x +
+      model.base[key][1] * y +
+      wIn * leg(model.inbound[key], railIn) +
+      wOut * leg(model.outbound[key], railOut);
+
+    const scope1 = totalOf('scope1');
+    const scope3 = totalOf('scope3');
+    const scope2 = totalOf('kwh') * model.gridFactor / 1000;
+    const energy = totalOf('sec');
+    const figures = {
+      total: (scope1 + scope2 + scope3).toFixed(3),
+      scope1: scope1.toFixed(3),
+      scope2: scope2.toFixed(3),
+      scope3: scope3.toFixed(3),
+      energy: energy.toFixed(1),
+    };
+    doc.querySelectorAll('[data-cs-metric]').forEach((node) => {
+      const value = figures[node.getAttribute('data-cs-metric')];
+      if (value !== undefined && node.textContent !== value) node.textContent = value;
+    });
+    const note = doc.querySelector('[data-cs-conditions]');
+    if (note) {
+      const railBlend = railIn * share + railOut * (1 - share);
+      note.textContent =
+        'scrap ' + Math.round(y * 100) + '% \u00b7 rail ' + Math.round(railBlend * 100) + '%';
+    }
+  };
+
   const paint = () => {
     const sliders = [...doc.querySelectorAll('div[data-testid="stSlider"]')];
     const byLabel = new Map();
@@ -76,7 +144,7 @@ _SCRIPT = """
   let frame = null;
   const schedule = () => {
     if (frame) return;
-    frame = requestAnimationFrame(() => { frame = null; paint(); });
+    frame = requestAnimationFrame(() => { frame = null; paint(); recompute(); });
   };
   ['pointerdown', 'pointermove', 'pointerup', 'keydown', 'keyup', 'input'].forEach((event) =>
     doc.addEventListener(event, schedule, true)
@@ -124,20 +192,54 @@ _SCRIPT = """
   const onScroll = () => { rememberScroll(); condense(); };
   doc.addEventListener('scroll', onScroll, true);
 
-  const tick = () => { schedule(); restoreScroll(); condense(); };
+  // --- a new page opens at its top -----------------------------------------
+  // Streamlit keeps the main container's scroll position across a page change,
+  // so arriving from the landing page dropped the reader at the bottom of the
+  // tool. The page stamps a token when it changes; each new token scrolls once.
+  const openAtTop = () => {
+    const stamp = doc.querySelector('[data-cs-page]');
+    if (!stamp) return;
+    const token = stamp.getAttribute('data-cs-page');
+    if (doc.__csPage === token) return;
+    doc.__csPage = token;
+    savedScroll = 0;
+    const box = scroller();
+    if (box) box.scrollTo({ top: 0, behavior: 'auto' });
+  };
+
+  const tick = () => { openAtTop(); schedule(); restoreScroll(); condense(); };
   new MutationObserver(tick).observe(doc.body, { subtree: true, childList: true });
 
   doc.__csLiveSliders = { sync: tick };
+  openAtTop();
   paint();
+  recompute();
   condense();
 })();
 </script>
 """
 
 
-def enable() -> None:
-    """Install the live-readout script for this page render."""
+def enable(page: str = "", model: Mapping[str, object] | None = None) -> None:
+    """Install the live-readout script for this page render.
+
+    ``page`` tells the script a navigation happened, so it scrolls the new page
+    to its top exactly once. ``model`` is the route's coefficient model, which
+    lets the readout follow a drag instead of waiting for the release.
+    """
+    payload = html_escape(json.dumps(model)) if model else ""
+    st.markdown(
+        f'<div data-cs-page="{page}" data-cs-model="{payload}" style="display:none"></div>',
+        unsafe_allow_html=True,
+    )
     components.html(_SCRIPT, height=0, width=0)
+
+
+def html_escape(text: str) -> str:
+    """Escape a JSON payload for an HTML attribute."""
+    return (
+        text.replace("&", "&amp;").replace('"', "&quot;").replace("<", "&lt;").replace(">", "&gt;")
+    )
 
 
 def rendered_chip(label: str, template: str, value: float, *, tone: str = "") -> str:

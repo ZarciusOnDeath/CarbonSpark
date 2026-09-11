@@ -9,6 +9,8 @@ import streamlit as st
 
 from carbon_calc.model import METRICS, METRIC_LABELS, MIX_VARIABLES, Dataset
 
+from . import live
+from .notes import parse as parse_note
 from .state import go, toggle_dark
 from .theme import spark_mark
 
@@ -19,6 +21,7 @@ def _variation(variation: str) -> str:
 
 
 def render(dataset: Dataset) -> None:
+    live.enable("database")
     bar = st.columns([4.0, 0.8, 1.5, 1.3])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
@@ -66,11 +69,14 @@ def render(dataset: Dataset) -> None:
             for proc in dataset.processes
         ]
         frame = pd.DataFrame(rows)
+        # Filters start empty: an empty filter means "no department chosen yet",
+        # and the grid shows everything until one is.
         picked = st.multiselect(
-            "Departments", dataset.departments, default=dataset.departments, key="db_depts"
+            "Departments", dataset.departments, default=[], key="db_depts",
+            placeholder="All departments",
         )
         search = st.text_input("Search techniques and variations", key="db_search").strip().lower()
-        view = frame[frame["Department"].isin(picked)]
+        view = frame[frame["Department"].isin(picked)] if picked else frame
         if search:
             haystack = (
                 view["Technique / Process"].str.lower() + " " + view["Variation"].str.lower()
@@ -105,14 +111,28 @@ def render(dataset: Dataset) -> None:
             use_container_width=True,
             hide_index=True,
         )
-        st.markdown("**Coefficients, basis and caveats for this row**")
-        # A row's note runs to several hundred words of coefficient listings.
-        # Rendered as plain text it ran the full width of the page and pushed
-        # everything else off screen, so it gets its own scrollable block.
-        st.markdown(
-            f'<div class="cs-note">{html.escape(proc.notes or "No notes recorded.")}</div>',
-            unsafe_allow_html=True,
-        )
+        # A row's note mixes prose with a dense run of NAME=value listings.
+        # Printed as one block the prose disappeared into the numbers, so the
+        # two are separated: coefficients into a table, the rest as notes.
+        paragraphs, coefficients = parse_note(proc.notes)
+        if coefficients:
+            st.markdown("**Coefficients behind these formulas**")
+            st.dataframe(
+                pd.DataFrame(coefficients),
+                use_container_width=True,
+                hide_index=True,
+                height=min(420, 40 + 36 * len(coefficients)),
+            )
+        if paragraphs:
+            st.markdown("**Basis and caveats**")
+            st.markdown(
+                '<div class="cs-note">'
+                + "".join(f"<p>{html.escape(text)}</p>" for text in paragraphs)
+                + "</div>",
+                unsafe_allow_html=True,
+            )
+        if not coefficients and not paragraphs:
+            st.caption("No notes recorded for this row.")
 
     with factors:
         st.dataframe(

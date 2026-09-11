@@ -25,7 +25,7 @@ import streamlit as st
 from carbon_calc.model import MIX_VARIABLES, Dataset
 from carbon_calc.route import RouteMix, Stage, build_stages, default_route, normalise_mix
 
-from .presets import GRID_PRESETS, PLANT_PROFILES, profile_route
+from .presets import GRID_PRESETS, OPENING_PROFILE, PLANT_PROFILES, profile_route
 
 #: Widget keys, kept distinct from the truth keys they mirror.
 SCRAP_W = "w_scrap"
@@ -293,11 +293,14 @@ def init_state(dataset: Dataset) -> tuple:
     st.session_state.open_stage = None
     st.session_state.dark = False
     st.session_state.profile_problems = []
-    st.session_state.plant_profile = "Custom"
+    # The app opens on the larger of the two sites rather than on "everything
+    # the workbook lists", so the first thing on screen is a real plant.
+    st.session_state.plant_profile = OPENING_PROFILE
     st.session_state.drawer_open = False
     st.session_state.drawer_panel = None
     st.session_state.baseline = None
     st.session_state.tool_view = "Dashboard"
+    apply_plant_profile(stages)
     return stages
 
 

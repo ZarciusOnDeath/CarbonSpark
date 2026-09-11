@@ -14,7 +14,7 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Dict, Iterable, List, Mapping, Sequence, Tuple
 
-from .model import Dataset, Process
+from .model import MIX_VARIABLES, Dataset, Process
 
 #: A stage's selection: variation id -> share of that stage's tonne.
 StageMix = Dict[int, float]
@@ -168,3 +168,67 @@ def apply_haulage(
     for process_id in outbound:
         scaled[process_id] = weights.get(process_id, 0.0) * 2.0 * (1.0 - share)
     return scaled
+
+
+def coefficient_model(dataset: Dataset, weights: Mapping[int, float]) -> Dict[str, object]:
+    """Reduce the selected route to coefficients a browser can evaluate.
+
+    Streamlit only learns a slider's value when it is released, so the figures
+    cannot follow a drag from the server. They can follow it in the page, because
+    the model is simple in the variables a drag changes:
+
+    * every metric is linear in the charge — ``M = A·x + B·y``;
+    * the two transport rows are additionally linear in their own rail share, so
+      each is bilinear: ``M = x(p·c₁ + q·c₂) + y(p·c₃ + q·c₄)``;
+    * Scope 2 is ``kWh × (share-weighted grid factor) / 1000``, so exporting kWh
+      separately keeps the grid mix out of the drag entirely.
+
+    Evaluating each row at the basis values of (x, y) and (p, q) therefore
+    captures it exactly — this is a re-arrangement of the same formulas, not an
+    approximation of them.
+    """
+    inbound_ids, outbound_ids = transport_ids(dataset)
+    coal = dataset.factor("a")
+    metrics = ("scope1", "scope3", "sec")
+
+    def binding(x: float, p: float) -> Dict[str, float]:
+        """Variables with a unit coal mix, so Scope 2 comes back as kWh × EF."""
+        values = {"x": x, "y": 1.0 - x, "p": p, "q": 1.0 - p}
+        values.update({var: 1.0 if var == "a" else 0.0 for var in MIX_VARIABLES})
+        return values
+
+    def evaluate(procs, x: float, p: float) -> Dict[str, float]:
+        totals = {key: 0.0 for key in (*metrics, "kwh")}
+        variables = binding(x, p)
+        for proc in procs:
+            weight = float(weights.get(proc.id, 0.0))
+            if weight <= 0:
+                continue
+            values = proc.evaluate(variables)
+            for key in metrics:
+                totals[key] += values[key] * weight
+            # Scope 2 at a unit coal mix is kWh × EF_coal / 1000.
+            totals["kwh"] += values["scope2"] * weight * 1000.0 / coal
+        return totals
+
+    by_id = {proc.id: proc for proc in dataset.processes}
+    plain = [
+        proc
+        for proc in dataset.processes
+        if proc.id not in set(inbound_ids) | set(outbound_ids)
+    ]
+
+    def quad(ids) -> Dict[str, List[float]]:
+        """A transport row at (virgin, rail), (virgin, road), (scrap, rail), (scrap, road)."""
+        procs = [by_id[pid] for pid in ids]
+        corners = [evaluate(procs, x, p) for x, p in ((1.0, 1.0), (1.0, 0.0), (0.0, 1.0), (0.0, 0.0))]
+        return {key: [corner[key] for corner in corners] for key in (*metrics, "kwh")}
+
+    virgin = evaluate(plain, 1.0, 0.5)
+    scrap = evaluate(plain, 0.0, 0.5)
+    return {
+        "base": {key: [virgin[key], scrap[key]] for key in (*metrics, "kwh")},
+        "inbound": quad(inbound_ids),
+        "outbound": quad(outbound_ids),
+        "factors": {var: dataset.factor(var) for var in MIX_VARIABLES},
+    }

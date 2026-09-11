@@ -388,11 +388,13 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 }}
 
 .cs-note {{
-  max-height: 320px; overflow-y: auto; padding: 16px 18px; border-radius: 6px;
+  max-height: 320px; overflow-y: auto; padding: 14px 18px; border-radius: 6px;
   background: var(--surface); border:1px solid var(--line);
-  color: var(--ink-soft); font-size:.86rem; line-height:1.64;
-  white-space: pre-wrap; overflow-wrap: anywhere;
+  color: var(--ink-soft); font-size:.88rem; line-height:1.7;
+  overflow-wrap: break-word;
 }}
+.cs-note p {{ margin: 0 0 10px 0; }}
+.cs-note p:last-child {{ margin-bottom: 0; }}
 
 /* ---------- loading ---------- */
 .cs-splash {{ min-height:70vh; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:18px; }}
