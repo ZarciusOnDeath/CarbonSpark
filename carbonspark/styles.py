@@ -387,22 +387,26 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
    hairline pill, not a slab of colour — and it picks up the accent on hover so
    it still reads as the thing to press. */
 .st-key-open_inputs {{ display:flex; align-items:center; height:100%; }}
+/* Present without shouting: the surface and a clay hairline mark it as the
+   control, and it sits on the same side as the drawer it opens so the panel
+   arrives under the button that asked for it. */
 .st-key-open_inputs button {{
-  background: transparent !important;
-  border: 1px solid var(--line) !important;
-  border-radius: 999px !important;
-  color: var(--ink-soft) !important;
-  font-weight: 600 !important;
-  letter-spacing: .04em;
-  font-size: .82rem !important;
-  padding: 8px 16px !important;
-  transition: border-color .18s ease, color .18s ease, background .18s ease;
+  background: var(--surface) !important;
+  border: 1px solid var(--clay) !important;
+  border-radius: 8px !important;
+  color: var(--clay) !important;
+  font-weight: 650 !important;
+  letter-spacing: .02em;
+  font-size: .86rem !important;
+  padding: 9px 14px !important;
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,0);
+  transition: background .18s ease, color .18s ease, box-shadow .18s ease;
 }}
 .st-key-open_inputs button:hover {{
-  border-color: var(--clay) !important; color: var(--clay) !important;
-  background: transparent !important;
+  background: var(--clay) !important; color: var(--paper) !important;
 }}
-.st-key-open_inputs button p {{ color: inherit !important; font-size: .82rem !important; }}
+.st-key-open_inputs button:hover p {{ color: var(--paper) !important; }}
+.st-key-open_inputs button p {{ color: inherit !important; font-size: .86rem !important; }}
 .cs-condensed .st-key-open_inputs button {{ padding: 5px 13px !important; font-size:.76rem !important; }}
 
 /* The hero's way into the calculator. */

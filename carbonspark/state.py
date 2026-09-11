@@ -261,6 +261,43 @@ def set_stage_mix(stage: Stage, mix: Mapping[int, float]) -> None:
     route[stage.key] = {int(pid): float(share) for pid, share in mix.items() if share > 0}
 
 
+def snapshot(label: str) -> Dict[str, object]:
+    """Freeze the scenario now on screen, so it can be compared with later."""
+    return {
+        "label": label,
+        "scrap": scrap_ratio(),
+        "mix": current_mix(),
+        "route": {key: dict(value) for key, value in st.session_state.route.items()},
+        "train": train_share(),
+        "inbound": inbound_share(),
+        "rail_in": inbound_rail(),
+        "rail_out": outbound_rail(),
+    }
+
+
+#: Widget keys the comparison view owns.
+SAVE_NAME_W = "cmp_save_name"
+COMPARE_RIGHT_W = "cmp_right"
+
+
+def save_scenario() -> None:
+    """Keep the current scenario under the name typed beside the button.
+
+    The name is read from session state rather than passed in: a callback's
+    arguments are bound when the button is *drawn*, which is before the user has
+    typed anything, so passing the text box's value saved the previous one.
+    """
+    typed = str(st.session_state.get(SAVE_NAME_W, "")).strip()
+    name = typed or f"Scenario {len(st.session_state.scenarios) + 1}"
+    st.session_state.scenarios[name] = snapshot(name)
+    st.session_state[SAVE_NAME_W] = ""
+
+
+def delete_scenario() -> None:
+    """Forget the scenario currently selected on the right of the comparison."""
+    st.session_state.scenarios.pop(st.session_state.get(COMPARE_RIGHT_W), None)
+
+
 def toggle_dark() -> None:
     st.session_state.dark = not st.session_state.dark
 
@@ -298,7 +335,10 @@ def init_state(dataset: Dataset) -> tuple:
     st.session_state.plant_profile = OPENING_PROFILE
     st.session_state.drawer_open = False
     st.session_state.drawer_panel = None
-    st.session_state.baseline = None
+    # Saved scenarios, by name, for the comparison view. A scenario is a frozen
+    # copy of every input, so comparing two of them is comparing two plants
+    # rather than a plant against a fixed reference.
+    st.session_state.scenarios = {}
     st.session_state.tool_view = "Dashboard"
     apply_plant_profile(stages)
     return stages
