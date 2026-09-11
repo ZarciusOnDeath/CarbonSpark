@@ -731,6 +731,36 @@ def _dashboard(result: Result, dataset: Dataset, stages) -> None:
         hide_index=True,
     )
 
+    _inputs_nudge()
+
+
+def _inputs_nudge() -> None:
+    """Name the way in, once, at the foot of the dashboard.
+
+    The Inputs pill rides in the readout at the top of the page, which is the
+    right place for it once you know it is there — and easy to read past on a
+    first visit. Someone who has scrolled the whole dashboard has seen the
+    figures and not yet learned they can change them, so the prompt goes where
+    that question arises. It disappears once the drawer is open, because by
+    then it is answered.
+    """
+    if st.session_state.drawer_open:
+        return
+    st.markdown(
+        '<div class="cs-nudge-rule"></div>'
+        '<p class="cs-nudge-line">Every figure above is yours to change \u2014 '
+        "the scrap ratio, the grid mix, and the technology at each stage.</p>",
+        unsafe_allow_html=True,
+    )
+    left, _ = st.columns([1, 2.2])
+    left.button(
+        "\u2699  Open Inputs",
+        on_click=_toggle_drawer,
+        use_container_width=True,
+        type="primary",
+        key="dash_inputs_cta",
+    )
+
 
 #: The reference scenario every comparison can fall back on.
 DEFAULT_BASELINE = "Default baseline"

@@ -101,6 +101,14 @@ html {{ scroll-behavior: smooth; }}
 }}
 .cs-scroll-hint svg {{ animation: csBob 1.7s ease-in-out infinite; }}
 
+/* The closing prompt at the foot of the dashboard: a rule and a line, so it
+   reads as the end of the page rather than as one more panel on it. */
+.cs-nudge-rule {{ border-top: 1px solid var(--line); margin: 30px 0 0 0; }}
+.cs-nudge-line {{
+  margin: 22px 0 14px 0;
+  color: var(--ink); font-size: 1.02rem; max-width: 52ch; line-height:1.6;
+}}
+
 /* ---------- sections ---------- */
 .cs-section {{ padding: 76px 0 10px 0; scroll-margin-top: 78px; }}
 .cs-rule {{ height:1px; background: var(--line); margin: 6px 0 0 0; }}
@@ -226,6 +234,10 @@ div[data-testid="stColumn"]:has(.st-key-cs_drawer)::-webkit-scrollbar-thumb {{
 .stButton button[kind="primary"] {{
   background: var(--clay); color: var(--paper); border-color: var(--clay);
 }}
+/* Streamlit wraps the label in a <p>, which takes its colour from the global
+   paragraph rule rather than from the button — so setting the button's colour
+   alone left near-black type on the clay fill. */
+.stButton button[kind="primary"] p {{ color: var(--paper) !important; }}
 .stButton button[kind="primary"]:hover {{ color: var(--paper); opacity:.92; }}
 .stButton button:disabled, .stButton button:disabled p {{ opacity:.45; }}
 /* The control's ground and its text are set separately — fixing only the ground
