@@ -814,10 +814,18 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
     # from under its. Nothing about a comparison lives anywhere else on the page.
     picker = st.columns(2, gap="large")
 
+    # Both sides may name the scenario on screen. Its controls are then drawn
+    # once, under the first of them: a second "Save as…" box would carry the
+    # same widget key as the first and Streamlit refuses to draw it at all.
+    drawn_current = []
+
     def side(column, key: str, index: int, caption: str) -> str:
         with column:
             name = st.selectbox(caption, options, index=index, key=key)
-            if name == CURRENT:
+            if name == CURRENT and drawn_current:
+                st.caption("The same scenario as on the other side.")
+            elif name == CURRENT:
+                drawn_current.append(key)
                 actions = st.columns([1, 1])
                 actions[0].button(
                     "\u2699  Edit inputs",
