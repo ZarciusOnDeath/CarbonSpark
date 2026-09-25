@@ -194,7 +194,7 @@ def _why() -> None:
     )
     stats = [
         (EMBER, 0.56, "~4.0", "tCO\u2082e per tonne on the default route"),
-        (AMBER, 0.72, "23%", "lower under the optimiser\u2019s practical limits"),
+        (AMBER, 0.72, "24%", "lower under the optimiser\u2019s practical limits"),
         (STEEL, 1.00, "48", "process stages you can reconfigure"),
     ]
     for column, (colour, _, figure, label) in zip(st.columns(3, gap="large"), stats):

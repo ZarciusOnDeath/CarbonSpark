@@ -117,7 +117,8 @@ recalibrates the per-row coefficients:
 * **Electricity** per row, benchmarked stage by stage (EAF 460 kWh/t on scrap and 650 on a
   virgin-heavy charge, AOD ~45–60, LF ~35–55, caster ~30, hot strip mill ~120 in all,
   Sendzimir ~140).
-* **Scope 1**, where Grid 4 was high (EAF, stockyard diesel, reheating).
+* **Scope 1**, checked against process chemistry: EAF ~0.10 t/t on scrap (electrodes 1.2–3 kg/t,
+  charge carbon), AOD/CLU decarburisation 0.05–0.09, reheating ~1.3 GJ/t of gas.
 * **Scope 3 of the charge**, raised from 1.1 to 3.2 tCO₂e per tonne of virgin charge,
   because ferrochrome, nickel units and pig iron carry more upstream carbon than Grid 4
   assumed. Scrap enters at 0.2. This matches the worldstainless finding that Scope 3 is
@@ -128,13 +129,13 @@ recalibrates the per-row coefficients:
 
 | | Grid 4 | Grid 5 | Reference |
 | --- | --- | --- | --- |
-| Jajpur total | 4.60 | **2.85** | — |
-| Jajpur Scope 1+2 | 3.19 | **1.24** | JSL 1.76 (FY26), which also covers captive FeCr and captive power |
-| Jajpur Scope 1 | 0.69 | **0.41** | worldstainless average ~0.4 |
+| Jajpur total | 4.60 | **2.89** | — |
+| Jajpur Scope 1+2 | 3.19 | **1.28** | JSL 1.76 (FY26), which also covers captive FeCr and captive power |
+| Jajpur Scope 1 | 0.69 | **0.44** | worldstainless average ~0.4 |
 | Jajpur electricity (kWh/t) | 3,283 | **1,091** | ~1,000–1,200 |
 | Jajpur specific energy (GJ/t) | 33.9 | **9.8** | ~10–15 |
-| Hisar total | 4.67 | **2.89** | — |
-| Default route total | 6.17 | **4.00** | runs every finishing line at once |
+| Hisar total | 4.67 | **2.93** | — |
+| Default route total | 6.17 | **4.04** | runs every finishing line at once |
 
 Each row's notes carry its Grid 4 → Grid 5 change and the reason for it. The workbook's
 **Calibration Basis** sheet holds the benchmarks and a row-by-row comparison, and the

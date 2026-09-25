@@ -99,9 +99,9 @@ def hero_art(dark: bool = False) -> str:
     t = tokens(dark)
     ink, ink_soft, clay = t["ink"], t["ink_soft"], t["clay"]
     bands = (
-        ("Scope 1 \u00b7 direct", t["ember"], 0.173, "0.691", 0),
-        ("Scope 2 \u00b7 purchased electricity", t["amber"], 0.353, "1.410", 1),
-        ("Scope 3 \u00b7 upstream", t["steel"], 0.474, "1.896", 2),
+        ("Scope 1 \u00b7 direct", t["ember"], 0.180, "0.728", 0),
+        ("Scope 2 \u00b7 purchased electricity", t["amber"], 0.350, "1.410", 1),
+        ("Scope 3 \u00b7 upstream", t["steel"], 0.470, "1.896", 2),
     )
     marks = "".join(
         f'<g transform="translate(0,{index * 74})">'
@@ -132,7 +132,7 @@ def hero_art(dark: bool = False) -> str:
     {route}
   </g>
   <text x="24" y="348" fill="{ink_soft}" font-size="11" font-family="Inter,sans-serif">
-    3.998 tCO2e per tonne \u00b7 default route, 70% scrap, today\u2019s Indian grid
+    4.035 tCO2e per tonne \u00b7 default route, 70% scrap, today\u2019s Indian grid
   </text>
 </svg>"""
 

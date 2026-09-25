@@ -142,8 +142,9 @@ CALIBRATION: Dict[int, Row] = {
     10: Row(
         "Stainless EAF melts scrap at ~420-480 kWh/t; a virgin-heavy charge (ferroalloys, "
         "pig iron, DRI) needs more, ~600-700 kWh/t. Direct emissions from electrodes "
-        "(~2 kg/t), charge carbon and burners are ~0.06-0.15 tCO2/t.",
-        kwh=Set(650, 460), s1=Set(0.14, 0.07), s3=CHARGE_S3, sec=Set(3.1, 2.1),
+        "(1.2-3 kg/t), charge carbon and burners: ~0.10 tCO2/t on scrap (typical EAF ~102 kg/t), "
+        "more on a carbon-rich virgin charge.",
+        kwh=Set(650, 460), s1=Set(0.14, 0.10), s3=CHARGE_S3, sec=Set(3.1, 2.1),
     ),
     11: Row(
         "Induction furnaces melt scrap at ~550-650 kWh/t with negligible direct emissions.",
@@ -169,8 +170,9 @@ CALIBRATION: Dict[int, Row] = {
     ),
     16: Row(
         "AOD needs little electricity of its own; oxygen, argon and nitrogen supply plus "
-        "fume extraction come to ~40-60 kWh/t. Decarburisation CO2 left as in Grid 4.",
-        kwh=Set(60, 45), sec=Set(0.9, 0.6),
+        "fume extraction come to ~40-60 kWh/t. Decarburising from ~1.5-2.5% C (more on a "
+        "high-carbon ferrochrome charge) to <0.05% C releases ~0.05-0.09 tCO2/t.",
+        kwh=Set(60, 45), s1=Set(0.09, 0.05), sec=Set(0.9, 0.6),
     ),
     17: Row(
         "VOD vacuum pumping and gas supply: ~60-100 kWh/t.",
@@ -178,8 +180,8 @@ CALIBRATION: Dict[int, Row] = {
     ),
     18: Row("K-OBM-S: converter blowing, gas supply and fume system ~50-70 kWh/t.",
             kwh=Set(70, 50), sec=Set(1.3, 0.9)),
-    19: Row("CLU: as AOD with steam dilution, ~50-65 kWh/t.",
-            kwh=Set(65, 48), sec=Set(1.0, 0.7)),
+    19: Row("CLU: as AOD with steam dilution, ~50-65 kWh/t; same decarburisation CO2.",
+            kwh=Set(65, 48), s1=Set(0.09, 0.05), sec=Set(1.0, 0.7)),
     20: Row(
         "Ladle furnace arcing is ~30-50 kWh/t; trim-alloy additions ~0.04-0.08 tCO2e/t "
         "upstream.",
@@ -448,6 +450,26 @@ BENCHMARKS = (
      "Typical published range for stainless EAF melting."),
     ("Melt-to-cold-coil electricity", "~1,000-1,200 kWh/t",
      "EAF, AOD, LF, caster, hot strip mill, Z-mill, CAPL and auxiliaries."),
+    ("EAF electricity, scrap / cold DRI charge", "385 / 590 kWh/t",
+     "Thermodynamic and plant studies of EAF electrical demand."),
+    ("EAF graphite electrode consumption", "1.2-3.0 kg/t",
+     "Varies with grade and practice; ~1.4 kg/t average across many EAFs."),
+    ("EAF direct CO2, typical", "~102 kg CO2/t",
+     "Electrodes, charge and foaming carbon, decarburisation, burners."),
+    ("Ladle furnace electricity", "~27.5 kWh/t average; 65 kWh/t with gas cleaning",
+     "Plant average and best-practice figure incl. fume system."),
+    ("Cold rolling, best practice (carbon sheet)", "87 kWh/t",
+     "LBNL world best practice; stainless on cluster mills runs higher (150-300 kWh/t cited)."),
+    ("Walking-beam reheating fuel", "~1.1-1.5 GJ/t",
+     "Conventional slab reheating; ~0.06-0.085 tCO2/t on natural gas."),
+    ("High-carbon ferrochrome footprint", "1.8-5.5 tCO2e/t FeCr (4.7-6.1 on coal power)",
+     "JOM 2023 (Energy Consumption and GHG Emissions of HC FeCr Production)."),
+    ("Nickel pig iron footprint", "~7 tCO2e/t alloy (60-85 t per t Ni)",
+     "Energies 2020 (Nickel products); CarbonChain."),
+    ("Stainless EAF corporate footprint", "4.57 tCO2e/t, ~70% Scope 3",
+     "ACS Sust. Resour. Manage. (Scope 3 in stainless EAF steelmaking); ferroalloys ~80% of Scope 3."),
+    ("Grid source factors", "coal ~0.95; gas ~0.45; hydro 0.024, wind 0.011, solar PV ~0.045, nuclear 0.012",
+     "Combustion factors for fossil; IPCC AR5 lifecycle medians for non-fossil. Kept from Grid 4."),
 )
 
 

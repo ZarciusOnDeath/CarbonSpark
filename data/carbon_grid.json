@@ -195,19 +195,19 @@
    "process": "Primary Melting",
    "variation": "Electric Arc Furnace (EAF)",
    "formulas": {
-    "scope1": "x*0.14+y*0.07",
+    "scope1": "x*0.14+y*0.1",
     "scope2": "(x*650+y*460)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
     "scope3": "x*3.2+y*0.2",
-    "co2": "x*0.126667+y*0.056",
-    "ch4": "(x*0.000233333+y*0.000056)*28",
-    "n2o": "(x*0.00000833333+y*0.0000056)*265",
+    "co2": "x*0.126667+y*0.08",
+    "ch4": "(x*0.000233333+y*0.00008)*28",
+    "n2o": "(x*0.00000833333+y*0.000008)*265",
     "hfc": "x*0.0001144+y*0.000168667",
     "pfc": "x*0.0000286+y*0.0000421667",
     "sf6": "(x*0.0000001144+y*0.000000168667)*23500",
     "nf3": "(x*0.00000001144+y*0.000000016867)*16100",
     "sec": "x*3.1+y*2.1"
    },
-   "notes": "Coefficients used in this row's formulas (Grid 5 calibration, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.14, EF_S1_scrap=0.07 tCO2e/t | EF_S2_virgin=0.5005, EF_S2_scrap=0.3542 tCO2e/t | EF_S3_virgin=3.2, EF_S3_scrap=0.2 tCO2e/t\nCO2_v=0.126667, CO2_s=0.056 t/t | CH4_v=0.000233333, CH4_s=0.000056 t/t (x28) | N2O_v=0.00000833333, N2O_s=0.0000056 t/t (x265)\nHFC_v=0.0001144, HFC_s=0.000168667 tCO2e/t | PFC_v=0.0000286, PFC_s=0.0000421667 tCO2e/t | SF6_v=0.0000001144, SF6_s=0.000000168667 t/t (x23500) | NF3_v=0.00000001144, NF3_s=0.000000016867 t/t (x16100)\nSEC_virgin=3.1 GJ/t, SEC_scrap=2.1 GJ/t.\nBasis: Standard scrap-EAF; virgin-side reflects ferrochrome/ferronickel/DRI charge requiring more melt energy and reduction-related Scope 1 than pure scrap remelt. CEA grid basis for Scope 2. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 650 kWh/t (virgin), 460 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.\nGrid 5 calibration: Stainless EAF melts scrap at ~420-480 kWh/t; a virgin-heavy charge (ferroalloys, pig iron, DRI) needs more, ~600-700 kWh/t. Direct emissions from electrodes (~2 kg/t), charge carbon and burners are ~0.06-0.15 tCO2/t. Grid 4 → Grid 5 (virgin/scrap): kWh/t 2272.73/545.455 → 650/460; Scope 1 0.42/0.05 → 0.14/0.07; Scope 3 1.1/0.12 → 3.2/0.2; SEC GJ/t 23/5.8 → 3.1/2.1.",
+   "notes": "Coefficients used in this row's formulas (Grid 5 calibration, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.14, EF_S1_scrap=0.1 tCO2e/t | EF_S2_virgin=0.5005, EF_S2_scrap=0.3542 tCO2e/t | EF_S3_virgin=3.2, EF_S3_scrap=0.2 tCO2e/t\nCO2_v=0.126667, CO2_s=0.08 t/t | CH4_v=0.000233333, CH4_s=0.00008 t/t (x28) | N2O_v=0.00000833333, N2O_s=0.000008 t/t (x265)\nHFC_v=0.0001144, HFC_s=0.000168667 tCO2e/t | PFC_v=0.0000286, PFC_s=0.0000421667 tCO2e/t | SF6_v=0.0000001144, SF6_s=0.000000168667 t/t (x23500) | NF3_v=0.00000001144, NF3_s=0.000000016867 t/t (x16100)\nSEC_virgin=3.1 GJ/t, SEC_scrap=2.1 GJ/t.\nBasis: Standard scrap-EAF; virgin-side reflects ferrochrome/ferronickel/DRI charge requiring more melt energy and reduction-related Scope 1 than pure scrap remelt. CEA grid basis for Scope 2. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 650 kWh/t (virgin), 460 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.\nGrid 5 calibration: Stainless EAF melts scrap at ~420-480 kWh/t; a virgin-heavy charge (ferroalloys, pig iron, DRI) needs more, ~600-700 kWh/t. Direct emissions from electrodes (1.2-3 kg/t), charge carbon and burners: ~0.10 tCO2/t on scrap (typical EAF ~102 kg/t), more on a carbon-rich virgin charge. Grid 4 → Grid 5 (virgin/scrap): kWh/t 2272.73/545.455 → 650/460; Scope 1 0.42/0.05 → 0.14/0.1; Scope 3 1.1/0.12 → 3.2/0.2; SEC GJ/t 23/5.8 → 3.1/2.1.",
    "transport": false
   },
   {
@@ -321,19 +321,19 @@
    "process": "Decarburization / Alloying",
    "variation": "AOD",
    "formulas": {
-    "scope1": "x*0.06+y*0.04",
+    "scope1": "x*0.09+y*0.05",
     "scope2": "(x*60+y*45)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
     "scope3": "x*0.2+y*0.08",
-    "co2": "x*0.09+y*0.03",
-    "ch4": "(x*0.00002+y*0.00001)*28",
-    "n2o": "(x*0.000001+y*0.0000005)*265",
+    "co2": "x*0.135+y*0.0375",
+    "ch4": "(x*0.00003+y*0.0000125)*28",
+    "n2o": "(x*0.0000015+y*0.000000625)*265",
     "hfc": "x*0.0000308+y*0.000017325",
     "pfc": "x*0.00000616+y*0.000003465",
     "sf6": "(x*0.0000000616+y*0.00000003465)*23500",
     "nf3": "(x*0.00000000616+y*0.000000003465)*16100",
     "sec": "x*0.9+y*0.6"
    },
-   "notes": "Coefficients used in this row's formulas (Grid 5 calibration, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.04 tCO2e/t | EF_S2_virgin=0.0462, EF_S2_scrap=0.03465 tCO2e/t | EF_S3_virgin=0.2, EF_S3_scrap=0.08 tCO2e/t\nCO2_v=0.09, CO2_s=0.03 t/t | CH4_v=0.00002, CH4_s=0.00001 t/t (x28) | N2O_v=0.000001, N2O_s=0.0000005 t/t (x265)\nHFC_v=0.0000308, HFC_s=0.000017325 tCO2e/t | PFC_v=0.00000616, PFC_s=0.000003465 tCO2e/t | SF6_v=0.0000000616, SF6_s=0.00000003465 t/t (x23500) | NF3_v=0.00000000616, NF3_s=0.000000003465 t/t (x16100)\nSEC_virgin=0.9 GJ/t, SEC_scrap=0.6 GJ/t.\nBasis: Argon-Oxygen Decarburization — most common global stainless decarb route; CO2 is dominated by actual process decarburization (carbon oxidized out of the melt), not fuel combustion. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 60 kWh/t (virgin), 45 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.\nGrid 5 calibration: AOD needs little electricity of its own; oxygen, argon and nitrogen supply plus fume extraction come to ~40-60 kWh/t. Decarburisation CO2 left as in Grid 4. Grid 4 → Grid 5 (virgin/scrap): kWh/t 194.805/129.87 → 60/45; SEC GJ/t 3.5/2 → 0.9/0.6.",
+   "notes": "Coefficients used in this row's formulas (Grid 5 calibration, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.09, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=0.0462, EF_S2_scrap=0.03465 tCO2e/t | EF_S3_virgin=0.2, EF_S3_scrap=0.08 tCO2e/t\nCO2_v=0.135, CO2_s=0.0375 t/t | CH4_v=0.00003, CH4_s=0.0000125 t/t (x28) | N2O_v=0.0000015, N2O_s=0.000000625 t/t (x265)\nHFC_v=0.0000308, HFC_s=0.000017325 tCO2e/t | PFC_v=0.00000616, PFC_s=0.000003465 tCO2e/t | SF6_v=0.0000000616, SF6_s=0.00000003465 t/t (x23500) | NF3_v=0.00000000616, NF3_s=0.000000003465 t/t (x16100)\nSEC_virgin=0.9 GJ/t, SEC_scrap=0.6 GJ/t.\nBasis: Argon-Oxygen Decarburization — most common global stainless decarb route; CO2 is dominated by actual process decarburization (carbon oxidized out of the melt), not fuel combustion. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 60 kWh/t (virgin), 45 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.\nGrid 5 calibration: AOD needs little electricity of its own; oxygen, argon and nitrogen supply plus fume extraction come to ~40-60 kWh/t. Decarburising from ~1.5-2.5% C (more on a high-carbon ferrochrome charge) to <0.05% C releases ~0.05-0.09 tCO2/t. Grid 4 → Grid 5 (virgin/scrap): kWh/t 194.805/129.87 → 60/45; Scope 1 0.06/0.04 → 0.09/0.05; SEC GJ/t 3.5/2 → 0.9/0.6.",
    "transport": false
   },
   {
@@ -384,19 +384,19 @@
    "process": "Decarburization / Alloying",
    "variation": "CLU",
    "formulas": {
-    "scope1": "x*0.06+y*0.04",
+    "scope1": "x*0.09+y*0.05",
     "scope2": "(x*65+y*48)*(a*0.95+b*0.7+c*0.45+d*0.02+e*0.011+f*0.045+g*0.012)/1000",
     "scope3": "x*0.21+y*0.085",
-    "co2": "x*0.088+y*0.03",
-    "ch4": "(x*0.00002+y*0.00001)*28",
-    "n2o": "(x*0.000001+y*0.0000005)*265",
+    "co2": "x*0.132+y*0.0375",
+    "ch4": "(x*0.00003+y*0.0000125)*28",
+    "n2o": "(x*0.0000015+y*0.000000625)*265",
     "hfc": "x*0.0000312812+y*0.00001848",
     "pfc": "x*0.00000625625+y*0.000003696",
     "sf6": "(x*0.000000062563+y*0.00000003696)*23500",
     "nf3": "(x*0.000000006256+y*0.000000003696)*16100",
     "sec": "x*1+y*0.7"
    },
-   "notes": "Coefficients used in this row's formulas (Grid 5 calibration, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.06, EF_S1_scrap=0.04 tCO2e/t | EF_S2_virgin=0.05005, EF_S2_scrap=0.03696 tCO2e/t | EF_S3_virgin=0.21, EF_S3_scrap=0.085 tCO2e/t\nCO2_v=0.088, CO2_s=0.03 t/t | CH4_v=0.00002, CH4_s=0.00001 t/t (x28) | N2O_v=0.000001, N2O_s=0.0000005 t/t (x265)\nHFC_v=0.0000312812, HFC_s=0.00001848 tCO2e/t | PFC_v=0.00000625625, PFC_s=0.000003696 tCO2e/t | SF6_v=0.000000062563, SF6_s=0.00000003696 t/t (x23500) | NF3_v=0.000000006256, NF3_s=0.000000003696 t/t (x16100)\nSEC_virgin=1 GJ/t, SEC_scrap=0.7 GJ/t.\nBasis: Creusot-Loire Uddeholm process — steam/O2/Ar/N2 blowing, similar purpose to AOD; steam generation adds a modest SEC premium over AOD. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 65 kWh/t (virgin), 48 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.\nGrid 5 calibration: CLU: as AOD with steam dilution, ~50-65 kWh/t. Grid 4 → Grid 5 (virgin/scrap): kWh/t 207.792/129.87 → 65/48; SEC GJ/t 3.6/2.1 → 1/0.7.",
+   "notes": "Coefficients used in this row's formulas (Grid 5 calibration, Melt Shop — replace with verified plant/EPD data before regulatory use):\nEF_S1_virgin=0.09, EF_S1_scrap=0.05 tCO2e/t | EF_S2_virgin=0.05005, EF_S2_scrap=0.03696 tCO2e/t | EF_S3_virgin=0.21, EF_S3_scrap=0.085 tCO2e/t\nCO2_v=0.132, CO2_s=0.0375 t/t | CH4_v=0.00003, CH4_s=0.0000125 t/t (x28) | N2O_v=0.0000015, N2O_s=0.000000625 t/t (x265)\nHFC_v=0.0000312812, HFC_s=0.00001848 tCO2e/t | PFC_v=0.00000625625, PFC_s=0.000003696 tCO2e/t | SF6_v=0.000000062563, SF6_s=0.00000003696 t/t (x23500) | NF3_v=0.000000006256, NF3_s=0.000000003696 t/t (x16100)\nSEC_virgin=1 GJ/t, SEC_scrap=0.7 GJ/t.\nBasis: Creusot-Loire Uddeholm process — steam/O2/Ar/N2 blowing, similar purpose to AOD; steam generation adds a modest SEC premium over AOD. Illustrative literature-typical values — NOT plant-measured.\nScope 2 CUSTOMIZED: underlying electricity intensity backed out at the CEA-baseline reference (0.77 kg CO2e/kWh) = 65 kWh/t (virgin), 48 kWh/t (scrap). Actual Scope 2 now scales with your real grid mix (a-g) — see 'Grid Energy Mix Factors' sheet for per-source factors.\nGrid 5 calibration: CLU: as AOD with steam dilution, ~50-65 kWh/t; same decarburisation CO2. Grid 4 → Grid 5 (virgin/scrap): kWh/t 207.792/129.87 → 65/48; Scope 1 0.06/0.04 → 0.09/0.05; SEC GJ/t 3.6/2.1 → 1/0.7.",
    "transport": false
   },
   {
@@ -1529,6 +1529,56 @@
     "Benchmark": "Melt-to-cold-coil electricity",
     "Value": "~1,000-1,200 kWh/t",
     "Note": "EAF, AOD, LF, caster, hot strip mill, Z-mill, CAPL and auxiliaries."
+   },
+   {
+    "Benchmark": "EAF electricity, scrap / cold DRI charge",
+    "Value": "385 / 590 kWh/t",
+    "Note": "Thermodynamic and plant studies of EAF electrical demand."
+   },
+   {
+    "Benchmark": "EAF graphite electrode consumption",
+    "Value": "1.2-3.0 kg/t",
+    "Note": "Varies with grade and practice; ~1.4 kg/t average across many EAFs."
+   },
+   {
+    "Benchmark": "EAF direct CO2, typical",
+    "Value": "~102 kg CO2/t",
+    "Note": "Electrodes, charge and foaming carbon, decarburisation, burners."
+   },
+   {
+    "Benchmark": "Ladle furnace electricity",
+    "Value": "~27.5 kWh/t average; 65 kWh/t with gas cleaning",
+    "Note": "Plant average and best-practice figure incl. fume system."
+   },
+   {
+    "Benchmark": "Cold rolling, best practice (carbon sheet)",
+    "Value": "87 kWh/t",
+    "Note": "LBNL world best practice; stainless on cluster mills runs higher (150-300 kWh/t cited)."
+   },
+   {
+    "Benchmark": "Walking-beam reheating fuel",
+    "Value": "~1.1-1.5 GJ/t",
+    "Note": "Conventional slab reheating; ~0.06-0.085 tCO2/t on natural gas."
+   },
+   {
+    "Benchmark": "High-carbon ferrochrome footprint",
+    "Value": "1.8-5.5 tCO2e/t FeCr (4.7-6.1 on coal power)",
+    "Note": "JOM 2023 (Energy Consumption and GHG Emissions of HC FeCr Production)."
+   },
+   {
+    "Benchmark": "Nickel pig iron footprint",
+    "Value": "~7 tCO2e/t alloy (60-85 t per t Ni)",
+    "Note": "Energies 2020 (Nickel products); CarbonChain."
+   },
+   {
+    "Benchmark": "Stainless EAF corporate footprint",
+    "Value": "4.57 tCO2e/t, ~70% Scope 3",
+    "Note": "ACS Sust. Resour. Manage. (Scope 3 in stainless EAF steelmaking); ferroalloys ~80% of Scope 3."
+   },
+   {
+    "Benchmark": "Grid source factors",
+    "Value": "coal ~0.95; gas ~0.45; hydro 0.024, wind 0.011, solar PV ~0.045, nuclear 0.012",
+    "Note": "Combustion factors for fossil; IPCC AR5 lifecycle medians for non-fossil. Kept from Grid 4."
    }
   ],
   "changes": [
@@ -1695,12 +1745,12 @@
     "Grid 4 kWh/t (s)": 545.455,
     "Grid 5 kWh/t (s)": 460,
     "Grid 4 Scope 1 (v/s)": "0.42 / 0.05",
-    "Grid 5 Scope 1 (v/s)": "0.14 / 0.07",
+    "Grid 5 Scope 1 (v/s)": "0.14 / 0.1",
     "Grid 4 Scope 3 (v/s)": "1.1 / 0.12",
     "Grid 5 Scope 3 (v/s)": "3.2 / 0.2",
     "Grid 4 SEC (v/s)": "23 / 5.8",
     "Grid 5 SEC (v/s)": "3.1 / 2.1",
-    "Reason": "Stainless EAF melts scrap at ~420-480 kWh/t; a virgin-heavy charge (ferroalloys, pig iron, DRI) needs more, ~600-700 kWh/t. Direct emissions from electrodes (~2 kg/t), charge carbon and burners are ~0.06-0.15 tCO2/t."
+    "Reason": "Stainless EAF melts scrap at ~420-480 kWh/t; a virgin-heavy charge (ferroalloys, pig iron, DRI) needs more, ~600-700 kWh/t. Direct emissions from electrodes (1.2-3 kg/t), charge carbon and burners: ~0.10 tCO2/t on scrap (typical EAF ~102 kg/t), more on a carbon-rich virgin charge."
    },
    {
     "#": 11,
@@ -1797,12 +1847,12 @@
     "Grid 4 kWh/t (s)": 129.87,
     "Grid 5 kWh/t (s)": 45,
     "Grid 4 Scope 1 (v/s)": "0.06 / 0.04",
-    "Grid 5 Scope 1 (v/s)": "0.06 / 0.04",
+    "Grid 5 Scope 1 (v/s)": "0.09 / 0.05",
     "Grid 4 Scope 3 (v/s)": "0.2 / 0.08",
     "Grid 5 Scope 3 (v/s)": "0.2 / 0.08",
     "Grid 4 SEC (v/s)": "3.5 / 2",
     "Grid 5 SEC (v/s)": "0.9 / 0.6",
-    "Reason": "AOD needs little electricity of its own; oxygen, argon and nitrogen supply plus fume extraction come to ~40-60 kWh/t. Decarburisation CO2 left as in Grid 4."
+    "Reason": "AOD needs little electricity of its own; oxygen, argon and nitrogen supply plus fume extraction come to ~40-60 kWh/t. Decarburising from ~1.5-2.5% C (more on a high-carbon ferrochrome charge) to <0.05% C releases ~0.05-0.09 tCO2/t."
    },
    {
     "#": 17,
@@ -1848,12 +1898,12 @@
     "Grid 4 kWh/t (s)": 129.87,
     "Grid 5 kWh/t (s)": 48,
     "Grid 4 Scope 1 (v/s)": "0.06 / 0.04",
-    "Grid 5 Scope 1 (v/s)": "0.06 / 0.04",
+    "Grid 5 Scope 1 (v/s)": "0.09 / 0.05",
     "Grid 4 Scope 3 (v/s)": "0.21 / 0.085",
     "Grid 5 Scope 3 (v/s)": "0.21 / 0.085",
     "Grid 4 SEC (v/s)": "3.6 / 2.1",
     "Grid 5 SEC (v/s)": "1 / 0.7",
-    "Reason": "CLU: as AOD with steam dilution, ~50-65 kWh/t."
+    "Reason": "CLU: as AOD with steam dilution, ~50-65 kWh/t; same decarburisation CO2."
    },
    {
     "#": 20,
