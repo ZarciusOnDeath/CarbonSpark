@@ -115,9 +115,9 @@ _SCRIPT = """
 
     const note = doc.querySelector('[data-cs-conditions]');
     if (note) {
-      const railBlend = railIn * share + railOut * (1 - share);
       note.textContent =
-        'scrap ' + Math.round(y * 100) + '% \u00b7 rail ' + Math.round(railBlend * 100) + '%';
+        'scrap ' + Math.round(y * 100) + '% \u00b7 rail in ' + Math.round(railIn * 100) +
+        '% / out ' + Math.round(railOut * 100) + '%';
     }
   };
 

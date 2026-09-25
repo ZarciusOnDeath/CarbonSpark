@@ -459,6 +459,102 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
   animation: csSweep 1s ease-in-out infinite;
 }}
 
+
+/* ---------- photography & calls to action ---------- */
+@keyframes csRing {{ 0% {{ box-shadow: 0 0 0 0 rgba(193,99,63,.55); }} 70% {{ box-shadow: 0 0 0 12px rgba(193,99,63,0); }} 100% {{ box-shadow: 0 0 0 0 rgba(193,99,63,0); }} }}
+
+.cs-nav a.cs-nav-cta {{
+  color: #fff; background: var(--clay); padding: 8px 16px; border-radius: 999px; font-weight: 600;
+}}
+.cs-nav a.cs-nav-cta:hover {{ color:#fff; filter: brightness(1.08); }}
+
+/* Photo-backed blocks. The background itself is set per key by the page. */
+.st-key-cs_hero_photo, .st-key-cs_cta_band {{
+  border-radius: 20px; overflow: hidden; margin-top: 6px;
+  padding: clamp(28px, 6vh, 72px) clamp(20px, 4vw, 64px) clamp(30px, 6vh, 64px);
+  box-shadow: 0 30px 60px -40px rgba(0,0,0,.6);
+}}
+.st-key-cs_cta_band {{ margin-top: 70px; }}
+.cs-on-photo, .cs-on-photo h1, .cs-on-photo h2, .cs-on-photo p {{ color: #f6f1ea !important; }}
+.cs-on-photo .cs-eyebrow {{ color: #ffb07a; }}
+.cs-on-photo h1 em {{ color: #ff9a5c; }}
+.cs-on-photo h2 {{ font-family: var(--serif); font-weight:400; font-size: clamp(1.9rem,3.4vw,2.8rem); margin: 0 0 8px 0; }}
+.cs-on-photo p {{ opacity: .88; font-size: 1.1rem; }}
+.st-key-cs_hero_photo .cs-hero {{ padding-top: 0; }}
+.st-key-cs_hero_photo button, .st-key-cs_cta_band button {{
+  border-radius: 999px !important; padding: 12px 22px !important; font-weight: 600 !important;
+}}
+.st-key-hero_plant button {{
+  background: rgba(255,255,255,.1) !important; color: #fff !important;
+  border: 1px solid rgba(255,255,255,.55) !important; backdrop-filter: blur(6px);
+}}
+.st-key-hero_plant button p {{ color: #fff !important; }}
+.st-key-hero_launch button {{ animation: csRing 2.4s ease-out 1.2s 3; }}
+
+.cs-glass {{
+  margin-top: clamp(8px, 4vh, 40px); padding: 22px 24px; border-radius: 16px;
+  background: rgba(20,18,16,.42); border: 1px solid rgba(255,255,255,.18);
+  backdrop-filter: blur(12px); color: #f6f1ea;
+}}
+.cs-glass-label {{ font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; opacity:.75; }}
+.cs-glass-total {{ font-family: var(--serif); font-size: 3.2rem; line-height:1.1; margin: 6px 0 14px 0; }}
+.cs-glass-total small {{ font-family: var(--sans); font-size: .9rem; color:#f6f1ea; opacity:.8; margin-left: 6px; }}
+.cs-glass-row {{ display:grid; grid-template-columns: 9.5em 1fr 3em; align-items:center; gap:10px; margin: 8px 0; font-size:.84rem; }}
+.cs-glass-row i {{ display:block; height:12px; border-radius: 6px; }}
+.cs-glass-row b {{ text-align:right; font-weight:600; }}
+.cs-glass-foot {{ margin-top: 12px; font-size: .8rem; opacity: .7; }}
+
+.cs-photo-card {{
+  height: 210px; border-radius: 16px; display:flex; align-items:flex-end; padding: 18px 20px;
+  transition: transform .25s ease, box-shadow .25s ease;
+  box-shadow: 0 18px 40px -30px rgba(0,0,0,.7);
+}}
+.cs-photo-card:hover {{ transform: translateY(-3px); }}
+.cs-photo-card h3 {{ color:#fff; margin:0; font-family: var(--serif); font-weight:400; font-size:1.6rem; line-height:1.15; }}
+.cs-photo-card-body {{ color: var(--ink-soft); font-size:.97rem; line-height:1.6; margin: 12px 0 10px 0; min-height: 3.2em; }}
+
+/* ---------- welcome cover ---------- */
+/* A fixed cover over the whole viewport. Streamlit keeps the previous page's
+   elements on screen until they are replaced, so an inline splash left the
+   landing page visible underneath it. */
+.cs-splash-cover {{
+  position: fixed; inset: 0; z-index: 100000; background: var(--paper);
+  display:flex; align-items:center; justify-content:center;
+}}
+.cs-splash-cover .cs-splash {{ min-height: auto; }}
+
+/* ---------- tool: making the inputs obvious ---------- */
+.cs-tiles-head {{ margin: 4px 0 6px 0; font-size:.74rem; letter-spacing:.14em; text-transform:uppercase; color: var(--clay); font-weight:600; }}
+.st-key-cs_tiles button {{
+  min-height: 86px; text-align:left !important; justify-content:flex-start !important;
+  background: var(--surface) !important; border: 1px solid var(--line) !important;
+  border-left: 4px solid var(--clay) !important; border-radius: 12px !important;
+  padding: 12px 16px !important; transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+}}
+.st-key-cs_tiles button:hover {{
+  transform: translateY(-2px); border-color: var(--clay) !important;
+  box-shadow: 0 12px 24px -18px rgba(0,0,0,.5);
+}}
+.st-key-cs_tiles button p {{ text-align:left; margin:0; font-size:.82rem; color: var(--ink-soft); }}
+.st-key-cs_tiles button strong {{ display:block; margin-top:6px; font-size:1.45rem; color: var(--ink); font-weight:650; }}
+.st-key-cs_tiles button [data-testid="stMarkdownContainer"] {{ width:100%; }}
+.st-key-cs_tiles button div {{ justify-content:flex-start !important; }}
+
+.st-key-open_inputs button {{
+  background: var(--clay) !important; color: #fff !important; border: 1px solid var(--clay) !important;
+  animation: csRing 2.4s ease-out 1s 4;
+}}
+.st-key-open_inputs button p {{ color: #fff !important; }}
+
+.cs-drawer-lead {{ font-size: 1rem; color: var(--ink); margin: 2px 0 14px 0; }}
+.cs-panel-photo {{
+  height: 116px; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
+  display:flex; flex-direction:column; justify-content:flex-end;
+  box-shadow: inset 0 -70px 60px -30px rgba(0,0,0,.65);
+}}
+.cs-panel-photo span {{ color:#fff; font-family: var(--serif); font-size: 1.45rem; line-height:1.1; }}
+.cs-panel-photo small {{ color: rgba(255,255,255,.85); font-size: .82rem; }}
+
 @media (prefers-reduced-motion: reduce) {{
   *, *::before, *::after {{ animation: none !important; transition: none !important; }}
 }}

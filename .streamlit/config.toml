@@ -17,3 +17,5 @@ showErrorDetails = true
 
 [server]
 runOnSave = false
+# Serves ./static at /app/static — the site's photography lives in static/photos.
+enableStaticServing = true

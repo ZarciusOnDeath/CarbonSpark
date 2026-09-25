@@ -29,6 +29,13 @@ STAGES = init_state(DATASET)
 # which mode that is.
 st.markdown(base_css(st.session_state.dark), unsafe_allow_html=True)
 
+# The landing nav's "Open the calculator" is a plain link (?go=tool), so it
+# works from anywhere on the page; it lands on the welcome screen like the
+# buttons do.
+if st.query_params.get("go") == "tool":
+    st.query_params.clear()
+    st.session_state.page = "loading"
+
 page = st.session_state.page
 if page == "loading":
     loading.render()

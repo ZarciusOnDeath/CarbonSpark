@@ -249,3 +249,40 @@ def spark_mark(size: int = 34, dark: bool = False) -> str:
   <circle cx="24" cy="24" r="20" fill="none" stroke="{mark_ink}" stroke-width="1.5" opacity="0.35"/>
   <path d="M26 6 L14 26 h9 l-3 16 L36 21 h-10 Z" fill="{mark_clay}"/>
 </svg>"""
+
+
+# --------------------------------------------------------------------------- #
+# Photography
+# --------------------------------------------------------------------------- #
+#: Photo slots used across the site. Each loads ``static/photos/<name>.jpg``
+#: (served by Streamlit's static route) and sits on a gradient in the photo's
+#: own colours, so a slot still reads as intended while a file is missing or
+#: loading.
+PHOTOS = {
+    "hero": "radial-gradient(120% 90% at 70% 110%, #ff8a2a 0%, #b8410f 22%, #3a1a0e 52%, #0f0d0c 100%)",
+    "melt": "radial-gradient(90% 80% at 40% 90%, #ffb347 0%, #d4561a 28%, #3b1a0c 60%, #121010 100%)",
+    "scrap": "linear-gradient(135deg, #5b4636 0%, #8a6a4c 35%, #3f3a36 70%, #1f1d1b 100%)",
+    "grid": "linear-gradient(160deg, #20364a 0%, #35607e 40%, #c9874a 85%, #e7b073 100%)",
+    "mill": "linear-gradient(120deg, #1d2329 0%, #4a545d 45%, #a9b1b8 70%, #2a3036 100%)",
+    "coil": "linear-gradient(140deg, #2b3440 0%, #6d7c8a 50%, #c7ced4 75%, #39424c 100%)",
+}
+
+#: Where a slot's photo is served from, relative to the page.
+PHOTO_URL = "./app/static/photos/{name}.jpg"
+
+
+def photo_style(name: str, shade: float = 0.0) -> str:
+    """Inline ``background`` for a photo slot, with an optional dark wash.
+
+    ``shade`` lays a black gradient over the photo so type set on it stays
+    legible whatever the picture turns out to be.
+    """
+    layers = []
+    if shade:
+        layers.append(
+            f"linear-gradient(180deg, rgba(10,9,8,{shade * 0.55:.2f}) 0%, "
+            f"rgba(10,9,8,{shade:.2f}) 100%)"
+        )
+    layers.append(f"url('{PHOTO_URL.format(name=name)}')")
+    layers.append(PHOTOS[name])
+    return f"background-image:{', '.join(layers)};background-size:cover;background-position:center;"

@@ -9,15 +9,12 @@ import pandas as pd
 import streamlit as st
 
 from carbon_calc.model import (
-    INDIA_GRID_MIX,
     METRIC_LABELS,
     MIX_VARIABLES,
     REFERENCE_GRID_FACTOR,
-    SCOPES,
     TRACE_GASES,
     Dataset,
     Result,
-    build_variables,
     calculate,
     mix_factor,
 )
@@ -31,7 +28,6 @@ from carbon_calc.route import (
     even_mix,
     normalise_mix,
     route_weights,
-    transport_ids,
 )
 
 from . import charts, live
@@ -39,7 +35,6 @@ from .presets import AMBITIONS, GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
 from .state import (
     load_scenario,
     COMPARE_RIGHT_W,
-    INBOUND_W,
     PRESET_W,
     PROFILE_W,
     SAVE_NAME_W,
@@ -59,7 +54,6 @@ from .state import (
     mix_dirty,
     mix_total,
     mix_widget,
-    on_inbound_change,
     on_mix_change,
     on_scrap_change,
     on_train_in_change,
@@ -78,13 +72,14 @@ from .state import (
     toggle_dark,
     train_share,
 )
-from .theme import DEPARTMENT_ICONS, SCOPE_NAMES, panel_art, section_band, spark_mark
+from .theme import DEPARTMENT_ICONS, photo_style, section_band, spark_mark
 
 PANELS = [
     ("scrap", "Scrap vs virgin", "How much of the charge is recycled steel"),
     ("grid", "Energy grid mix", "Where the electricity comes from"),
-    ("plant", "Plant customisation", "Departments, techniques and variations"),
+    ("plant", "Plant & transport", "Process route, and rail vs road in and out"),
 ]
+PANEL_PHOTOS = {"scrap": "scrap", "grid": "grid", "plant": "mill"}
 
 #: Glyphs used in the drill-down titles, kept out of the f-strings that use them.
 ALL_ON, SOME_ON, ALL_OFF = "\u2713", "\u2013", "\u00d7"
@@ -120,34 +115,42 @@ def _open_panel(panel: str | None) -> None:
     st.session_state.drawer_panel = panel
 
 
-@st.cache_data(show_spinner=False)
-def _workbook_haulage_split(_dataset: Dataset) -> tuple:
-    """The inbound leg's share of haulage carbon and energy, read off the workbook.
+def _open_transport() -> None:
+    """Open the plant panel with the transport dropdown already unfolded."""
+    _open_panel("plant")
+    st.session_state.open_department = "__transport__"
 
-    Evaluated at the workbook's own reference basis — an even virgin/scrap charge,
-    an even rail/road split and today's Indian grid — so the figure describes the
-    two transport rows themselves rather than the user's current scenario.
+
+def _scenario_tiles(result: Result) -> None:
+    """The scenario's inputs as tiles above the charts, each one a way in.
+
+    People read the figures and never found the drawer. Showing the current
+    inputs as values with a pencil makes it obvious they are settings, not
+    facts, and pressing one opens the exact panel that changes it.
     """
-    inbound_ids, outbound_ids = transport_ids(_dataset)
-    variables = build_variables(0.5, INDIA_GRID_MIX, 0.5)
-    by_id = {proc.id: proc for proc in _dataset.processes}
-
-    def leg(ids):
-        carbon = energy = 0.0
-        for process_id in ids:
-            values = by_id[process_id].evaluate(variables)
-            carbon += sum(values[scope] for scope in SCOPES)
-            energy += values["sec"]
-        return carbon, energy
-
-    in_carbon, in_energy = leg(inbound_ids)
-    out_carbon, out_energy = leg(outbound_ids)
-    carbon_total = in_carbon + out_carbon
-    energy_total = in_energy + out_energy
-    return (
-        in_carbon / carbon_total if carbon_total else 0.0,
-        in_energy / energy_total if energy_total else 0.0,
+    if st.session_state.drawer_open:
+        return
+    stages_on = sum(1 for mix in st.session_state.route.values() if normalise_mix(mix))
+    tiles = [
+        ("scrap", "\u267B\ufe0f  Scrap in the charge", f"{result.scrap_ratio:.0%}", _open_panel, ("scrap",)),
+        ("grid", "\u26A1  Grid electricity", f"{result.grid_factor:.3f} kg/kWh", _open_panel, ("grid",)),
+        ("transport", "\U0001F686  Rail share in / out",
+         f"{inbound_rail():.0%} / {outbound_rail():.0%}", _open_transport, ()),
+        ("plant", "\U0001F3ED  Process route", f"{stages_on} steps", _open_panel, ("plant",)),
+    ]
+    st.markdown(
+        '<p class="cs-tiles-head">Your inputs \u2014 click any to change it</p>',
+        unsafe_allow_html=True,
     )
+    with st.container(key="cs_tiles"):
+        for column, (key, label, value, action, args) in zip(st.columns(4, gap="small"), tiles):
+            column.button(
+                f"{label}\n\n**{value}**\n\nChange \u2192",
+                key=f"tile_{key}",
+                on_click=action,
+                args=args,
+                use_container_width=True,
+            )
 
 
 def _panel_scrap(dataset: Dataset) -> None:
@@ -168,28 +171,10 @@ def _panel_scrap(dataset: Dataset) -> None:
         + live.rendered_chip(SCRAP_LABEL, "scrap {v}%", scrap, tone="cs-chip-good"),
         unsafe_allow_html=True,
     )
-    st.divider()
-    st.markdown("#### Inbound / outbound haulage")
-    inbound = st.slider(
-        INBOUND_LABEL,
-        min_value=0,
-        max_value=100,
-        value=st.session_state.inbound,
-        key=INBOUND_W,
-        on_change=on_inbound_change,
-        format="%d%%",
-        help="Inbound is raw material arriving; outbound is finished coil leaving. "
-        "50% is the workbook as published.",
+    st.caption(
+        "Rail vs road for raw material in and coil out is under "
+        "**Plant \u2192 Transport**."
     )
-    st.markdown(
-        live.rendered_chip(INBOUND_LABEL, "inbound {v}%", inbound)
-        + " "
-        + live.rendered_chip(INBOUND_LABEL, "outbound {inv}%", inbound, tone="cs-chip-warn"),
-        unsafe_allow_html=True,
-    )
-    st.caption("Rail vs road is set per leg, under Plant \u2192 RMHS and Outbound.")
-    carbon_share, _ = _workbook_haulage_split(dataset)
-    st.caption(f"At an even split, {carbon_share:.0%} of transport carbon sits on the inbound leg.")
 
 
 def _action_bar(dirty: bool, apply_label: str, on_apply, on_revert, dirty_note: str) -> None:
@@ -342,22 +327,23 @@ def _toggle_variation(stage: Stage, process_id: int) -> None:
     route[stage.key] = kept if len(kept) == len(chosen) else even_mix(chosen)
 
 
-def _transport_controls(stage: Stage) -> None:
-    """The rail/road split for a transport step, shown with the step itself.
+def _transport_controls(inbound: bool) -> None:
+    """The rail/road split for one transport leg.
 
     The workbook has two transport rows and they are independent choices: a
-    plant can rail its raw material in and truck its coil out. Each row's slider
-    therefore lives with the row, not in a single global setting.
+    plant can rail its raw material in and truck its coil out, so each leg has
+    its own rail share.
     """
-    inbound = stage.department == "RMHS"
     label = INBOUND_RAIL_LABEL if inbound else OUTBOUND_RAIL_LABEL
     widget, callback, value = (
         (TRAIN_IN_W, on_train_in_change, st.session_state.train_in)
         if inbound
         else (TRAIN_OUT_W, on_train_out_change, st.session_state.train_out)
     )
-    leg = "arriving" if inbound else "leaving"
-    st.caption(f"How the tonnes {leg} are moved. Road is the remainder.")
+    st.markdown(
+        "**Inbound** \u00b7 raw material arriving" if inbound
+        else "**Outbound** \u00b7 finished coil leaving"
+    )
     share = st.slider(
         label,
         min_value=0,
@@ -406,8 +392,7 @@ def _stage_controls(stage: Stage, route) -> None:
             )
         set_stage_mix(stage, normalise_mix(raw) or even_mix(picked))
     if stage.options[0].transport:
-        st.divider()
-        _transport_controls(stage)
+        st.caption("Rail vs road for this leg is set under **Transport** at the top.")
 
 
 def _panel_plant(dataset: Dataset, stages) -> None:
@@ -418,6 +403,14 @@ def _panel_plant(dataset: Dataset, stages) -> None:
     technique with real alternatives opens into its variations.
     """
     st.markdown("#### Plant customisation")
+    with st.expander(
+        "\U0001F686  Transport \u00b7 rail vs road, inbound and outbound",
+        expanded=st.session_state.get("open_department") == "__transport__",
+    ):
+        st.caption("Each leg is set separately. Road is the remainder. Applies straight away.")
+        _transport_controls(True)
+        st.divider()
+        _transport_controls(False)
     st.caption("Tick what the plant runs. Untick to take it out of the route.")
     route = st.session_state.route_draft
 
@@ -528,11 +521,19 @@ def _drawer(dataset: Dataset, stages) -> None:
     head[1].button("Close  \u2715", key="close_drawer", on_click=_toggle_drawer,
                    use_container_width=True)
     if panel is None:
+        st.markdown(
+            '<p class="cs-drawer-lead">Start here. Pick what to change \u2014 the figures on '
+            "the right update as you go.</p>",
+            unsafe_allow_html=True,
+        )
         for key, title, blurb in PANELS:
-            st.markdown(panel_art(key, st.session_state.dark), unsafe_allow_html=True)
-            st.button(title, key=f"open_{key}", on_click=_open_panel, args=(key,),
-                      use_container_width=True)
-            st.caption(blurb)
+            st.markdown(
+                f'<div class="cs-panel-photo" style="{photo_style(PANEL_PHOTOS[key])}">'
+                f"<span>{title}</span><small>{blurb}</small></div>",
+                unsafe_allow_html=True,
+            )
+            st.button(f"Change {title.lower()}  \u2192", key=f"open_{key}", on_click=_open_panel,
+                      args=(key,), use_container_width=True, type="primary")
             st.write("")
         return
 
@@ -577,7 +578,7 @@ def _readout_figures(figures: str, result: Result, kwh: float) -> None:
     st.markdown(
         f'<div class="cs-readout">{figures}</div>'
         f'<p class="cs-readout-note"><span data-cs-conditions>scrap '
-        f"{result.scrap_ratio:.0%} \u00b7 rail {result.train_share:.0%}</span> "
+        f"{result.scrap_ratio:.0%} \u00b7 rail in {inbound_rail():.0%} / out {outbound_rail():.0%}</span> "
         f"\u00b7 grid {result.grid_factor:.3f} kg CO\u2082e/kWh "
         f"\u00b7 electricity \u2248 "
         f"{'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}</p>",
@@ -610,7 +611,7 @@ def _headline(result: Result, dataset: Dataset) -> None:
             return
         action, readings = st.columns([1.25, 6.2], gap="small")
         action.button(
-            "\u2715  Close" if st.session_state.drawer_open else "\u2699  Inputs",
+            "\u2715  Close" if st.session_state.drawer_open else "\u2699  Edit inputs",
             on_click=_toggle_drawer,
             use_container_width=True,
             help="Scrap ratio, energy grid mix and the plant's process route",
@@ -619,7 +620,7 @@ def _headline(result: Result, dataset: Dataset) -> None:
         readings.markdown(
             f'<div class="cs-readout">{figures}</div>'
             f'<p class="cs-readout-note"><span data-cs-conditions>scrap '
-            f"{result.scrap_ratio:.0%} \u00b7 rail {result.train_share:.0%}</span> "
+            f"{result.scrap_ratio:.0%} \u00b7 rail in {inbound_rail():.0%} / out {outbound_rail():.0%}</span> "
             f"\u00b7 grid {result.grid_factor:.3f} kg CO\u2082e/kWh "
             f"\u00b7 electricity \u2248 "
             f"{'n/a' if math.isnan(kwh) else f'{kwh:,.0f} kWh/t'}</p>",
@@ -695,6 +696,7 @@ def _chart_key(name: str) -> str:
 
 
 def _dashboard(result: Result, dataset: Dataset, stages) -> None:
+    _scenario_tiles(result)
     _profile_banner(stages)
 
     st.markdown('<div class="cs-stage">', unsafe_allow_html=True)
