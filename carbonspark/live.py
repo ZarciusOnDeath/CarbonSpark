@@ -195,19 +195,43 @@ _SCRIPT = """
 
   // Pointer events fire continuously through a drag; the observer catches the
   // keyboard case and any re-render Streamlit does underneath us.
+  //
+  // Work only happens when a slider's value has actually changed. Without that
+  // gate the page looped: redrawing a chart mutates styles, the observer saw
+  // the mutation and redrew again, every frame, and every mouse move anywhere
+  // on the page recomputed the whole model — which is what made it laggy.
   let frame = null;
-  const schedule = () => {
-    if (frame) return;
-    frame = requestAnimationFrame(() => { frame = null; paint(); recompute(); });
+  let lastSignature = '';
+  // The model payload is part of the signature, so a server re-render with
+  // new figures redraws once, while a chart's own redraw changes nothing here.
+  const signature = () => {
+    const holder = doc.querySelector('[data-cs-model]');
+    return [...doc.querySelectorAll('[data-testid="stSliderThumbValue"]')]
+      .map((bubble) => bubble.textContent).join('|') +
+      '#' + (holder ? holder.getAttribute('data-cs-model').length : 0) +
+      '#' + doc.querySelectorAll('.js-plotly-plot').length;
   };
-  ['pointerdown', 'pointermove', 'pointerup', 'keydown', 'keyup', 'input'].forEach((event) =>
-    doc.addEventListener(event, schedule, true)
-  );
+  const schedule = (force) => {
+    if (frame) return;
+    frame = requestAnimationFrame(() => {
+      frame = null;
+      const now = signature();
+      if (force !== true && now === lastSignature) return;
+      lastSignature = now;
+      paint();
+      recompute();
+    });
+  };
+  let dragging = false;
+  doc.addEventListener('pointerdown', () => { dragging = true; }, true);
+  doc.addEventListener('pointerup', () => { dragging = false; schedule(); }, true);
+  doc.addEventListener('pointermove', () => { if (dragging) schedule(); }, true);
+  ['keyup', 'input'].forEach((event) => doc.addEventListener(event, () => schedule(), true));
   // characterData catches the thumb bubble's own text changing, which is what
-  // moves during a drag; childList catches Streamlit re-rendering underneath.
-  new MutationObserver(schedule).observe(doc.body, {
-    subtree: true, childList: true, characterData: true,
-    attributes: true, attributeFilter: ['aria-valuenow', 'style'],
+  // moves during a drag. Style changes are deliberately not observed.
+  new MutationObserver(() => schedule()).observe(doc.body, {
+    subtree: true, characterData: true,
+    attributes: true, attributeFilter: ['aria-valuenow'],
   });
 
   // --- the readout condenses as the page scrolls ---------------------------
@@ -266,7 +290,16 @@ _SCRIPT = """
     if (box) box.scrollTo({ top: 0, behavior: 'auto' });
   };
 
-  const tick = () => { openAtTop(); schedule(); restoreScroll(); condense(); };
+  // Streamlit re-renders in bursts of many mutations; handle a burst once.
+  let tickFrame = null;
+  const tick = () => {
+    if (tickFrame) return;
+    tickFrame = requestAnimationFrame(() => {
+      tickFrame = null;
+      openAtTop(); restoreScroll(); condense();
+      schedule();
+    });
+  };
   new MutationObserver(tick).observe(doc.body, { subtree: true, childList: true });
 
   doc.__csLiveSliders = { sync: tick };

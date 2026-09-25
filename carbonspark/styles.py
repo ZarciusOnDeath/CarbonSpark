@@ -70,7 +70,7 @@ html {{ scroll-behavior: smooth; }}
   position: sticky; top: 0; z-index: 999;
   display: flex; align-items: center; gap: 28px;
   padding: 14px 18px; margin: 0 -1rem 4px -1rem;
-  background: {nav}; backdrop-filter: blur(10px);
+  background: var(--paper);
   border-bottom: 1px solid var(--line);
 }}
 .cs-nav .cs-brand {{ display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.01em; font-size:1.04rem; }}
@@ -486,15 +486,15 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 }}
 .st-key-hero_plant button {{
   background: rgba(255,255,255,.1) !important; color: #fff !important;
-  border: 1px solid rgba(255,255,255,.55) !important; backdrop-filter: blur(6px);
+  border: 1px solid rgba(255,255,255,.55) !important;
 }}
 .st-key-hero_plant button p {{ color: #fff !important; }}
 .st-key-hero_launch button {{ animation: csRing 2.4s ease-out 1.2s 3; }}
 
 .cs-glass {{
   margin-top: clamp(8px, 4vh, 40px); padding: 22px 24px; border-radius: 16px;
-  background: rgba(20,18,16,.42); border: 1px solid rgba(255,255,255,.18);
-  backdrop-filter: blur(12px); color: #f6f1ea;
+  background: rgba(16,14,12,.62); border: 1px solid rgba(255,255,255,.18);
+  color: #f6f1ea;
 }}
 .cs-glass-label {{ font-size:.72rem; letter-spacing:.16em; text-transform:uppercase; opacity:.75; }}
 .cs-glass-total {{ font-family: var(--serif); font-size: 3.2rem; line-height:1.1; margin: 6px 0 14px 0; }}
