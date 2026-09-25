@@ -2,7 +2,7 @@
 
 The model is a thin, faithful evaluator of the workbook: every number the app
 shows is produced by evaluating a formula that came out of
-``Stainless_Steel_Carbon_Accounting_Grid (3).xlsx`` at the user's chosen input
+``Stainless_Steel_Carbon_Accounting_Grid_5.xlsx`` at the user's chosen input
 mix (``x``/``y``) and grid energy mix (``a``-``g``). No coefficients are
 re-derived or hard-coded here.
 """
@@ -119,6 +119,9 @@ class Dataset:
     processes: Tuple[Process, ...]
     grid_sources: Tuple[GridSource, ...]
     downstream: Tuple[Dict[str, str], ...]
+    #: How the workbook's coefficients were calibrated: a summary, the published
+    #: benchmarks and the per-row changes. Empty for a workbook without them.
+    calibration: Mapping[str, object] = field(default_factory=dict, compare=False, hash=False)
 
     @property
     def departments(self) -> List[str]:
@@ -157,7 +160,12 @@ def load_dataset(path: str | Path = DATA_PATH) -> Dataset:
         GridSource(variable=var, source=info["source"], ef=float(info["ef"]), basis=info["basis"])
         for var, info in raw["grid_factors"].items()
     )
-    return Dataset(processes, grid_sources, tuple(raw.get("downstream", ())))
+    return Dataset(
+        processes,
+        grid_sources,
+        tuple(raw.get("downstream", ())),
+        raw.get("calibration", {}),
+    )
 
 
 def build_variables(

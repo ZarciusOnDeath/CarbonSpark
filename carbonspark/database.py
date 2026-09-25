@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import html
+from pathlib import Path
 
 import pandas as pd
 import streamlit as st
@@ -13,6 +14,13 @@ from . import live
 from .notes import parse as parse_note
 from .state import go, toggle_dark
 from .theme import spark_mark
+
+
+#: The workbook the grid is extracted from, offered as a download.
+WORKBOOK = (
+    Path(__file__).resolve().parent.parent
+    / "data" / "source" / "Stainless_Steel_Carbon_Accounting_Grid_5.xlsx"
+)
 
 
 def _variation(variation: str) -> str:
@@ -53,8 +61,14 @@ def render(dataset: Dataset) -> None:
         unsafe_allow_html=True,
     )
 
-    processes, factors, downstream, notation = st.tabs(
-        ["Process formulas", "Grid emission factors", "Downstream Scope 3", "Notation"]
+    processes, factors, downstream, calibration, notation = st.tabs(
+        [
+            "Process formulas",
+            "Grid emission factors",
+            "Downstream Scope 3",
+            "Calibration",
+            "Notation",
+        ]
     )
 
     with processes:
@@ -90,6 +104,13 @@ def render(dataset: Dataset) -> None:
             file_name="carbonspark_formula_grid.csv",
             mime="text/csv",
         )
+        if WORKBOOK.exists():
+            st.download_button(
+                "Download the source workbook (.xlsx)",
+                WORKBOOK.read_bytes(),
+                file_name=WORKBOOK.name,
+                mime="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+            )
 
         st.markdown("#### Coefficients behind a row")
         chosen = st.selectbox(
@@ -172,6 +193,30 @@ def render(dataset: Dataset) -> None:
             hide_index=True,
         )
 
+    with calibration:
+        basis = dataset.calibration or {}
+        if not basis:
+            st.caption("This workbook carries no calibration record.")
+        else:
+            st.markdown(
+                f'<p style="color:var(--ink-soft);max-width:80ch">'
+                f"{html.escape(str(basis.get('summary', '')))}</p>",
+                unsafe_allow_html=True,
+            )
+            st.markdown("**Published benchmarks the coefficients were checked against**")
+            st.dataframe(
+                pd.DataFrame(list(basis.get("benchmarks", ()))),
+                use_container_width=True,
+                hide_index=True,
+            )
+            st.markdown("**What changed, row by row (virgin / scrap)**")
+            st.dataframe(
+                pd.DataFrame(list(basis.get("changes", ()))).astype(str),
+                use_container_width=True,
+                hide_index=True,
+                height=460,
+            )
+
     with notation:
         st.markdown(
             """
@@ -193,9 +238,10 @@ throughput however many technologies run in parallel.
             """
         )
         st.warning(
-            "**Disclaimer.** The coefficients in the source workbook are illustrative values "
-            "chosen to demonstrate a working, formula-linked model. They are not measured or "
-            "independently verified for any specific plant or grid connection. Replace them "
+            "**Disclaimer.** The coefficients in the source workbook are calibrated against "
+            "published industry and company benchmarks (see Calibration), but they are not "
+            "measured or independently verified for any specific plant or grid connection. "
+            "Replace them "
             "with verified plant data and your utility's disclosed emission factors before "
             "using any output for regulatory disclosure (BRSR, CBAM, EPD)."
         )

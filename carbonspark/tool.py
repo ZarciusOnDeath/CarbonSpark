@@ -786,7 +786,7 @@ def _evaluate_scenario(scenario, dataset: Dataset) -> Result:
 def _default_baseline(stages) -> dict:
     return {
         "label": DEFAULT_BASELINE,
-        "scrap": 0.40,
+        "scrap": 0.70,
         "mix": GRID_PRESETS["India grid today"],
         "route": default_route(stages),
         "train": 0.50,
@@ -877,7 +877,7 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                 )
             else:
                 st.caption(
-                    "40% scrap, today's Indian grid, and the workbook's first-listed "
+                    "70% scrap, today's Indian grid, and the workbook's first-listed "
                     "technology at every stage."
                 )
         return name

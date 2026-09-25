@@ -83,9 +83,11 @@ class PlantProfile:
 CUSTOM = PlantProfile(
     name="Custom",
     tagline="Start from the workbook's default route",
-    summary="Every stage on its first-listed technology, 40% scrap, today's Indian grid.",
+    summary="Every stage on its first-listed technology, 70% scrap, today's Indian grid.",
     grid_preset="India grid today",
-    scrap_ratio=0.40,
+    # The scrap share Jindal Stainless disclosed for FY26 (70.12%), in place of
+    # the 40% the prelim used, which sat below every producer's published range.
+    scrap_ratio=0.70,
     inbound_rail=0.50,
     outbound_rail=0.50,
 )
@@ -95,7 +97,10 @@ JAJPUR = PlantProfile(
     tagline="Integrated melting to hot rolling, Odisha",
     summary="~2.2 MTPA. SAF ferrochrome \u2192 EAF \u2192 AOD \u2192 ladle furnace \u2192 slab caster \u2192 hot rolling.",
     grid_preset="JSL Jajpur (estimated)",
-    scrap_ratio=0.35,
+    # JSL charged 70.12% scrap company-wide in FY26. Jajpur carries the captive
+    # ferrochrome and most of the tonnage, so it sits a little under the average
+    # and Hisar a little over; weighted by capacity the two come back to ~70%.
+    scrap_ratio=0.68,
     inbound_rail=0.70,
     outbound_rail=0.55,
     route_choices=(
@@ -158,7 +163,7 @@ HISAR = PlantProfile(
         "anneal-and-pickle lines, bright annealing and finishing."
     ),
     grid_preset="JSL Hisar (estimated)",
-    scrap_ratio=0.45,
+    scrap_ratio=0.75,
     inbound_rail=0.40,
     outbound_rail=0.25,
     route_choices=(
@@ -339,13 +344,14 @@ PRACTICAL = Ambition(
     name="Buildable today",
     summary="Only what a plant could contract or commission inside a year.",
     rationale=(
-        "**Scrap \u2264 60%** \u2014 stainless needs its alloying elements, and graded scrap is scarce.",
+        "**Scrap \u2264 75%** \u2014 JSL already charges ~70%; beyond that needs graded scrap "
+        "that is scarce, and stainless still needs its virgin chromium and nickel.",
         "**Coal \u2265 45%** \u2014 the grid a plant is connected to is coal-fired; captive "
         "renewables displace part of it, not all.",
         "**Hydro and nuclear** capped near their real grid share.",
         "**No vacuum or remelting** \u2014 a negligible share of world tonnage.",
     ),
-    scrap_max=0.60,
+    scrap_max=0.75,
     rail_max=0.80,
     min_coal=0.45,
     max_coal=0.75,
@@ -361,12 +367,13 @@ STRETCH = Ambition(
     name="Stretch, but reachable",
     summary="A decade of procurement and scrap-supply work, not a change of physics.",
     rationale=(
-        "**Scrap \u2264 80%** \u2014 needs secured grade-specific supply and less grade flexibility.",
+        "**Scrap \u2264 85%** \u2014 the top of the range stainless producers run today; needs "
+        "secured grade-specific supply and less grade flexibility.",
         "**Renewables \u2264 70%** \u2014 assumes firmed round-the-clock contracts or storage.",
         "**Coal 10\u201330%**, the rest firmed renewables, gas, hydro and nuclear.",
         "**No vacuum or remelting.**",
     ),
-    scrap_max=0.80,
+    scrap_max=0.85,
     rail_max=0.90,
     min_coal=0.10,
     max_coal=0.30,

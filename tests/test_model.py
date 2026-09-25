@@ -471,3 +471,57 @@ def test_per_department_coefficients_match_the_server(scrap, inbound_share, rail
             assert live[metric] == pytest.approx(
                 served.by_department[name][metric], rel=1e-9, abs=1e-12
             ), f"{name} {metric}"
+
+
+# --------------------------------------------------------------------------- #
+# Grid 5 calibration
+# --------------------------------------------------------------------------- #
+def _profile_result(dataset, name):
+    from carbon_calc.route import apply_haulage, rail_shares
+    from carbonspark.presets import GRID_PRESETS, PLANT_PROFILES, profile_route
+
+    profile = PLANT_PROFILES[name]
+    route, problems = profile_route(profile, build_stages(dataset))
+    assert not problems
+    return calculate(
+        profile.scrap_ratio,
+        GRID_PRESETS[profile.grid_preset],
+        dataset,
+        apply_haulage(route_weights(route), dataset),
+        train_shares=rail_shares(dataset, profile.inbound_rail, profile.outbound_rail),
+    )
+
+
+@pytest.mark.parametrize("name", ["JSL Jajpur", "JSL Hisar"])
+def test_site_profiles_sit_inside_published_bands(dataset, name):
+    """The calibration's purpose: site figures in the range the industry reports.
+
+    Scope 1+2 sits under JSL's disclosed 1.76-2.15 tCO2e/tcs because that figure
+    also carries captive ferrochrome and captive power, which this grid has no
+    rows for. Electricity and specific energy match published stainless-route
+    ranges rather than the ~3,300 kWh/t and ~34 GJ/t Grid 4 produced.
+    """
+    result = _profile_result(dataset, name)
+    direct_and_power = result.totals["scope1"] + result.totals["scope2"]
+    assert 1.0 <= direct_and_power <= 2.15
+    assert 0.2 <= result.totals["scope1"] <= 0.6
+    assert 2.0 <= result.total_co2e <= 3.5
+    assert 900 <= result.electricity_kwh <= 1400
+    assert 8 <= result.energy_gj <= 15
+
+
+def test_scope3_falls_with_scrap_as_published(dataset):
+    """worldstainless: Scope 3 is linear in scrap share and falls steeply with it."""
+    low = calculate(0.50, INDIA_GRID_MIX, dataset).totals["scope3"]
+    high = calculate(0.85, INDIA_GRID_MIX, dataset).totals["scope3"]
+    assert high < low
+    assert calculate(0.675, INDIA_GRID_MIX, dataset).totals["scope3"] == pytest.approx(
+        (low + high) / 2
+    )
+
+
+def test_calibration_record_travels_with_the_data(dataset):
+    basis = dataset.calibration
+    assert basis["benchmarks"]
+    changed = {row["#"] for row in basis["changes"]}
+    assert changed == {proc.id for proc in dataset.processes}

@@ -345,7 +345,7 @@ def init_state(dataset: Dataset) -> tuple:
 
     st.session_state.initialised = True
     st.session_state.page = "landing"
-    st.session_state.scrap = 40
+    st.session_state.scrap = 70
     st.session_state.train_in = 50
     st.session_state.train_out = 50
     st.session_state.inbound = 50

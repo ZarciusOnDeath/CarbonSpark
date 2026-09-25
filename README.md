@@ -6,7 +6,7 @@ energy mix and the process route; see how each input moves the result; and find
 lower-carbon combinations that stay practical.
 
 Every figure comes from evaluating the formula definitions in
-`Stainless Steel Carbon Accounting Grid (4).xlsx` — **67 process steps × 11 metrics** — at
+`data/source/Stainless_Steel_Carbon_Accounting_Grid_5.xlsx` — **67 process steps × 11 metrics** — at
 the chosen scrap ratio (`y`), grid shares (`a`–`g`) and per-leg rail/road split (`p`/`q`).
 No coefficients are re-derived or hard-coded in application code.
 
@@ -45,14 +45,17 @@ doors into the tool and the database.
 * **baseline comparison**, **optimiser** and **process grid** views.
 
 **Database** — the accounting grid itself: every formula, every emission factor and its
-basis, the downstream Scope 3 categories, and the notation.
+basis, the downstream Scope 3 categories, the calibration record, and the notation. The
+source workbook can be downloaded from there.
 
 ## Starting points
 
 `Custom` plus two JSL site profiles. Their **process routes are sourced**; their
 **energy-mix percentages, scrap ratios and haulage splits are estimates**, since neither
 site publishes a source-wise breakdown of the electricity it consumes. The app labels that
-split wherever a profile is shown.
+split wherever a profile is shown. The scrap ratios (Jajpur 68%, Hisar 75%, Custom 70%) are
+set so the capacity-weighted average matches the 70.12% scrap Jindal Stainless disclosed
+company-wide for FY26.
 
 | Profile | Route (sourced) |
 | --- | --- |
@@ -87,7 +90,7 @@ VAR / ESR, decarburisation by AOD / VOD / K-OBM-S / CLU, eight casting variants)
 more than one technology at once. Selecting several **splits that stage's tonne between
 them by share**, so a stage always accounts for exactly one tonne of throughput. Adding EAF
 at 60% and IF at 40% lands exactly on the weighted average of the two — never their sum,
-which is what made a naive read of the whole grid produce an impossible 19.4 tCO₂e/t.
+which is what made a naive read of the whole grid produce an impossible 19.4 tCO₂e/t (17.7 on the Grid 5 coefficients).
 
 ### The optimiser is exact, not heuristic
 
@@ -98,6 +101,50 @@ which is what made a naive read of the whole grid produce an impossible 19.4 tCO
 4. That leaves a one-dimensional sweep over the allowed scrap-ratio range.
 
 Infeasible constraint sets are reported rather than silently relaxed.
+
+## Calibration (Grid 5)
+
+The prelim ran on Grid 4, whose coefficients were illustrative. They overstated the footprint:
+the Jajpur route came out at ~4.6 tCO₂e/t with Scope 1+2 at ~3.2, against the 1.76–2.15
+tCO₂e/tcs Scope 1+2 intensity Jindal Stainless discloses. Nearly all of the excess was
+electricity: the route summed to ~3,300 kWh/t and ~34 GJ/t, where stainless melt-to-coil
+routes run at roughly 1,000–1,200 kWh/t and 10–15 GJ/t.
+
+Grid 5 (`data/source/Stainless_Steel_Carbon_Accounting_Grid_5.xlsx`) keeps Grid 4's sheets,
+headers, 67 rows, departments, variables, formula shapes and grid emission factors, and
+recalibrates the per-row coefficients:
+
+* **Electricity** per row, benchmarked stage by stage (EAF 460 kWh/t on scrap and 650 on a
+  virgin-heavy charge, AOD ~45–60, LF ~35–55, caster ~30, hot strip mill ~120 in all,
+  Sendzimir ~140).
+* **Scope 1**, where Grid 4 was high (EAF, stockyard diesel, reheating).
+* **Scope 3 of the charge**, raised from 1.1 to 3.2 tCO₂e per tonne of virgin charge,
+  because ferrochrome, nickel units and pig iron carry more upstream carbon than Grid 4
+  assumed. Scrap enters at 0.2. This matches the worldstainless finding that Scope 3 is
+  linear in scrap share, and it is why scrap is the biggest lever in the model.
+* **Trace gases** follow Scope 1 (CO₂, CH₄, N₂O) or electricity (HFC, PFC, SF₆, NF₃).
+  **Specific energy** is final energy, `0.0036 × kWh + fuel`.
+* The two **transport rows** are unchanged.
+
+| | Grid 4 | Grid 5 | Reference |
+| --- | --- | --- | --- |
+| Jajpur total | 4.60 | **2.85** | — |
+| Jajpur Scope 1+2 | 3.19 | **1.24** | JSL 1.76 (FY26), which also covers captive FeCr and captive power |
+| Jajpur Scope 1 | 0.69 | **0.41** | worldstainless average ~0.4 |
+| Jajpur electricity (kWh/t) | 3,283 | **1,091** | ~1,000–1,200 |
+| Jajpur specific energy (GJ/t) | 33.9 | **9.8** | ~10–15 |
+| Hisar total | 4.67 | **2.89** | — |
+| Default route total | 6.17 | **4.00** | runs every finishing line at once |
+
+Each row's notes carry its Grid 4 → Grid 5 change and the reason for it. The workbook's
+**Calibration Basis** sheet holds the benchmarks and a row-by-row comparison, and the
+Database page shows both. To change a coefficient, edit the table in
+`scripts/calibrate_workbook.py` (or the workbook directly), then regenerate:
+
+```bash
+python scripts/calibrate_workbook.py   # Grid 4 -> Grid 5 workbook
+python scripts/extract_workbook.py     # Grid 5 workbook -> data/carbon_grid.json
+```
 
 ## Layout
 
@@ -115,6 +162,7 @@ carbonspark/charts.py         Figures — zoom and pan disabled on every one
 carbonspark/theme.py          Palette and generated SVG artwork
 carbonspark/presets.py        Grid mixes and the JSL plant profiles
 carbonspark/state.py          Session state
+scripts/calibrate_workbook.py Builds the calibrated Grid 5 workbook from Grid 4
 scripts/extract_workbook.py   Regenerates data/carbon_grid.json from the .xlsx
 tests/                        pytest suite (run with `python -m pytest`)
 ```
@@ -133,8 +181,8 @@ variables and the arithmetic operators — `eval` is never used on workbook cont
 
 ## Disclaimer
 
-The coefficients in the source workbook are illustrative values chosen to demonstrate a
-working, formula-linked model. They are not measured or independently verified for any
+The coefficients in the source workbook are calibrated against published industry and
+company benchmarks (see Calibration above). They are not measured or independently verified for any
 specific plant or grid connection. Replace them with verified plant data and your utility's
 disclosed emission factors before using any output for regulatory disclosure (BRSR, CBAM,
 EPD).

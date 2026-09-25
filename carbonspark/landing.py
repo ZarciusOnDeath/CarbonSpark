@@ -193,8 +193,8 @@ def _why() -> None:
         unsafe_allow_html=True,
     )
     stats = [
-        (EMBER, 0.56, "~6.1", "tCO\u2082e per tonne on the default route"),
-        (AMBER, 0.72, "72%", "lower under the optimiser\u2019s practical limits"),
+        (EMBER, 0.56, "~4.0", "tCO\u2082e per tonne on the default route"),
+        (AMBER, 0.72, "23%", "lower under the optimiser\u2019s practical limits"),
         (STEEL, 1.00, "48", "process stages you can reconfigure"),
     ]
     for column, (colour, _, figure, label) in zip(st.columns(3, gap="large"), stats):
@@ -335,7 +335,7 @@ def render(dataset: Dataset) -> None:
         """
 <div class="cs-section" style="padding-bottom:40px">
   <p style="font-size:.86rem;opacity:.75">
-    <b>Disclaimer.</b> The workbook's coefficients are illustrative, not measured or
+    <b>Disclaimer.</b> The workbook's coefficients are calibrated against published benchmarks, not measured or
     verified for any specific plant. Replace them with verified plant data before using
     any output for regulatory disclosure (BRSR, CBAM, EPD).
   </p>

@@ -16,12 +16,13 @@ from pathlib import Path
 import openpyxl
 
 ROOT = Path(__file__).resolve().parent.parent
-DEFAULT_WORKBOOK = ROOT / "data" / "source" / "Stainless_Steel_Carbon_Accounting_Grid_4.xlsx"
+DEFAULT_WORKBOOK = ROOT / "data" / "source" / "Stainless_Steel_Carbon_Accounting_Grid_5.xlsx"
 OUTPUT = ROOT / "data" / "carbon_grid.json"
 
 GRID_SHEET = "Carbon Accounting Grid"
 MIX_SHEET = "Grid Energy Mix Factors"
 DOWNSTREAM_SHEET = "Downstream Scope 3 (Product)"
+CALIBRATION_SHEET = "Calibration Basis"
 
 #: Columns M-W of the grid sheet, in order.
 METRIC_KEYS = (
@@ -87,7 +88,45 @@ def extract(workbook_path: Path) -> dict:
         if row[0].value and row[1].value
     ]
 
-    return {"processes": processes, "grid_factors": grid_factors, "downstream": downstream}
+    return {
+        "processes": processes,
+        "grid_factors": grid_factors,
+        "downstream": downstream,
+        "calibration": _calibration(workbook),
+    }
+
+
+def _calibration(workbook) -> dict:
+    """The benchmarks and per-row Grid 4 -> Grid 5 changes, if the sheet exists.
+
+    Layout (written by ``scripts/calibrate_workbook.py``): a summary in A2, a
+    benchmark table from row 4 down to the first blank row, then the per-row
+    table with its own header row.
+    """
+    if CALIBRATION_SHEET not in workbook.sheetnames:
+        return {}
+    rows = [
+        [cell.value for cell in row]
+        for row in workbook[CALIBRATION_SHEET].iter_rows(min_row=1)
+    ]
+    summary = rows[1][0] or ""
+    benchmarks, index = [], 4  # row 5, zero-based
+    while index < len(rows) and rows[index][0]:
+        label, value, note = rows[index][:3]
+        benchmarks.append({"Benchmark": label, "Value": value, "Note": note})
+        index += 1
+    while index < len(rows) and not rows[index][0]:
+        index += 1
+    changes = []
+    if index < len(rows):
+        headers = [str(h) for h in rows[index] if h is not None]
+        for values in rows[index + 1:]:
+            if values[0] is None:
+                continue
+            changes.append(
+                {h: ("" if v is None else v) for h, v in zip(headers, values)}
+            )
+    return {"summary": summary, "benchmarks": benchmarks, "changes": changes}
 
 
 def main() -> int:
