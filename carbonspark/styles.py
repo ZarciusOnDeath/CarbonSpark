@@ -548,11 +548,12 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 
 .cs-drawer-lead {{ font-size: 1rem; color: var(--ink); margin: 2px 0 14px 0; }}
 .cs-panel-photo {{
-  height: 116px; border-radius: 14px; padding: 14px 16px; margin-bottom: 8px;
+  height: 104px; border-radius: 12px; padding: 10px 12px; margin-bottom: 6px;
   display:flex; flex-direction:column; justify-content:flex-end;
   box-shadow: inset 0 -70px 60px -30px rgba(0,0,0,.65);
 }}
-.cs-panel-photo span {{ color:#fff; font-family: var(--serif); font-size: 1.45rem; line-height:1.1; }}
+.cs-panel-photo span {{ color:#fff; font-family: var(--serif); font-size: 1.1rem; line-height:1.1; }}
+.cs-panel-blurb {{ font-size: .78rem; color: var(--ink-soft); line-height: 1.4; min-height: 4.3em; margin: 0 0 6px 0; }}
 .cs-panel-photo small {{ color: rgba(255,255,255,.85); font-size: .82rem; }}
 
 @media (prefers-reduced-motion: reduce) {{

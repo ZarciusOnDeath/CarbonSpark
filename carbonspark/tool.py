@@ -526,15 +526,16 @@ def _drawer(dataset: Dataset, stages) -> None:
             "the right update as you go.</p>",
             unsafe_allow_html=True,
         )
-        for key, title, blurb in PANELS:
-            st.markdown(
+        # Side by side, so all three choices are visible at once.
+        for column, (key, title, blurb) in zip(st.columns(3, gap="small"), PANELS):
+            column.markdown(
                 f'<div class="cs-panel-photo" style="{photo_style(PANEL_PHOTOS[key])}">'
-                f"<span>{title}</span><small>{blurb}</small></div>",
+                f"<span>{title}</span></div>"
+                f'<p class="cs-panel-blurb">{blurb}</p>',
                 unsafe_allow_html=True,
             )
-            st.button(f"Change {title.lower()}  \u2192", key=f"open_{key}", on_click=_open_panel,
-                      args=(key,), use_container_width=True, type="primary")
-            st.write("")
+            column.button("Change \u2192", key=f"open_{key}", on_click=_open_panel,
+                          args=(key,), use_container_width=True, type="primary")
         return
 
     columns = st.columns(3)

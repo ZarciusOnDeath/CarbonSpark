@@ -220,8 +220,13 @@ _SCRIPT = """
     const dock = doc.querySelector('.st-key-cs_readout');
     const box = scroller();
     if (!dock || !box) return;
-    const past = (box.scrollTop || 0) > 90;
-    dock.classList.toggle('cs-condensed', past);
+    // Two thresholds, not one. Condensing shortens the page, which pulls the
+    // scroll position back under a single threshold and un-condenses it — the
+    // readout then bounced up and down on its own.
+    const top = box.scrollTop || 0;
+    const condensed = dock.classList.contains('cs-condensed');
+    if (!condensed && top > 160) dock.classList.add('cs-condensed');
+    else if (condensed && top < 24) dock.classList.remove('cs-condensed');
   };
 
   // --- the drawer keeps its scroll position across reruns ------------------
