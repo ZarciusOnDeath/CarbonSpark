@@ -37,7 +37,6 @@ def render(dataset: Dataset) -> None:
         "☀️" if st.session_state.dark else "☾",
         on_click=toggle_dark,
         use_container_width=True,
-        help="Switch to light mode" if st.session_state.dark else "Switch to dark mode",
         key="dark_toggle_db",
     )
     bar[2].button("Use the tool", on_click=go, args=("loading",), use_container_width=True)

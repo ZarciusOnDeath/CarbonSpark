@@ -24,7 +24,10 @@ def render() -> None:
     placeholder.empty()
     # Arrive with the inputs open: people who met the dashboard first read the
     # figures as fixed and never found the controls.
-    st.session_state.drawer_open = True
-    st.session_state.drawer_panel = st.session_state.pop("pending_panel", None)
+    # The calculator opens on its figures. A lever card on the landing page
+    # ("Try it") names a panel, and only then does it arrive with inputs open.
+    panel = st.session_state.pop("pending_panel", None)
+    st.session_state.drawer_open = panel is not None
+    st.session_state.drawer_panel = panel
     st.session_state.page = "tool"
     st.rerun()

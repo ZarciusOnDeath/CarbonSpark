@@ -170,7 +170,6 @@ def _panel_scrap(dataset: Dataset) -> None:
         key=SCRAP_W,
         on_change=on_scrap_change,
         format="%d%%",
-        help="Share of the metallic charge that is recycled scrap.",
     )
     st.markdown(
         live.rendered_chip(SCRAP_LABEL, "virgin {inv}%", scrap)
@@ -223,7 +222,6 @@ def _panel_grid(dataset: Dataset) -> None:
         index=presets.index(st.session_state.grid_preset),
         key=PRESET_W,
         on_change=apply_grid_preset,
-        help="Moves the sliders and applies straight away.",
     )
     note = GRID_PRESET_NOTES.get(st.session_state.grid_preset)
     if note:
@@ -241,7 +239,6 @@ def _panel_grid(dataset: Dataset) -> None:
         on_click=rescale_mix,
         use_container_width=True,
         disabled=off_by <= 0.05,
-        help="Rescales every share proportionally.",
     )
 
     for var in MIX_VARIABLES:
@@ -562,7 +559,6 @@ def _drawer(dataset: Dataset, stages) -> None:
             args=(key,),
             use_container_width=True,
             type="primary" if key == panel else "secondary",
-            help=title,
         )
     st.divider()
     if panel == "scrap":
@@ -630,7 +626,6 @@ def _headline(result: Result, dataset: Dataset) -> None:
             "\u2715  Close" if st.session_state.drawer_open else "\u2699  Edit inputs",
             on_click=_toggle_drawer,
             use_container_width=True,
-            help="Scrap ratio, energy grid mix and the plant's process route",
             key="open_inputs",
         )
         readings.markdown(
@@ -859,7 +854,6 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                     on_click=_toggle_drawer,
                     use_container_width=True,
                     key=f"edit_{key}",
-                    help="Scrap ratio, energy grid mix and the plant's process route",
                 )
                 if first:
                     actions[1].button(
@@ -867,7 +861,6 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                         on_click=save_scenario,
                         use_container_width=True,
                         key=f"save_{key}",
-                        help="Keep this scenario under the name typed below",
                     )
                     st.text_input(
                         "Name for the saved scenario",
@@ -883,7 +876,6 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                     args=(name,),
                     use_container_width=True,
                     key=f"load_{key}",
-                    help="Reopen this scenario in the inputs",
                 )
                 actions[1].button(
                     "Delete",
@@ -1207,7 +1199,6 @@ def render(dataset: Dataset, stages) -> None:
         "\u2600\ufe0f" if st.session_state.dark else "\u263e",
         on_click=toggle_dark,
         use_container_width=True,
-        help="Switch to light mode" if st.session_state.dark else "Switch to dark mode",
         key="dark_toggle_tool",
     )
     bar[2].button("Database", on_click=go, args=("database",), use_container_width=True)
@@ -1250,6 +1241,7 @@ def render(dataset: Dataset, stages) -> None:
             view = st.segmented_control(
                 "View", VIEWS, key="tool_view", label_visibility="collapsed",
                 width="stretch",
+                default=VIEWS[0],
             ) or VIEWS[0]
         st.markdown(page_backdrop(VIEW_PHOTOS.get(view, "dept_melt"), st.session_state.dark),
                     unsafe_allow_html=True)

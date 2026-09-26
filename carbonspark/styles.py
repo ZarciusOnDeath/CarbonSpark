@@ -69,10 +69,10 @@ html {{ scroll-behavior: smooth; }}
 .cs-nav {{
   position: sticky; top: 0; z-index: 999;
   display: flex; align-items: center; gap: 28px;
-  padding: 14px 18px; margin: 0 -1rem 4px -1rem;
+  padding: 14px 22px; margin: 12px 0 18px 0;
   background: color-mix(in srgb, var(--paper) 72%, transparent);
-  border-bottom: 1px solid var(--line);
-  border-radius: 0 0 16px 16px;
+  border: 1px solid var(--line);
+  border-radius: 16px;
   box-shadow: 0 10px 30px -24px rgba(0,0,0,.5);
 }}
 .cs-nav .cs-brand {{ display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.01em; font-size:1.04rem; }}
@@ -472,19 +472,19 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 .cs-nav a.cs-nav-cta:hover {{ color:#fff; filter: brightness(1.08); }}
 
 /* Photo-backed blocks. The background itself is set per key by the page. */
-.st-key-cs_hero_photo, .st-key-cs_cta_band {{
+.st-key-cs_hero_photo, .st-key-cs_cta_band, .st-key-cs_db_band {{
   border-radius: 20px; overflow: hidden; margin-top: 6px;
   padding: clamp(28px, 6vh, 72px) clamp(20px, 4vw, 64px) clamp(30px, 6vh, 64px);
   box-shadow: 0 30px 60px -40px rgba(0,0,0,.6);
 }}
-.st-key-cs_cta_band {{ margin-top: 70px; }}
+.st-key-cs_cta_band, .st-key-cs_db_band {{ margin-top: 70px; }}
 .cs-on-photo, .cs-on-photo h1, .cs-on-photo h2, .cs-on-photo p {{ color: #f6f1ea !important; }}
 .cs-on-photo .cs-eyebrow {{ color: #ffb07a; }}
 .cs-on-photo h1 em {{ color: #ff9a5c; }}
 .cs-on-photo h2 {{ font-family: var(--serif); font-weight:400; font-size: clamp(1.9rem,3.4vw,2.8rem); margin: 0 0 8px 0; }}
 .cs-on-photo p {{ opacity: .88; font-size: 1.1rem; }}
 .st-key-cs_hero_photo .cs-hero {{ padding-top: 0; }}
-.st-key-cs_hero_photo button, .st-key-cs_cta_band button {{
+.st-key-cs_hero_photo button, .st-key-cs_cta_band button, .st-key-cs_db_band button {{
   border-radius: 999px !important; padding: 12px 22px !important; font-weight: 600 !important;
 }}
 .st-key-hero_plant button {{
@@ -651,6 +651,14 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 [data-testid="stExpander"] details {{ background: color-mix(in srgb, var(--paper) 80%, transparent); }}
 
 .st-key-cs_views .stButtonGroup, .st-key-cs_ambition .stButtonGroup {{ border-bottom: none !important; }}
+
+.cs-nav a.cs-nav-mode {{
+  border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px;
+}}
+/* The route strip spreads across the full width. */
+.cs-strip {{ display:flex !important; justify-content: space-between; flex-wrap: wrap; }}
+/* Room under the last control, so the docked Apply bar never hides it. */
+.st-key-cs_drawer {{ padding-bottom: 150px !important; }}
 
 /* ---------- wordmark ---------- */
 .cs-wordmark {{

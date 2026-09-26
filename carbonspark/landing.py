@@ -12,6 +12,9 @@ from .state import go, toggle_dark
 from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, page_backdrop, photo_style, wordmark
 
 def _nav() -> None:
+    # The mode switch lives in the nav as a link, so it sits with the rest.
+    mode = "light" if st.session_state.dark else "dark"
+    mode_label = "\u2600\ufe0f Light" if st.session_state.dark else "\u263e Dark"
     st.markdown(
         f"""
 <div class="cs-nav">
@@ -19,20 +22,10 @@ def _nav() -> None:
   <span class="cs-spacer"></span>
   <a href="#levers">How it works</a>
   <a href="#database">Database</a>
+  <a class="cs-nav-mode" href="?mode={mode}" target="_self">{mode_label}</a>
   <a class="cs-nav-cta" href="?go=tool" target="_self">Open the calculator \u2192</a>
 </div>""",
         unsafe_allow_html=True,
-    )
-
-
-def _mode_toggle() -> None:
-    """A light/dark switch, parked at the top right under the nav."""
-    spacer, button = st.columns([9, 1])
-    button.button(
-        "\u2600\ufe0f Light" if st.session_state.dark else "\u263e Dark",
-        on_click=toggle_dark,
-        use_container_width=True,
-        key="dark_toggle_landing",
     )
 
 
@@ -70,7 +63,7 @@ def _hero() -> None:
             with st.container(key="cs_hero_cta"):
                 action, _ = st.columns([1.2, 1.6])
                 action.button(
-                    "Calculate a footprint  \u2192",
+                    "Calculate your footprint  \u2192",
                     on_click=_launch,
                     type="primary",
                     use_container_width=True,
@@ -204,29 +197,27 @@ def _cta_band() -> None:
 
 
 def _database_door(dataset: Dataset) -> None:
-    st.markdown(
-        f"""
-<div class="cs-section" id="database">
+    """The database as one photo panel: the words and the way in sit on the image."""
+    _photo_block("cs_db_band", "database", 0.72)
+    with st.container(key="cs_db_band"):
+        st.markdown(
+            f"""
+<div class="cs-on-photo" id="database">
   <div class="cs-eyebrow">Database</div>
   <h2>No black box</h2>
-  <p>Every formula, emission factor and source behind the numbers, downloadable.</p>
+  <p>All {len(dataset.processes)} process formulas, the seven grid factors and every source
+  behind the numbers, open to read and download.</p>
 </div>""",
-        unsafe_allow_html=True,
-    )
-    left, right = st.columns([1, 1.25], gap="large")
-    with left:
-        st.button(
-            "Open the database  →",
+            unsafe_allow_html=True,
+        )
+        left, _ = st.columns([1, 2.4])
+        left.button(
+            "Open the database  \u2192",
             on_click=go,
             args=("database",),
+            type="primary",
             use_container_width=True,
             key="open_db",
-        )
-    with right:
-        st.markdown(
-            f'<div class="cs-photo-card" style="{photo_style("database", 0.35)};height:240px">'
-            "<h3>67 formulas, 7 grid factors, every source</h3></div>",
-            unsafe_allow_html=True,
         )
 
 
@@ -234,7 +225,6 @@ def render(dataset: Dataset) -> None:
     live.enable("landing")
     st.markdown(page_backdrop("dept_hot", st.session_state.dark), unsafe_allow_html=True)
     _nav()
-    _mode_toggle()
     _hero()
     _levers()
     _why(dataset)
