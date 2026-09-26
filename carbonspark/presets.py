@@ -327,6 +327,12 @@ SPECIALTY_MELTING = (
     "ESR Remelting",
 )
 
+#: Melting routes that are a different plant, not a change to this one. An
+#: integrated blast furnace and converter is a greenfield build, and a converter
+#: melts only ~20-30% scrap, so offering it to a scrap-based EAF shop as a
+#: "technology switch" is not a practical answer.
+REBUILD_MELTING = ("Integrated BF/Converter",)
+
 DREAM = Ambition(
     name="Theoretical floor",
     summary="Every lever at its physical limit, with no regard for what can be bought or built.",
@@ -350,6 +356,8 @@ PRACTICAL = Ambition(
         "renewables displace part of it, not all.",
         "**Hydro and nuclear** capped near their real grid share.",
         "**No vacuum or remelting** \u2014 a negligible share of world tonnage.",
+        "**No switch to a blast furnace** \u2014 that is a new plant, and a converter cannot "
+        "take a scrap-heavy charge.",
     ),
     scrap_max=0.75,
     rail_max=0.80,
@@ -360,7 +368,7 @@ PRACTICAL = Ambition(
     max_gas=0.10,
     max_hydro=0.12,
     max_nuclear=0.04,
-    excluded_variations=SPECIALTY_MELTING,
+    excluded_variations=SPECIALTY_MELTING + REBUILD_MELTING,
 )
 
 STRETCH = Ambition(
@@ -371,7 +379,7 @@ STRETCH = Ambition(
         "secured grade-specific supply and less grade flexibility.",
         "**Renewables \u2264 70%** \u2014 assumes firmed round-the-clock contracts or storage.",
         "**Coal 10\u201330%**, the rest firmed renewables, gas, hydro and nuclear.",
-        "**No vacuum or remelting.**",
+        "**No vacuum or remelting, and no blast furnace.**",
     ),
     scrap_max=0.85,
     rail_max=0.90,
@@ -383,7 +391,7 @@ STRETCH = Ambition(
     max_hydro=0.25,
     max_nuclear=0.10,
     min_renewable=0.35,
-    excluded_variations=SPECIALTY_MELTING,
+    excluded_variations=SPECIALTY_MELTING + REBUILD_MELTING,
 )
 
 AMBITIONS: Dict[str, Ambition] = {

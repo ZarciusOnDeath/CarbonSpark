@@ -114,6 +114,39 @@ def active_stages(route: Mapping[str, Mapping[int, float]]) -> int:
     return sum(1 for stage_mix in route.values() if normalise_mix(stage_mix))
 
 
+#: Variations that genuinely replace one another. The workbook lists several
+#: things under one stage that are not alternatives: argon stirring and a
+#: submerged entry nozzle are practices used *with* a ladle furnace or a caster,
+#: and ferroalloy and scrap inspection check different materials. Swapping a
+#: caster for "air-mist cooling" is not a technology choice, so the optimiser
+#: only ever swaps within one of these groups; anything outside them keeps what
+#: the plant runs.
+SUBSTITUTE_GROUPS: Tuple[frozenset, ...] = (
+    frozenset({
+        "Electric Arc Furnace (EAF)", "Induction Furnace (IF)", "Integrated BF/Converter",
+        "Vacuum / Special Induction (VIM)", "Vacuum Arc Remelting (VAR)", "ESR Remelting",
+    }),
+    frozenset({"AOD", "VOD", "K-OBM-S", "CLU"}),
+    frozenset({"Curved Mold Caster", "Vertical Continuous Caster", "Thin Slab Casting"}),
+)
+
+
+def substitutes(stage: Stage, stage_mix: Mapping[int, float]) -> Tuple[Process, ...]:
+    """The options that could replace what a stage runs now.
+
+    Empty when the stage runs anything that has no substitutes (or a mix that
+    spans groups): such a stage is left as it is.
+    """
+    running = [stage.option_by_id(pid).variation for pid in normalise_mix(stage_mix)]
+    if not running:
+        return ()
+    groups = {group for group in SUBSTITUTE_GROUPS for name in running if name in group}
+    if len(groups) != 1 or any(not any(name in g for g in groups) for name in running):
+        return ()
+    group = next(iter(groups))
+    return tuple(option for option in stage.options if option.variation in group)
+
+
 #: Neutral inbound share: both transport legs at the workbook's per-tonne basis.
 NEUTRAL_INBOUND_SHARE = 0.5
 

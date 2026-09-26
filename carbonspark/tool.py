@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import html
 import math
 from typing import Dict, List
 
@@ -18,6 +19,7 @@ from carbon_calc.model import (
     calculate,
     mix_factor,
 )
+from carbon_calc.advice import Scenario, critique, waterfall
 from carbon_calc.optimize import Constraints, InfeasibleError, optimise
 from carbon_calc.route import (
     Stage,
@@ -30,7 +32,7 @@ from carbon_calc.route import (
     route_weights,
 )
 
-from . import charts, live
+from . import ai_review, charts, live
 from .presets import AMBITIONS, GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
 from .state import (
     load_scenario,
@@ -949,25 +951,8 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
     )
 
 
-def _optimiser(result: Result, dataset: Dataset, stages) -> None:
-    """The lowest-carbon path, set against the scenario on screen.
-
-    There is nothing to configure here. The scenario being improved is whatever
-    the inputs drawer currently holds, and how hard the search is allowed to
-    push is one of three named ambition levels — so the answer is a comparison,
-    not a form.
-    """
-    st.markdown("### Lowest-carbon path")
-    st.caption("Best scrap, grid, haulage and technology for the plant you are running. Change the plant from **Inputs**.")
-
-    names = list(AMBITIONS)
-    chosen = st.segmented_control(
-        "Ambition", names, key="opt_ambition", label_visibility="collapsed"
-    ) or names[0]
-    level = AMBITIONS[chosen]
-    st.markdown(f"**{level.name}** \u2014 {level.summary}")
-
-    constraints = Constraints(
+def _optimiser_constraints(level) -> Constraints:
+    return Constraints(
         scrap_min=0.0,
         scrap_max=level.scrap_max,
         mix_bounds={
@@ -984,101 +969,191 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
         train_max=level.rail_max,
         excluded_variations=level.excluded_variations,
     )
+
+
+_TONE_CHIP = {
+    "high": ("cs-chip-warn", "Big gap"),
+    "medium": ("cs-chip-warn", "Worth doing"),
+    "low": ("", "Small gain"),
+    "info": ("", "Binding"),
+    "good": ("cs-chip-good", "Already good"),
+}
+
+
+def _optimiser(result: Result, dataset: Dataset, stages) -> None:
+    """The lowest-carbon path for the plant on screen, and why it is the lowest.
+
+    Everything here is recomputed on every rerun from the inputs drawer, so the
+    comparison follows the sliders: the optimum stays where the ambition level's
+    limits put it, and the gap between it and the current scenario moves.
+    """
+    st.markdown("### Lowest-carbon path")
+    st.caption(
+        "The best scrap share, grid mix, rail share per leg and technology for the plant you "
+        "are running, within the limits of the ambition level you pick. It recomputes every "
+        "time you change an input: the target stays put, the gap to it moves."
+    )
+
+    names = list(AMBITIONS)
+    chosen = st.segmented_control(
+        "Ambition", names, key="opt_ambition", label_visibility="collapsed"
+    ) or names[0]
+    level = AMBITIONS[chosen]
+    st.markdown(f"**{level.name}** \u2014 {level.summary}")
+
+    constraints = _optimiser_constraints(level)
+    current = Scenario(
+        scrap_ratio(), current_mix(), inbound_rail(), outbound_rail(),
+        st.session_state.route, inbound_share(),
+    )
     try:
         optimum = optimise(
-            dataset,
-            stages,
-            constraints,
-            st.session_state.route,
-            inbound_share=inbound_share(),
+            dataset, stages, constraints, st.session_state.route, inbound_share=inbound_share()
         )
     except InfeasibleError as error:
         st.error(f"No feasible scenario: {error}")
         return
 
-    def delta(new: float, old: float) -> str:
-        return "n/a" if old == 0 else f"{(new - old) / old:+.1%}"
+    now, best = result.total_co2e, optimum.result.total_co2e
+    saving = now - best
+    share = saving / now if now else 0.0
 
-    pairs = [
-        ("Total CO\u2082e", optimum.result.total_co2e, result.total_co2e, "{:.3f} t/t"),
-        ("Scope 1", optimum.result.totals["scope1"], result.totals["scope1"], "{:.3f} t/t"),
-        ("Scope 2", optimum.result.totals["scope2"], result.totals["scope2"], "{:.3f} t/t"),
-        ("Scope 3", optimum.result.totals["scope3"], result.totals["scope3"], "{:.3f} t/t"),
-        ("Energy", optimum.result.energy_gj, result.energy_gj, "{:.1f} GJ/t"),
+    # --- headline ----------------------------------------------------------
+    cols = st.columns(3)
+    cols[0].metric("Your scenario", f"{now:.3f} t/t")
+    cols[1].metric(f"Optimum \u00b7 {level.name}", f"{best:.3f} t/t",
+                   f"{-share:+.1%}" if saving > 1e-9 else "0%", delta_color="inverse")
+    cols[2].metric("Gap", f"{max(saving, 0):.3f} t/t",
+                   f"{max(saving, 0) * 1000:,.0f} kt CO\u2082e/yr per Mt", delta_color="off")
+    if saving <= 1e-9:
+        st.success("Your scenario is already at or below the best this ambition level allows.")
+
+    # --- the optimised route ----------------------------------------------
+    st.markdown("#### The optimised route")
+    rows = [
+        ("Scrap in the charge", f"{current.scrap:.0%}", f"{optimum.scrap_ratio:.0%}"),
+        ("Grid electricity", f"{result.grid_factor:.3f} kg/kWh", f"{optimum.grid_factor:.3f} kg/kWh"),
+        ("Rail share, inbound", f"{current.rail_in:.0%}", f"{optimum.rail_in:.0%}"),
+        ("Rail share, outbound", f"{current.rail_out:.0%}", f"{optimum.rail_out:.0%}"),
     ]
-    for column, (label, new, old, fmt) in zip(st.columns(5), pairs):
-        column.metric(label, fmt.format(new), delta(new, old), delta_color="inverse")
-
-    saving = result.total_co2e - optimum.result.total_co2e
-    if saving > 1e-9:
-        st.success(
-            f"**{saving:.3f} tCO\u2082e/t below your current scenario** "
-            f"({saving / result.total_co2e:.1%}) \u2014 {saving * 1000:,.0f} kt CO\u2082e a "
-            f"year at 1 Mt of output."
+    for key, before, after in optimum.stage_changes:
+        rows.append((key.split(" :: ")[1], before.replace(" 100%", ""), after.replace(" 100%", "")))
+    st.dataframe(
+        pd.DataFrame(rows, columns=["Lever", "Yours", "Optimum"]),
+        use_container_width=True, hide_index=True,
+    )
+    if not optimum.stage_changes:
+        st.caption("No technology change: every running stage already uses its best allowed option.")
+    with st.expander("Grid mix the optimum buys", expanded=False):
+        st.dataframe(
+            pd.DataFrame([
+                {
+                    "Source": dataset.source_by_var[var].source,
+                    "kg CO\u2082e/kWh": dataset.source_by_var[var].ef,
+                    "Yours": current_mix()[var],
+                    "Optimum": optimum.mix[var],
+                }
+                for var in MIX_VARIABLES
+            ]).style.format({"Yours": "{:.1%}", "Optimum": "{:.1%}", "kg CO\u2082e/kWh": "{:.3f}"}),
+            use_container_width=True, hide_index=True,
         )
+        st.caption(
+            "Filled cheapest-carbon first, each source up to its cap, after any floor "
+            "(the coal floor, a renewable minimum) is met."
+        )
+
+    # --- where the saving comes from --------------------------------------
+    steps = waterfall(dataset, current, optimum)
+    if saving > 1e-9:
+        st.markdown("#### Where the saving comes from")
+        st.plotly_chart(
+            charts.saving_waterfall(now, [(s.lever, s.saving) for s in steps], best),
+            use_container_width=True, config=charts.PLOT_CONFIG,
+        )
+        st.caption(
+            "Each lever is moved to its optimum in turn, in the order shown. The steps add up "
+            "exactly to the gap. Scrap and grid interact slightly (Scope 2 is kWh \u00d7 grid "
+            "factor, and kWh moves with scrap), and the order decides which lever gets that sliver."
+        )
+
+    # --- the advisor --------------------------------------------------------
+    st.markdown("#### Your choices, reviewed")
+    st.caption("Each lever priced on its own: what moving only that one to its best allowed value saves.")
+    findings = critique(dataset, stages, current, optimum, constraints, level.name,
+                        technology_step=steps[-1].saving)
+    for finding in findings:
+        tone, label = _TONE_CHIP[finding.tone]
+        gain = f" \u00b7 saves {finding.saving:.3f} t/t" if finding.saving > 0.0005 else ""
+        st.markdown(
+            f'<div class="cs-finding cs-finding-{finding.tone}">'
+            f'<span class="cs-chip {tone}">{label} \u00b7 {finding.lever}{gain}</span>'
+            f"<p><b>{html.escape(finding.headline)}</b></p>"
+            + (f"<p>{html.escape(finding.detail)}</p>" if finding.detail else "")
+            + "</div>",
+            unsafe_allow_html=True,
+        )
+    if ai_review.available():
+        if st.button("\u2728  Ask Claude for a written review", key="ai_review"):
+            with st.spinner("Claude is reading your scenario\u2026"):
+                st.session_state.ai_review_text = ai_review.review(
+                    ai_review.payload(current, optimum, steps, findings, level.name,
+                                      now, result.grid_factor)
+                )
+        if st.session_state.get("ai_review_text"):
+            st.markdown(
+                '<div class="cs-finding cs-finding-info"><span class="cs-chip">Claude\u2019s review</span></div>',
+                unsafe_allow_html=True,
+            )
+            st.markdown(st.session_state.ai_review_text)
+            st.caption("Written by Claude from the figures above. Check before relying on it.")
     else:
-        st.info("Your current scenario is already the best this ambition level allows.")
+        st.caption(
+            "A written AI review is available when an Anthropic API key is set "
+            "(ANTHROPIC_API_KEY in the environment or .streamlit/secrets.toml)."
+        )
 
-    st.plotly_chart(
-        charts.comparison_bars(
-            ["Current scenario", level.name], [result, optimum.result]
-        ),
-        use_container_width=True,
-        config=charts.PLOT_CONFIG,
-    )
+    # --- why this is optimal ----------------------------------------------
+    with st.expander("Why this is the optimum, not just a good answer", expanded=False):
+        st.markdown(
+            """
+The search is **exact**. The model's structure lets it be:
 
-    st.markdown("#### What it would take")
-    settings = st.columns(3)
-    settings[0].metric(
-        "Scrap ratio", f"{optimum.scrap_ratio:.0%}", delta(optimum.scrap_ratio, scrap_ratio())
-    )
-    settings[1].metric(
-        "Rail share", f"{optimum.train_share:.0%}", delta(optimum.train_share, train_share())
-    )
-    settings[2].metric(
-        "Grid factor",
-        f"{optimum.grid_factor:.3f} kg/kWh",
-        delta(optimum.grid_factor, result.grid_factor),
-        delta_color="inverse",
-    )
+1. **Grid mix first.** Scope 2 is *kWh \u00d7 grid factor*, and kWh is never negative.
+   So whatever else is chosen, a lower grid factor means lower Scope 2. The mix with the
+   lowest factor inside the limits is found exactly: meet each floor, then fill the rest
+   from the cleanest source that still has room.
+2. **Technology, stage by stage.** With the mix fixed, the total is a sum over stages, and
+   each stage depends only on its own technology. So each stage is minimised on its own.
+   Splitting a stage between two options can only land *between* their totals, never
+   below the better one. Only genuine alternatives are compared: melting furnaces with
+   each other, decarburisers with each other, casters with each other.
+3. **Scrap and rail at the limits.** For a fixed route, every formula is a straight line in
+   the scrap share and in each leg's rail share. A function that is a straight line in each
+   variable takes its lowest value at a corner of the allowed box. So only 2 \u00d7 2 \u00d7 2 = 8
+   combinations can be the answer: scrap at its minimum or maximum, each leg's rail share
+   at its minimum or maximum.
 
-    with st.expander("Why these limits", expanded=False):
+All eight corners are evaluated below, each with its best technology. The lowest one is
+the optimum; nothing inside the box can beat it.
+            """
+        )
+        st.dataframe(
+            pd.DataFrame([
+                {
+                    "Scrap": f"{corner.scrap_ratio:.0%}",
+                    "Rail in": f"{corner.rail_in:.0%}",
+                    "Rail out": f"{corner.rail_out:.0%}",
+                    "Total tCO\u2082e/t": round(corner.total, 4),
+                    "": "\u2190 optimum" if index == 0 else "",
+                }
+                for index, corner in enumerate(optimum.corners)
+            ]),
+            use_container_width=True, hide_index=True,
+        )
+        st.markdown("**The limits of this ambition level**")
         for reason in level.rationale:
             st.markdown(f"- {reason}")
-        st.caption("Judgements about what is procurable, not workbook figures.")
-
-    grid_rows = [
-        {
-            "Source": dataset.source_by_var[var].source,
-            "Now": current_mix()[var],
-            level.name: optimum.mix[var],
-            "kg CO\u2082e/kWh": dataset.source_by_var[var].ef,
-        }
-        for var in MIX_VARIABLES
-    ]
-    st.markdown("**Grid mix it would buy**")
-    st.dataframe(
-        pd.DataFrame(grid_rows).style.format(
-            {"Now": "{:.1%}", level.name: "{:.1%}", "kg CO\u2082e/kWh": "{:.3f}"}
-        ),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-    if optimum.stage_changes:
-        st.markdown("**Technology it would change**")
-        st.dataframe(
-            pd.DataFrame(
-                [
-                    {"Stage": key.replace(" :: ", " \u2014 "), "Now": before, "Change to": after}
-                    for key, before, after in optimum.stage_changes
-                ]
-            ),
-            use_container_width=True,
-            hide_index=True,
-        )
-    else:
-        st.caption("No technology change needed \u2014 the gain is all in the charge and the grid.")
+        st.caption("These limits are judgements about what can be bought or built, not workbook figures.")
 
 
 def _process_grid(result: Result, dataset: Dataset) -> None:

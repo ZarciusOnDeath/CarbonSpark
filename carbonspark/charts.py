@@ -183,6 +183,31 @@ def comparison_bars(
     return _lock(figure, height)
 
 
+def saving_waterfall(
+    start: float, steps: Sequence[tuple], end: float, height: int = 380
+) -> go.Figure:
+    """Current total, what each lever takes off, and the optimum it lands on."""
+    colours = tokens(_mode())
+    figure = go.Figure(
+        go.Waterfall(
+            orientation="v",
+            measure=["absolute"] + ["relative"] * len(steps) + ["total"],
+            x=["Your scenario"] + [label for label, _ in steps] + ["Optimum"],
+            y=[start] + [-value for _, value in steps] + [end],
+            text=[f"{start:.3f}"] + [f"\u2212{value:.3f}" for _, value in steps] + [f"{end:.3f}"],
+            textposition="outside",
+            connector=dict(line=dict(color=colours["line"])),
+            decreasing=dict(marker=dict(color=colours["green"])),
+            increasing=dict(marker=dict(color=colours["ember"])),
+            totals=dict(marker=dict(color=colours["steel"])),
+            hovertemplate="%{x}<br><b>%{y:.3f} tCO2e/t</b><extra></extra>",
+        )
+    )
+    figure.update_layout(yaxis_title="tCO2e per tonne", showlegend=False,
+                         yaxis=dict(range=[0, start * 1.15]))
+    return _lock(figure, height)
+
+
 def mix_donut(mix: Mapping[str, float], sources: Mapping[str, object], height: int = 300) -> go.Figure:
     """The grid mix as a donut, so the sliders have a visual counterpart."""
     order = [var for var in mix if mix.get(var, 0) > 0.0005]

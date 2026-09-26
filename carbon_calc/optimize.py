@@ -1,19 +1,28 @@
-"""Lowest-carbon-path search over scrap ratio, grid mix and process variations.
+"""Lowest-carbon-path search over scrap ratio, grid mix, haulage and technology.
 
-The search is exact rather than heuristic, because the model's structure allows
-it. Every formula is linear in ``x``/``y``, and each Scope 2 formula has the form
-``kWh(x, y) * EF_mix(a..g) / 1000`` where ``EF_mix`` is a share-weighted average
-of the seven source factors. Two consequences:
+The search is exact, and the model's structure is what makes it so:
 
-* the mix that minimises Scope 2 is the mix that minimises ``EF_mix``, whatever
-  the scrap ratio or the route — so the mix is solved once, as a small linear
-  program with box bounds plus share-group floors;
-* stages are additive, so at any fixed scrap ratio the best route is simply the
-  lowest-total variation at each stage, chosen independently.
+1. **Grid mix.** Every Scope 2 formula is ``kWh(route, y) * EF_mix / 1000`` with
+   ``kWh >= 0`` and ``EF_mix`` a share-weighted average of the seven source
+   factors. Lowering ``EF_mix`` lowers Scope 2 whatever else is chosen, so the
+   best mix is the one with the lowest ``EF_mix`` — a small linear program
+   (box bounds, share floors, shares summing to one) solved exactly by filling
+   floors and remaining demand from the cheapest source with headroom.
+2. **Technology.** With the mix fixed, the total is a sum over stages, and each
+   stage's contribution depends only on the technology chosen for it. So each
+   stage is minimised on its own; splitting a stage between two options can only
+   land between their two totals, never below the better one.
+3. **Scrap and rail.** For a fixed route, every formula is linear in the scrap
+   share ``y`` and in each leg's rail share ``p`` (the transport rows are
+   bilinear: linear in each with the others fixed). A function that is linear in
+   each variable separately takes its minimum over a box at a corner of the box.
+   Minimising over routes first and corners second gives the same answer as the
+   other way round, so the optimum is at one of the corners
+   ``y in {min, max}`` x ``p_in in {min, max}`` x ``p_out in {min, max}``.
 
-That leaves a one-dimensional search over the scrap ratio, which is swept on a
-fine grid (the route choice can switch between steps, so the objective is only
-piecewise linear in ``y``).
+The search therefore evaluates those eight corners, each with its per-stage best
+technology, and keeps the lowest. Every corner is returned, so the page can show
+the whole comparison: that table is the proof the answer is the minimum.
 """
 
 from __future__ import annotations
@@ -39,7 +48,10 @@ from .route import (
     Stage,
     apply_haulage,
     normalise_mix,
+    rail_shares,
     route_weights,
+    substitutes,
+    transport_ids,
 )
 
 
@@ -135,44 +147,62 @@ def optimise_mix(constraints: Constraints, dataset: Dataset) -> Dict[str, float]
 
 def _best_route(
     stages: Sequence[Stage],
-    variables: Mapping[str, float],
+    variables_for,
     locked: Mapping[str, Mapping[int, float]],
     enabled: Mapping[str, bool] | None,
     excluded: Tuple[str, ...] = (),
+    stage_weight=None,
+    current: Mapping[str, Mapping[int, float]] | None = None,
 ) -> Tuple[RouteMix, float]:
     """Pick the lowest-total-CO2e variation at every unlocked stage.
 
-    Splitting a stage between technologies can only land between their two
-    totals, so an unconstrained optimum always puts the whole stage on its
-    single best option. Locked stages keep the user's own split.
+    ``variables_for(stage)`` gives the variable binding for a stage (the two
+    transport legs each carry their own rail share). ``stage_weight(stage)`` is
+    the stage's tonne weight (the haulage split re-weights the transport legs).
+    Locked stages keep the user's own split.
     """
     route: RouteMix = {}
     total = 0.0
     for stage in stages:
         if enabled is not None and not enabled.get(stage.key, True):
             continue
-        if stage.key in locked:
-            stage_mix = {int(pid): float(share) for pid, share in locked[stage.key].items()}
+        variables = variables_for(stage)
+        weight = stage_weight(stage) if stage_weight else 1.0
+
+        def value_of(option) -> float:
+            values = option.evaluate(variables)
+            return weight * sum(values[scope] for scope in SCOPES)
+
+        # Only genuine alternatives are candidates; a stage running something
+        # with no substitute keeps it (see route.SUBSTITUTE_GROUPS).
+        allowed = substitutes(stage, (current or {}).get(stage.key, {stage.default_id: 1.0}))
+        if stage.key in locked or not allowed:
+            source = locked.get(stage.key) or (current or {}).get(stage.key) or {stage.default_id: 1.0}
+            stage_mix = normalise_mix({int(pid): float(share) for pid, share in source.items()})
             for process_id, share in stage_mix.items():
-                values = stage.option_by_id(process_id).evaluate(variables)
-                total += share * sum(values[scope] for scope in SCOPES)
+                total += share * value_of(stage.option_by_id(process_id))
             route[stage.key] = stage_mix
             continue
         # A technology the constraints exclude is not an option, but a stage
         # whose every option is excluded keeps what it is running rather than
         # vanishing from the route.
         options = [
-            option for option in stage.options if option.variation not in excluded
-        ] or list(stage.options)
-        best_id, best_value = None, float("inf")
-        for option in options:
-            values = option.evaluate(variables)
-            value = sum(values[scope] for scope in SCOPES)
-            if value < best_value:
-                best_id, best_value = option.id, value
-        route[stage.key] = {int(best_id): 1.0}
-        total += best_value
+            option for option in allowed if option.variation not in excluded
+        ] or list(allowed)
+        best = min(options, key=value_of)
+        route[stage.key] = {int(best.id): 1.0}
+        total += value_of(best)
     return route, total
+
+
+@dataclass(frozen=True)
+class Corner:
+    """One corner of the scrap x rail box, with its best route's total."""
+
+    scrap_ratio: float
+    rail_in: float
+    rail_out: float
+    total: float
 
 
 @dataclass(frozen=True)
@@ -181,11 +211,18 @@ class Optimum:
 
     scrap_ratio: float
     mix: Dict[str, float]
-    train_share: float
+    rail_in: float
+    rail_out: float
     route: RouteMix
     result: Result
     grid_factor: float
     stage_changes: Tuple[Tuple[str, str, str], ...]
+    corners: Tuple[Corner, ...] = ()
+
+    @property
+    def train_share(self) -> float:
+        """Rail share of the inbound leg (kept for the single-share callers)."""
+        return self.rail_in
 
 
 def optimise(
@@ -194,16 +231,15 @@ def optimise(
     constraints: Constraints,
     baseline_route: Mapping[str, Mapping[int, float]],
     enabled: Mapping[str, bool] | None = None,
-    steps: int = 201,
     optimise_route: bool = True,
     inbound_share: float = NEUTRAL_INBOUND_SHARE,
+    steps: int | None = None,
 ) -> Optimum:
     """Find the lowest-carbon scenario allowed by ``constraints``.
 
-    ``enabled`` defaults to the stages the baseline route actually runs. Without
-    it the search switched on every stage in the workbook — a Jajpur route of 29
-    stages came back "optimised" as all 48 — so the answer described a different
-    plant from the one it was being compared with.
+    ``enabled`` defaults to the stages the baseline route actually runs, so the
+    answer describes the same plant as the one it is compared with. ``steps`` is
+    accepted for compatibility and ignored: the search is exact, not a sweep.
     """
     if enabled is None:
         enabled = {
@@ -228,36 +264,57 @@ def optimise(
     else:
         locked = dict(baseline_route)
 
-    span = scrap_max - scrap_min
-    grid = [scrap_min] if span <= 0 else [
-        scrap_min + span * i / (steps - 1) for i in range(steps)
-    ]
-    # Only two rows depend on the rail/road split and both are linear in p, so
-    # the best share is always one of the two bounds.
-    train_options = sorted({train_min, train_max})
+    inbound_ids, outbound_ids = transport_ids(dataset)
+    share = max(0.0, min(1.0, float(inbound_share)))
 
-    best: Tuple[float, RouteMix, float, float] | None = None
-    for scrap in grid:
-        scrap_best: Tuple[float, RouteMix, float] | None = None
-        for train_share in train_options:
-            variables = build_variables(scrap, mix, train_share)
-            route, total = _best_route(
-                stages, variables, locked, enabled, constraints.excluded_variations
-            )
-            if scrap_best is None or total < scrap_best[0] - 1e-15:
-                scrap_best = (total, route, train_share)
-        assert scrap_best is not None
-        if best is None or scrap_best[0] < best[0] - 1e-15:
-            best = (scrap_best[0], scrap_best[1], scrap, scrap_best[2])
+    def leg(stage: Stage) -> str | None:
+        ids = set(stage.option_ids)
+        if ids & set(inbound_ids):
+            return "in"
+        if ids & set(outbound_ids):
+            return "out"
+        return None
+
+    def stage_weight(stage: Stage) -> float:
+        side = leg(stage)
+        if side == "in":
+            return 2.0 * share
+        if side == "out":
+            return 2.0 * (1.0 - share)
+        return 1.0
+
+    corners: List[Corner] = []
+    best: Tuple[float, RouteMix, float, float, float] | None = None
+    for scrap in sorted({scrap_min, scrap_max}):
+        for rail_in in sorted({train_min, train_max}):
+            for rail_out in sorted({train_min, train_max}):
+                bindings = {
+                    None: build_variables(scrap, mix, rail_in),
+                    "in": build_variables(scrap, mix, rail_in),
+                    "out": build_variables(scrap, mix, rail_out),
+                }
+                route, total = _best_route(
+                    stages,
+                    lambda stage: bindings[leg(stage)],
+                    locked,
+                    enabled,
+                    constraints.excluded_variations,
+                    stage_weight,
+                    baseline_route,
+                )
+                corners.append(Corner(scrap, rail_in, rail_out, total))
+                if best is None or total < best[0] - 1e-15:
+                    best = (total, route, scrap, rail_in, rail_out)
 
     assert best is not None
-    _, route, scrap_ratio, train_share = best
+    _, route, scrap_ratio, rail_in, rail_out = best
     result = calculate(
         scrap_ratio,
         mix,
         dataset,
-        apply_haulage(route_weights(route), dataset, inbound_share),
-        train_share,
+        apply_haulage(route_weights(route), dataset, share),
+        rail_in,
+        rail_shares(dataset, rail_in, rail_out),
     )
 
     changes: List[Tuple[str, str, str]] = []
@@ -281,9 +338,11 @@ def optimise(
     return Optimum(
         scrap_ratio=scrap_ratio,
         mix=mix,
-        train_share=train_share,
+        rail_in=rail_in,
+        rail_out=rail_out,
         route=route,
         result=result,
         grid_factor=mix_factor(mix, dataset),
         stage_changes=tuple(changes),
+        corners=tuple(sorted(corners, key=lambda corner: corner.total)),
     )

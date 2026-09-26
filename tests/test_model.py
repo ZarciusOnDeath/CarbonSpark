@@ -525,3 +525,93 @@ def test_calibration_record_travels_with_the_data(dataset):
     assert basis["benchmarks"]
     changed = {row["#"] for row in basis["changes"]}
     assert changed == {proc.id for proc in dataset.processes}
+
+
+# --------------------------------------------------------------------------- #
+# Optimiser: exactness, explanation and advice
+# --------------------------------------------------------------------------- #
+def _jajpur(dataset):
+    from carbonspark.presets import GRID_PRESETS, PLANT_PROFILES, profile_route
+
+    profile = PLANT_PROFILES["JSL Jajpur"]
+    route, _ = profile_route(profile, build_stages(dataset))
+    return profile, route, GRID_PRESETS[profile.grid_preset]
+
+
+def test_optimum_is_no_worse_than_any_point_in_the_box(dataset):
+    """Brute force over a grid of scrap and per-leg rail shares, and every
+    substitute at every stage: nothing beats the corner answer."""
+    import itertools
+
+    from carbon_calc.route import apply_haulage, rail_shares, substitutes
+
+    stages = build_stages(dataset)
+    _, route, _ = _jajpur(dataset)
+    constraints = Constraints(scrap_min=0.2, scrap_max=0.8, train_min=0.1, train_max=0.9)
+    optimum = optimise(dataset, stages, constraints, route)
+    choices = []
+    for stage in stages:
+        options = substitutes(stage, route.get(stage.key, {}))
+        if options and normalise_mix(route.get(stage.key, {})):
+            choices.append((stage.key, [o.id for o in options]))
+    for picks in itertools.product(*[ids for _, ids in choices]):
+        candidate = dict(route)
+        for (key, _), pid in zip(choices, picks):
+            candidate[key] = {pid: 1.0}
+        weights = apply_haulage(route_weights(candidate), dataset, 0.5)
+        for scrap in (0.2, 0.35, 0.5, 0.65, 0.8):
+            for rail_in in (0.1, 0.5, 0.9):
+                for rail_out in (0.1, 0.5, 0.9):
+                    total = calculate(
+                        scrap, optimum.mix, dataset, weights, rail_in,
+                        rail_shares(dataset, rail_in, rail_out),
+                    ).total_co2e
+                    assert optimum.result.total_co2e <= total + 1e-9
+
+
+def test_optimum_keeps_the_rail_legs_separate(dataset):
+    stages = build_stages(dataset)
+    _, route, _ = _jajpur(dataset)
+    optimum = optimise(dataset, stages, Constraints(train_max=0.6), route)
+    assert optimum.rail_in == pytest.approx(0.6)
+    assert optimum.rail_out == pytest.approx(0.6)
+    assert len(optimum.corners) == 8
+    assert optimum.corners[0].total == pytest.approx(optimum.result.total_co2e)
+
+
+def test_optimiser_only_swaps_genuine_alternatives(dataset):
+    """A ladle furnace is never 'replaced' by argon stirring, nor a caster by a spray."""
+    stages = build_stages(dataset)
+    _, route, _ = _jajpur(dataset)
+    optimum = optimise(dataset, stages, Constraints(), route)
+    for key, _, after in optimum.stage_changes:
+        assert key.split(" :: ")[1] in (
+            "Primary Melting", "Decarburization / Alloying", "Continuous Casting (CCM)",
+        ), (key, after)
+
+
+def test_waterfall_adds_up_to_the_saving(dataset):
+    from carbon_calc.advice import Scenario, evaluate, waterfall
+
+    stages = build_stages(dataset)
+    profile, route, mix = _jajpur(dataset)
+    current = Scenario(profile.scrap_ratio, mix, profile.inbound_rail, profile.outbound_rail, route)
+    optimum = optimise(dataset, stages, Constraints(scrap_max=0.75), route)
+    steps = waterfall(dataset, current, optimum)
+    assert sum(step.saving for step in steps) == pytest.approx(
+        evaluate(dataset, current).total_co2e - optimum.result.total_co2e
+    )
+
+
+def test_critique_ranks_the_biggest_miss_first(dataset):
+    from carbon_calc.advice import Scenario, critique
+
+    stages = build_stages(dataset)
+    profile, route, mix = _jajpur(dataset)
+    current = Scenario(0.30, mix, profile.inbound_rail, profile.outbound_rail, route)
+    constraints = Constraints(scrap_max=0.75)
+    optimum = optimise(dataset, stages, constraints, route)
+    findings = critique(dataset, stages, current, optimum, constraints, "test")
+    actionable = [f for f in findings if f.saving > 0]
+    assert actionable[0].lever == "Scrap"
+    assert all(a.saving >= b.saving for a, b in zip(actionable, actionable[1:]) if a.tone == b.tone)

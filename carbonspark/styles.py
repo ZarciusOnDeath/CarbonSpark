@@ -577,6 +577,19 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
   border-radius: 10px; padding: 10px 14px 4px 14px; margin-bottom: 10px;
 }}
 
+/* ---------- optimiser advisor ---------- */
+.cs-finding {{
+  border: 1px solid var(--line); border-left: 4px solid var(--line); border-radius: 10px;
+  padding: 10px 14px; margin: 0 0 10px 0; background: var(--surface);
+}}
+.cs-finding p {{ margin: 6px 0 0 0; color: var(--ink-soft); font-size: .93rem; line-height: 1.55; }}
+.cs-finding p b {{ color: var(--ink); font-weight: 600; }}
+.cs-finding-high {{ border-left-color: var(--ember); }}
+.cs-finding-medium {{ border-left-color: var(--amber); }}
+.cs-finding-low {{ border-left-color: var(--steel); }}
+.cs-finding-good {{ border-left-color: var(--green); }}
+.cs-finding-info {{ border-left-color: var(--clay); }}
+
 @media (prefers-reduced-motion: reduce) {{
   *, *::before, *::after {{ animation: none !important; transition: none !important; }}
 }}

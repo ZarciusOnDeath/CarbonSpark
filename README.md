@@ -94,11 +94,22 @@ which is what made a naive read of the whole grid produce an impossible 19.4 tCO
 
 ### The optimiser is exact, not heuristic
 
-1. Scope 2 is `kWh × EF_mix / 1000` with `EF_mix` a share-weighted average, so the best mix
-   is independent of scrap ratio and route → solved once as a bounded linear program.
-2. Stages are additive → the best variation at each unlocked stage is chosen independently.
-3. Both transport rows are linear in `p`, so the best rail share is always at a bound.
-4. That leaves a one-dimensional sweep over the allowed scrap-ratio range.
+1. **Grid mix.** Scope 2 is `kWh × EF_mix / 1000` with `kWh ≥ 0`, so the mix with the
+   lowest `EF_mix` inside the limits is best whatever else is chosen. It is found exactly:
+   meet each floor, then fill from the cleanest source with headroom.
+2. **Technology.** With the mix fixed, stages are additive, so each is minimised on its own.
+   Only genuine alternatives are compared (`route.SUBSTITUTE_GROUPS`): melting furnaces,
+   decarburisers, casters. A ladle furnace is never "replaced" by argon stirring.
+3. **Scrap and rail.** For a fixed route every formula is linear in the scrap share and in
+   each leg's rail share, so the minimum over the allowed box is at a corner. The search
+   evaluates all 2 × 2 × 2 = 8 corners (scrap min/max × inbound rail min/max × outbound rail
+   min/max), each with its best technology, and the page shows all eight as the proof.
+
+The page also breaks the saving down lever by lever (a waterfall that adds up exactly to
+the gap), and reviews the current choices (`carbon_calc/advice.py`): each lever priced on
+its own, ranked, plus the limits the optimum is pressed against and what relaxing them is
+worth. With `ANTHROPIC_API_KEY` set (environment or `.streamlit/secrets.toml`), a button
+asks Claude for a written review of those same figures.
 
 Infeasible constraint sets are reported rather than silently relaxed.
 
