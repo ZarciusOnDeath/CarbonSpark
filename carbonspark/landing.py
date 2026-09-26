@@ -160,8 +160,8 @@ def _why(dataset: Dataset) -> None:
 
 def _route_strip(dataset: Dataset) -> None:
     steps = "".join(
-        f'<span class="cs-step">{DEPARTMENT_ICONS.get(name, BULLET)} <b>{name}</b></span>'
-        for name in dataset.departments
+        f'<span class="cs-step"><i>{index:02d}</i> <b>{name}</b></span>'
+        for index, name in enumerate(dataset.departments, start=1)
     )
     st.markdown(
         f"""

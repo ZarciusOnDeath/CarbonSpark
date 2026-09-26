@@ -139,11 +139,11 @@ def _scenario_tiles(result: Result) -> None:
         return
     stages_on = sum(1 for mix in st.session_state.route.values() if normalise_mix(mix))
     tiles = [
-        ("scrap", "\u267B\ufe0f  Scrap in the charge", f"{result.scrap_ratio:.0%}", _open_panel, ("scrap",)),
-        ("grid", "\u26A1  Grid electricity", f"{result.grid_factor:.3f} kg/kWh", _open_panel, ("grid",)),
-        ("transport", "\U0001F686  Rail share in / out",
+        ("scrap", ":material/recycling:  Scrap in the charge", f"{result.scrap_ratio:.0%}", _open_panel, ("scrap",)),
+        ("grid", ":material/bolt:  Grid electricity", f"{result.grid_factor:.3f} kg/kWh", _open_panel, ("grid",)),
+        ("transport", ":material/train:  Rail share in / out",
          f"{inbound_rail():.0%} / {outbound_rail():.0%}", _open_transport, ()),
-        ("plant", "\U0001F3ED  Process route", f"{stages_on} steps", _open_panel, ("plant",)),
+        ("plant", ":material/factory:  Process route", f"{stages_on} steps", _open_panel, ("plant",)),
     ]
     st.markdown(
         '<p class="cs-tiles-head">Your inputs \u2014 click any to change it</p>',
@@ -395,8 +395,11 @@ def _stage_controls(stage: Stage, route) -> None:
                 key=route_key("share", f"{stage.key}_{pid}"),
             )
         set_stage_mix(stage, normalise_mix(raw) or even_mix(picked))
+    # The transport step carries its own leg's rail/road split, right under it:
+    # raw material arriving under Inbound, finished coil leaving under Outbound.
     if stage.options[0].transport:
-        st.caption("Rail vs road for this leg is set at the top of this department.")
+        with st.container(key=f"cs_haul_{stage.department}"):
+            _transport_controls(stage.department == "Inbound")
 
 
 def _panel_plant(dataset: Dataset, stages) -> None:
@@ -417,13 +420,13 @@ def _panel_plant(dataset: Dataset, stages) -> None:
         dept_stages = [stage for stage in stages if stage.department == department]
         running = [stage for stage in dept_stages if _stage_on(route, stage)]
         mark = ALL_ON if len(running) == len(dept_stages) else (SOME_ON if running else ALL_OFF)
-        icon = DEPARTMENT_ICONS.get(department, BULLET)
         title = (
-            f"{mark}  {icon}  {department}  {MIDDOT}  "
-            f"{len(running)} of {len(dept_stages)} running"
+            f"{department}  {MIDDOT}  {len(running)} of {len(dept_stages)} running  {mark}"
         )
         with st.expander(
-            title, expanded=department == st.session_state.get("open_department")
+            title,
+            icon=DEPARTMENT_ICONS.get(department),
+            expanded=department == st.session_state.get("open_department"),
         ):
             photo = DEPARTMENT_PHOTOS.get(department, "")
             st.markdown(
@@ -432,11 +435,6 @@ def _panel_plant(dataset: Dataset, stages) -> None:
                 f"<small>{len(running)} of {len(dept_stages)} processes running</small></div>",
                 unsafe_allow_html=True,
             )
-            # Each transport leg is set in its own department: raw material
-            # arriving under Inbound, finished coil leaving under Outbound.
-            if department in ("Inbound", "Outbound"):
-                with st.container(key=f"cs_haul_{department}"):
-                    _transport_controls(department == "Inbound")
             head = st.columns(2)
             head[0].button(
                 "Tick all",
@@ -523,7 +521,7 @@ def _drawer(dataset: Dataset, stages) -> None:
     panel = st.session_state.drawer_panel
     # One way to close: the Close button beside the figures, where Edit inputs was.
     st.markdown(
-        '<div class="cs-drawer-title">\u2699\ufe0f Inputs</div>'
+        '<div class="cs-drawer-title">Inputs</div>'
         '<p class="cs-drawer-sub">Everything you can change about the scenario.</p>',
         unsafe_allow_html=True,
     )
@@ -623,7 +621,7 @@ def _headline(result: Result, dataset: Dataset) -> None:
             return
         action, readings = st.columns([1.25, 6.2], gap="small")
         action.button(
-            "\u2715  Close" if st.session_state.drawer_open else "\u2699  Edit inputs",
+            ":material/close:  Close" if st.session_state.drawer_open else ":material/tune:  Edit inputs",
             on_click=_toggle_drawer,
             use_container_width=True,
             key="open_inputs",
@@ -766,7 +764,7 @@ def _inputs_nudge() -> None:
         unsafe_allow_html=True,
     )
     st.button(
-        "\u2699  Open Inputs",
+        ":material/tune:  Open inputs",
         on_click=_toggle_drawer,
         use_container_width=True,
         type="primary",
@@ -850,7 +848,7 @@ def _comparison(result: Result, dataset: Dataset, stages) -> None:
                 saving_drawn.append(key)
                 actions = st.columns([1, 1]) if first else [st.container()]
                 actions[0].button(
-                    "\u2699  Edit inputs",
+                     ":material/tune:  Edit inputs",
                     on_click=_toggle_drawer,
                     use_container_width=True,
                     key=f"edit_{key}",
@@ -1224,7 +1222,7 @@ def render(dataset: Dataset, stages) -> None:
             st.error(
                 "Every stage is switched off. Open Inputs and add at least one process."
             )
-            st.button("\u2699\ufe0f  Open inputs", on_click=_toggle_drawer, type="primary")
+            st.button(":material/tune:  Open inputs", on_click=_toggle_drawer, type="primary")
         return
     result = calculate(
         scrap_ratio(),

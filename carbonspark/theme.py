@@ -74,15 +74,18 @@ SCOPE_NAMES = {
     "scope3": "Scope 3 — upstream (Cat. 1-8)",
 }
 
+#: One monochrome line icon per department (Streamlit's Material Symbols),
+#: in place of the emoji: they take the text colour, so they sit quietly in
+#: both modes rather than as coloured pictures.
 DEPARTMENT_ICONS = {
-    "Inbound": "🚚",
-    "Melt Shop": "🔥",
-    "Hot Rolling": "🌡️",
-    "Annealing": "♨️",
-    "Descaling": "💨",
-    "Pickling": "🧪",
-    "Cold Rolling": "🧊",
-    "Outbound": "📦",
+    "Inbound": ":material/move_to_inbox:",
+    "Melt Shop": ":material/local_fire_department:",
+    "Hot Rolling": ":material/compress:",
+    "Annealing": ":material/thermostat:",
+    "Descaling": ":material/cleaning_services:",
+    "Pickling": ":material/science:",
+    "Cold Rolling": ":material/layers:",
+    "Outbound": ":material/outbox:",
 }
 
 

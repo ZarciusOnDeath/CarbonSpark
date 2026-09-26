@@ -660,6 +660,32 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 /* Room under the last control, so the docked Apply bar never hides it. */
 .st-key-cs_drawer {{ padding-bottom: 150px !important; }}
 
+/* ---------- readout: one row, centred on the Close/Edit button ---------- */
+.cs-readout {{
+  flex-wrap: nowrap !important; justify-content: space-between;
+  gap: 0 clamp(10px, 1.6vw, 44px) !important; align-items: flex-end;
+}}
+.cs-readout .cs-metric {{ min-width: 0; }}
+.cs-readout .cs-metric-value {{ font-size: clamp(1.25rem, 1.9vw, 2.6rem); white-space: nowrap; }}
+.cs-readout .cs-metric-lead .cs-metric-value {{ font-size: clamp(2rem, 3.4vw, 4.8rem); }}
+.cs-readout .cs-metric-label {{ white-space: nowrap; font-size: clamp(.58rem, .7vw, .7rem); }}
+.st-key-cs_readout [data-testid="stHorizontalBlock"] {{ align-items: center !important; }}
+.st-key-cs_readout [data-testid="stColumn"] {{ align-self: center; }}
+
+/* ---------- tab bars: pills centred in their bar ---------- */
+.st-key-cs_views, .st-key-cs_ambition {{ padding: 6px !important; gap: 0 !important; }}
+.st-key-cs_views [data-testid="stElementContainer"],
+.st-key-cs_ambition [data-testid="stElementContainer"] {{ margin: 0 !important; }}
+.st-key-cs_views .stButtonGroup, .st-key-cs_ambition .stButtonGroup {{ margin: 0 !important; padding: 0 !important; }}
+.st-key-cs_views [data-testid="stButtonGroup"] > div,
+.st-key-cs_ambition [data-testid="stButtonGroup"] > div {{ align-items: center; }}
+
+/* ---------- landing route strip: numbered steps ---------- */
+.cs-step i {{
+  font-style: normal; font-family: var(--serif); color: var(--clay);
+  font-size: 1.1rem; margin-right: 6px;
+}}
+
 /* ---------- wordmark ---------- */
 .cs-wordmark {{
   font-family: var(--serif); font-weight: 400; letter-spacing: -.03em; line-height: 1;
