@@ -118,7 +118,8 @@ def scope_breakdown(result: Result, height: int = 520) -> go.Figure:
         # `meta` travels into the page, where the script uses it to find this
         # figure and redraw its bars while a slider is being dragged.
         meta=dict(live="scopes", scopes=list(SCOPES)),
-        xaxis=dict(title="tCO2e per tonne of steel", range=[0, SCOPE_AXIS_MAX]),
+        xaxis=dict(title="tCO2e per tonne of steel",
+                   range=[0, max(0.2, max(result.totals[s] for s in SCOPES) * 1.12)]),
         yaxis_title=None,
         bargap=0.42,
     )
@@ -144,11 +145,25 @@ def department_breakdown(result: Result, height: int = 520) -> go.Figure:
             marker_color=scope_colours(_mode())[scope],
             hovertemplate="%{y} · %{fullData.name}<br><b>%{x:.4f} tCO2e/t</b><extra></extra>",
         )
+    heaviest = max((result.by_department[name]["total_co2e"] for name in departments), default=0.0)
+    span = max(0.2, heaviest * 1.18)
     figure.update_layout(
         meta=dict(live="departments", departments=list(departments), order=list(STACK_ORDER)),
         barmode="stack",
         bargap=0.34,
-        xaxis=dict(title="tCO2e per tonne of steel", range=[0, DEPARTMENT_AXIS_MAX]),
+        # The axis fits the heaviest department (with room for its label)
+        # rather than a fixed span: at a fixed 4.2 the melt shop took a third of
+        # the width and every other department was a sliver.
+        xaxis=dict(title="tCO2e per tonne of steel", range=[0, span]),
+        annotations=[
+            dict(
+                x=result.by_department[name]["total_co2e"], y=name,
+                text=f"{result.by_department[name]['total_co2e']:.3f}",
+                xanchor="left", xshift=6, showarrow=False,
+                font=_font(12),
+            )
+            for name in departments
+        ],
         # Below the plot, anchored to the top of its own band: an overlay legend
         # sat on the widest bar and hid the very numbers it was labelling.
         legend=dict(orientation="h", yanchor="top", y=-0.14, x=0),
