@@ -70,8 +70,10 @@ html {{ scroll-behavior: smooth; }}
   position: sticky; top: 0; z-index: 999;
   display: flex; align-items: center; gap: 28px;
   padding: 14px 18px; margin: 0 -1rem 4px -1rem;
-  background: var(--paper);
+  background: color-mix(in srgb, var(--paper) 72%, transparent);
   border-bottom: 1px solid var(--line);
+  border-radius: 0 0 16px 16px;
+  box-shadow: 0 10px 30px -24px rgba(0,0,0,.5);
 }}
 .cs-nav .cs-brand {{ display:flex; align-items:center; gap:10px; font-weight:600; letter-spacing:-.01em; font-size:1.04rem; }}
 .cs-nav a {{ color: var(--ink-soft); text-decoration:none; font-weight:500; font-size:.92rem; transition: color .18s ease; }}
@@ -104,7 +106,8 @@ html {{ scroll-behavior: smooth; }}
 /* The closing prompt at the foot of the dashboard: a rule and a line, so it
    reads as the end of the page rather than as one more panel on it. */
 .cs-nudge-rule {{ border-top: 1px solid var(--line); margin: 30px 0 0 0; }}
-.cs-nudge-line {{
+/* stretches the full width */
+.cs-nudge-line {{ max-width: none !important;
   margin: 22px 0 14px 0;
   color: var(--ink); font-size: 1.02rem; max-width: 52ch; line-height:1.6;
 }}
@@ -646,6 +649,33 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 /* Surfaces let the backdrop through a little. */
 .st-key-cs_drawer {{ background: color-mix(in srgb, var(--surface) 90%, transparent) !important; }}
 [data-testid="stExpander"] details {{ background: color-mix(in srgb, var(--paper) 80%, transparent); }}
+
+.st-key-cs_views .stButtonGroup, .st-key-cs_ambition .stButtonGroup {{ border-bottom: none !important; }}
+
+/* ---------- wordmark ---------- */
+.cs-wordmark {{
+  font-family: var(--serif); font-weight: 400; letter-spacing: -.03em; line-height: 1;
+  color: var(--ink); white-space: nowrap;
+}}
+.cs-wordmark em {{ font-style: italic; color: var(--clay); }}
+
+/* ---------- ambition levels: the same full-width bar as the views ---------- */
+.st-key-cs_ambition {{
+  margin: 6px 0 12px 0; padding: 6px; border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border: 1px solid var(--line);
+}}
+.st-key-cs_ambition [data-testid="stButtonGroup"], .st-key-cs_ambition [data-testid="stButtonGroup"] > div {{ width: 100%; display:flex; gap: 6px; }}
+.st-key-cs_ambition [data-testid="stButtonGroup"] div {{ border-bottom: none !important; }}
+.st-key-cs_ambition [data-testid="stButtonGroup"] button {{
+  flex: 1 1 0; min-height: 44px; border-radius: 12px !important; border: none !important;
+  background: transparent !important; font-weight: 600 !important;
+}}
+.st-key-cs_ambition [data-testid="stButtonGroup"] button:hover {{ background: color-mix(in srgb, var(--clay) 12%, transparent) !important; }}
+.st-key-cs_ambition button[kind$="Active"], .st-key-cs_ambition button[aria-checked="true"],
+.st-key-cs_ambition button[aria-pressed="true"] {{ background: var(--clay) !important; }}
+.st-key-cs_ambition button[kind$="Active"] p, .st-key-cs_ambition button[aria-checked="true"] p,
+.st-key-cs_ambition button[aria-pressed="true"] p {{ color: #fff !important; }}
 
 @media (prefers-reduced-motion: reduce) {{
   *, *::before, *::after {{ animation: none !important; transition: none !important; }}

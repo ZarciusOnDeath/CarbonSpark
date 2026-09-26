@@ -9,13 +9,13 @@ from carbon_calc.model import Dataset
 
 from . import live
 from .state import go, toggle_dark
-from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, page_backdrop, photo_style, spark_mark
+from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, page_backdrop, photo_style, wordmark
 
 def _nav() -> None:
     st.markdown(
         f"""
 <div class="cs-nav">
-  <span class="cs-brand">{spark_mark(26, st.session_state.dark)} CarbonSpark</span>
+  <span class="cs-brand">{wordmark(1.9)}</span>
   <span class="cs-spacer"></span>
   <a href="#levers">How it works</a>
   <a href="#database">Database</a>
@@ -68,19 +68,13 @@ def _hero() -> None:
                 unsafe_allow_html=True,
             )
             with st.container(key="cs_hero_cta"):
-                action, second, _ = st.columns([1.2, 1, 0.6])
+                action, _ = st.columns([1.2, 1.6])
                 action.button(
                     "Calculate a footprint  \u2192",
                     on_click=_launch,
                     type="primary",
                     use_container_width=True,
                     key="hero_launch",
-                )
-                second.button(
-                    "Start from a real plant",
-                    on_click=_launch,
-                    use_container_width=True,
-                    key="hero_plant",
                 )
         with right:
             st.markdown(_hero_card(), unsafe_allow_html=True)
@@ -101,7 +95,7 @@ def _hero_card() -> str:
     )
     return f"""
 <div class="cs-glass cs-rise-3">
-  <div class="cs-glass-label">JSL Jajpur route \u00b7 68% scrap</div>
+  <div class="cs-glass-label">Example \u00b7 electric-arc route, 68% scrap</div>
   <div class="cs-glass-total">2.89<small> tCO\u2082e per tonne</small></div>
   {rows}
   <div class="cs-glass-foot">Your numbers will differ \u2014 that is the point.</div>
@@ -195,7 +189,7 @@ def _cta_band() -> None:
 <div class="cs-on-photo">
   <div class="cs-eyebrow">Your turn</div>
   <h2>See your plant\u2019s number in 30 seconds</h2>
-  <p>Open on a real site profile, then move one slider.</p>
+  <p>Start from an example plant, then move one slider.</p>
 </div>""",
             unsafe_allow_html=True,
         )

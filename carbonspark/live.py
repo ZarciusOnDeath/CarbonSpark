@@ -275,6 +275,24 @@ _SCRIPT = """
   const onScroll = () => { rememberScroll(); condense(); };
   doc.addEventListener('scroll', onScroll, true);
 
+  // --- one department open at a time in the inputs drawer ----------------
+  // Opening a department closes whichever department was open before, so the
+  // list never turns into a wall of open panels. Process-level dropdowns
+  // nested inside a department are left alone. The other panel is closed by
+  // clicking its own summary, so Streamlit's record of it stays in step.
+  // 'toggle' does not bubble, but a capturing listener still sees it.
+  doc.addEventListener('toggle', (event) => {
+    const opened = event.target;
+    if (!opened || opened.tagName !== 'DETAILS' || !opened.open) return;
+    const drawer = opened.closest('.st-key-cs_drawer');
+    if (!drawer || opened.parentElement.closest('details')) return;
+    drawer.querySelectorAll('details[open]').forEach((other) => {
+      if (other === opened || other.parentElement.closest('details')) return;
+      const summary = other.querySelector(':scope > summary');
+      if (summary) summary.click();
+    });
+  }, true);
+
   // --- a new page opens at its top -----------------------------------------
   // Streamlit keeps the main container's scroll position across a page change,
   // so arriving from the landing page dropped the reader at the bottom of the

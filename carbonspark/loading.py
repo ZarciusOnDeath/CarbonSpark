@@ -6,12 +6,12 @@ import time
 
 import streamlit as st
 
-from .theme import spark_mark
+from .theme import wordmark
 
 WELCOME = f"""
 <div class="cs-splash-cover"><div class="cs-splash">
-  <div class="cs-rise">{spark_mark(64)}</div>
-  <h1>Welcome to CarbonSpark</h1>
+  <h1>Welcome to</h1>
+  <div class="cs-rise">{wordmark(4.6)}</div>
   <p>Loading the accounting grid and building your plant…</p>
   <div class="cs-loadbar"><i></i></div>
 </div></div>"""

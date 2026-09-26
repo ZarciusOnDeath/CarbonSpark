@@ -74,7 +74,7 @@ from .state import (
     toggle_dark,
     train_share,
 )
-from .theme import DEPARTMENT_ICONS, DEPARTMENT_PHOTOS, page_backdrop, photo_style, spark_mark
+from .theme import DEPARTMENT_ICONS, DEPARTMENT_PHOTOS, page_backdrop, photo_style, wordmark
 
 PANELS = [
     ("scrap", "Scrap vs virgin", "How much of the charge is recycled steel"),
@@ -524,14 +524,12 @@ def _forget_stage_widgets(stage: Stage) -> None:
 
 def _drawer(dataset: Dataset, stages) -> None:
     panel = st.session_state.drawer_panel
-    head = st.columns([3, 1])
-    head[0].markdown(
+    # One way to close: the Close button beside the figures, where Edit inputs was.
+    st.markdown(
         '<div class="cs-drawer-title">\u2699\ufe0f Inputs</div>'
         '<p class="cs-drawer-sub">Everything you can change about the scenario.</p>',
         unsafe_allow_html=True,
     )
-    head[1].button("Close  \u2715", key="close_drawer", on_click=_toggle_drawer,
-                   use_container_width=True)
     if panel is None:
         st.markdown(
             '<p class="cs-drawer-lead">Start here. Pick what to change \u2014 the figures on '
@@ -772,8 +770,7 @@ def _inputs_nudge() -> None:
         "the scrap ratio, the grid mix, and the technology at each stage.</p>",
         unsafe_allow_html=True,
     )
-    left, _ = st.columns([1, 2.2])
-    left.button(
+    st.button(
         "\u2699  Open Inputs",
         on_click=_toggle_drawer,
         use_container_width=True,
@@ -1005,8 +1002,10 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
     )
 
     names = list(AMBITIONS)
-    chosen = st.segmented_control(
-        "Ambition", names, key="opt_ambition", label_visibility="collapsed"
+    with st.container(key="cs_ambition"):
+        chosen = st.segmented_control(
+        "Ambition", names, key="opt_ambition", label_visibility="collapsed",
+        width="stretch", default=names[0],
     ) or names[0]
     level = AMBITIONS[chosen]
     st.markdown(f"**{level.name}** \u2014 {level.summary}")
@@ -1203,11 +1202,7 @@ def _process_grid(result: Result, dataset: Dataset) -> None:
 def render(dataset: Dataset, stages) -> None:
     live.enable("tool", _live_model(dataset))
     bar = st.columns([3.8, 0.7, 1.2, 1.2])
-    bar[0].markdown(
-        f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
-        f'font-size:1.55rem;letter-spacing:-.01em">{spark_mark(40, st.session_state.dark)} CarbonSpark</div>',
-        unsafe_allow_html=True,
-    )
+    bar[0].markdown(wordmark(2.3), unsafe_allow_html=True)
     bar[1].button(
         "\u2600\ufe0f" if st.session_state.dark else "\u263e",
         on_click=toggle_dark,

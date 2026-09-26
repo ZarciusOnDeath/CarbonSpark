@@ -172,3 +172,15 @@ def page_backdrop(photo: str, dark: bool = False) -> str:
         "background-size: cover; background-position: center; background-attachment: fixed;"
         "}</style>"
     )
+
+
+def wordmark(size: float = 2.0) -> str:
+    """The CarbonSpark name as the hero sets it: serif, with *Spark* in italic clay.
+
+    Used in every header instead of the drawn mark, so the brand reads the same
+    wherever it appears.
+    """
+    return (
+        f'<span class="cs-wordmark" style="font-size:{size}rem">'
+        "Carbon<em>Spark</em></span>"
+    )
