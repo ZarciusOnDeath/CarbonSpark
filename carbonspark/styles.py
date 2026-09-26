@@ -591,20 +591,47 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 .cs-finding-info {{ border-left-color: var(--clay); }}
 
 /* ---------- vibrance: views, choices, headings ---------- */
-/* The view tabs lead the page, as pills with the clay accent on the chosen one. */
-.st-key-cs_views {{ margin: 10px 0 4px 0; }}
+/* The view tabs lead the page: one glass bar across the full width, the four
+   views sharing it equally, the chosen one filled with clay. */
+.st-key-cs_views {{
+  margin: 12px 0 10px 0; padding: 6px; border-radius: 16px;
+  background: color-mix(in srgb, var(--surface) 72%, transparent);
+  border: 1px solid var(--line);
+  box-shadow: 0 10px 30px -22px rgba(0,0,0,.45);
+}}
+.st-key-cs_views [data-testid="stButtonGroup"] {{ width: 100%; }}
+.st-key-cs_views [data-testid="stButtonGroup"] div {{ border-bottom: none !important; }}
+.st-key-cs_views [data-testid="stButtonGroup"] > div {{ display: flex; width: 100%; gap: 6px; border: none !important; }}
 .st-key-cs_views [data-testid="stButtonGroup"] button {{
-  border-radius: 999px !important; padding: 8px 20px !important; font-weight: 600 !important;
-  border: 1px solid var(--line) !important; background: var(--surface) !important;
+  flex: 1 1 0; min-height: 46px; border-radius: 12px !important;
+  font-weight: 600 !important; font-size: 1rem !important;
+  border: none !important; background: transparent !important;
+  transition: background .18s ease;
+}}
+.st-key-cs_views [data-testid="stButtonGroup"] button:hover {{
+  background: color-mix(in srgb, var(--clay) 12%, transparent) !important;
 }}
 .st-key-cs_views [data-testid="stButtonGroup"] button[kind$="Active"],
 .st-key-cs_views [data-testid="stButtonGroup"] button[aria-checked="true"],
 .st-key-cs_views [data-testid="stButtonGroup"] button[aria-pressed="true"] {{
-  background: var(--clay) !important; border-color: var(--clay) !important;
+  background: var(--clay) !important;
+  box-shadow: 0 6px 16px -8px rgba(193,99,63,.8);
 }}
 .st-key-cs_views [data-testid="stButtonGroup"] button[kind$="Active"] p,
 .st-key-cs_views [data-testid="stButtonGroup"] button[aria-checked="true"] p,
 .st-key-cs_views [data-testid="stButtonGroup"] button[aria-pressed="true"] p {{ color: #fff !important; }}
+
+/* The figures sit on the same glass as the tabs, not on a flat slab. */
+.st-key-cs_readout {{
+  background: color-mix(in srgb, var(--surface) 78%, transparent) !important;
+  border: 1px solid var(--line); border-radius: 16px;
+  padding: 14px 20px 16px 20px !important;
+  box-shadow: 0 10px 30px -22px rgba(0,0,0,.45);
+}}
+.st-key-cs_readout.cs-condensed {{
+  background: color-mix(in srgb, var(--paper) 94%, transparent) !important;
+  padding: 8px 20px !important;
+}}
 
 /* The three input choices, stacked to fill the screen height. */
 .cs-choice-photo {{ height: max(110px, calc((100vh - 360px) / 3)); margin-bottom: 6px; }}

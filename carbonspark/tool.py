@@ -1205,7 +1205,7 @@ def render(dataset: Dataset, stages) -> None:
     bar = st.columns([3.8, 0.7, 1.2, 1.2])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'
-        f'font-size:1.1rem">{spark_mark(24, st.session_state.dark)} CarbonSpark <span class="cs-chip">tool</span></div>',
+        f'font-size:1.55rem;letter-spacing:-.01em">{spark_mark(40, st.session_state.dark)} CarbonSpark</div>',
         unsafe_allow_html=True,
     )
     bar[1].button(
@@ -1253,7 +1253,8 @@ def render(dataset: Dataset, stages) -> None:
         # The views sit above the figures, so choosing what to look at comes first.
         with st.container(key="cs_views"):
             view = st.segmented_control(
-                "View", VIEWS, key="tool_view", label_visibility="collapsed"
+                "View", VIEWS, key="tool_view", label_visibility="collapsed",
+                width="stretch",
             ) or VIEWS[0]
         st.markdown(page_backdrop(VIEW_PHOTOS.get(view, "dept_melt"), st.session_state.dark),
                     unsafe_allow_html=True)
