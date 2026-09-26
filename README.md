@@ -108,8 +108,11 @@ which is what made a naive read of the whole grid produce an impossible 19.4 tCO
 The page also breaks the saving down lever by lever (a waterfall that adds up exactly to
 the gap), and reviews the current choices (`carbon_calc/advice.py`): each lever priced on
 its own, ranked, plus the limits the optimum is pressed against and what relaxing them is
-worth. With `ANTHROPIC_API_KEY` set (environment or `.streamlit/secrets.toml`), a button
-asks Claude for a written review of those same figures.
+worth. A button writes a review of the current choices (verdict, strengths, biggest gaps
+and why, an ordered action plan, binding limits). It works with no setup: the built-in
+writer (`carbonspark/ai_review.py`) composes it from the model's own figures. With
+`ANTHROPIC_API_KEY` set (environment or `.streamlit/secrets.toml`), Claude writes it instead,
+from the same figures.
 
 Infeasible constraint sets are reported rather than silently relaxed.
 

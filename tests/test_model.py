@@ -615,3 +615,23 @@ def test_critique_ranks_the_biggest_miss_first(dataset):
     actionable = [f for f in findings if f.saving > 0]
     assert actionable[0].lever == "Scrap"
     assert all(a.saving >= b.saving for a, b in zip(actionable, actionable[1:]) if a.tone == b.tone)
+
+
+def test_written_review_needs_no_api_key(dataset, monkeypatch):
+    from carbon_calc.advice import Scenario, critique, evaluate, waterfall
+    from carbonspark import ai_review
+
+    monkeypatch.delenv("ANTHROPIC_API_KEY", raising=False)
+    stages = build_stages(dataset)
+    profile, route, mix = _jajpur(dataset)
+    current = Scenario(0.45, mix, profile.inbound_rail, profile.outbound_rail, route)
+    constraints = Constraints(scrap_max=0.75)
+    optimum = optimise(dataset, stages, constraints, route)
+    steps = waterfall(dataset, current, optimum)
+    findings = critique(dataset, stages, current, optimum, constraints, "Test level")
+    text = ai_review.write_review(ai_review.payload(
+        current, optimum, steps, findings, "Test level",
+        evaluate(dataset, current).total_co2e, mix_factor(mix, dataset),
+    ))
+    assert "Verdict" in text and "Do this, in this order" in text
+    assert f"{optimum.result.total_co2e:.3f}" in text

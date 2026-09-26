@@ -1092,24 +1092,30 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
             + "</div>",
             unsafe_allow_html=True,
         )
-    if ai_review.available():
-        if st.button("\u2728  Ask Claude for a written review", key="ai_review"):
+    # The written review always works: Claude writes it when an API key is
+    # configured, and the built-in writer composes it from the same figures when
+    # not. The label says which one wrote it.
+    by_claude = ai_review.available()
+    label = "Ask Claude for a written review" if by_claude else "Write me a review of my choices"
+    if st.button(f"\u2728  {label}", key="ai_review", type="primary"):
+        data = ai_review.payload(current, optimum, steps, findings, level.name,
+                                 now, result.grid_factor)
+        if by_claude:
             with st.spinner("Claude is reading your scenario\u2026"):
-                st.session_state.ai_review_text = ai_review.review(
-                    ai_review.payload(current, optimum, steps, findings, level.name,
-                                      now, result.grid_factor)
-                )
-        if st.session_state.get("ai_review_text"):
-            st.markdown(
-                '<div class="cs-finding cs-finding-info"><span class="cs-chip">Claude\u2019s review</span></div>',
-                unsafe_allow_html=True,
-            )
-            st.markdown(st.session_state.ai_review_text)
-            st.caption("Written by Claude from the figures above. Check before relying on it.")
-    else:
+                text = ai_review.review(data)
+            author = "Claude\u2019s review"
+        else:
+            text = ai_review.write_review(data)
+            author = "Automated review"
+        st.session_state.ai_review_text = (author, text)
+    if st.session_state.get("ai_review_text"):
+        author, text = st.session_state.ai_review_text
+        with st.container(border=True, key="cs_review"):
+            st.markdown(f"**{author}** \u00b7 {level.name}")
+            st.markdown(text)
         st.caption(
-            "A written AI review is available when an Anthropic API key is set "
-            "(ANTHROPIC_API_KEY in the environment or .streamlit/secrets.toml)."
+            "Written from the calculator's own figures above."
+            + ("" if by_claude else " Set ANTHROPIC_API_KEY to have Claude write it instead.")
         )
 
     # --- why this is optimal ----------------------------------------------
