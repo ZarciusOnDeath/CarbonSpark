@@ -74,7 +74,7 @@ from .state import (
     toggle_dark,
     train_share,
 )
-from .theme import DEPARTMENT_ICONS, DEPARTMENT_PHOTOS, photo_style, spark_mark
+from .theme import DEPARTMENT_ICONS, DEPARTMENT_PHOTOS, page_backdrop, photo_style, spark_mark
 
 PANELS = [
     ("scrap", "Scrap vs virgin", "How much of the charge is recycled steel"),
@@ -95,6 +95,11 @@ INBOUND_LABEL = "Inbound share of haulage"
 
 #: The tool's result views, shown as a tab strip matching the database page.
 VIEWS = ["Dashboard", "Compare", "Optimiser", "Process grid"]
+#: The photo washed behind each view.
+VIEW_PHOTOS = {
+    "Dashboard": "dept_melt", "Compare": "dept_cold",
+    "Optimiser": "grid", "Process grid": "dept_anneal",
+}
 
 SCROLL_HINT = """
 <div class="cs-scroll-hint" style="margin-top:8px">
@@ -174,8 +179,8 @@ def _panel_scrap(dataset: Dataset) -> None:
         unsafe_allow_html=True,
     )
     st.caption(
-        "Rail vs road for raw material in and coil out is under "
-        "**Plant \u2192 Transport**."
+        "Rail vs road is set per leg under **Plant**: raw material in the "
+        "**Inbound** department, finished coil in **Outbound**."
     )
 
 
@@ -533,20 +538,25 @@ def _drawer(dataset: Dataset, stages) -> None:
             "the right update as you go.</p>",
             unsafe_allow_html=True,
         )
-        # Side by side, so all three choices are visible at once.
-        for column, (key, title, blurb) in zip(st.columns(3, gap="small"), PANELS):
-            column.markdown(
-                f'<div class="cs-panel-photo" style="{photo_style(PANEL_PHOTOS[key])}">'
-                f"<span>{title}</span></div>"
-                f'<p class="cs-panel-blurb">{blurb}</p>',
-                unsafe_allow_html=True,
-            )
-            column.button("Change \u2192", key=f"open_{key}", on_click=_open_panel,
-                          args=(key,), use_container_width=True, type="primary")
+        # Stacked, and sized so the three together fill the screen height.
+        for key, title, blurb in PANELS:
+            with st.container(key=f"cs_choice_{key}"):
+                st.markdown(
+                    f'<div class="cs-panel-photo cs-choice-photo" '
+                    f'style="{photo_style(PANEL_PHOTOS[key], 0.35)}">'
+                    f"<span>{title}</span><small>{blurb}</small></div>",
+                    unsafe_allow_html=True,
+                )
+                st.button(f"Change {title.lower()}  \u2192", key=f"open_{key}",
+                          on_click=_open_panel, args=(key,), use_container_width=True,
+                          type="primary")
         return
 
-    columns = st.columns(3)
-    for column, (key, title, _) in zip(columns, PANELS):
+    # A way back to the three choices from inside any panel.
+    columns = st.columns([1.35, 1, 1, 1])
+    columns[0].button("\u2190 All inputs", key="back_to_choices", on_click=_open_panel,
+                      args=(None,), use_container_width=True)
+    for column, (key, title, _) in zip(columns[1:], PANELS):
         column.button(
             title.split()[0],
             key=f"tab_{key}",
@@ -1240,10 +1250,14 @@ def render(dataset: Dataset, stages) -> None:
     )
 
     with main:
+        # The views sit above the figures, so choosing what to look at comes first.
+        with st.container(key="cs_views"):
+            view = st.segmented_control(
+                "View", VIEWS, key="tool_view", label_visibility="collapsed"
+            ) or VIEWS[0]
+        st.markdown(page_backdrop(VIEW_PHOTOS.get(view, "dept_melt"), st.session_state.dark),
+                    unsafe_allow_html=True)
         _headline(result, dataset)
-        view = st.segmented_control(
-            "View", VIEWS, key="tool_view", label_visibility="collapsed"
-        ) or VIEWS[0]
         if view == "Dashboard":
             _dashboard(result, dataset, stages)
         elif view == "Compare":

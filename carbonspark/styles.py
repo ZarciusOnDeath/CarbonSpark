@@ -386,7 +386,7 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 
 .st-key-cs_readout {{
   position: sticky; top: 0; z-index: 60;
-  background: var(--paper);
+  background: {nav};
   padding: 6px 0 18px 0;
   transition: padding .3s ease, box-shadow .3s ease;
 }}
@@ -589,6 +589,36 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 .cs-finding-low {{ border-left-color: var(--steel); }}
 .cs-finding-good {{ border-left-color: var(--green); }}
 .cs-finding-info {{ border-left-color: var(--clay); }}
+
+/* ---------- vibrance: views, choices, headings ---------- */
+/* The view tabs lead the page, as pills with the clay accent on the chosen one. */
+.st-key-cs_views {{ margin: 10px 0 4px 0; }}
+.st-key-cs_views [data-testid="stButtonGroup"] button {{
+  border-radius: 999px !important; padding: 8px 20px !important; font-weight: 600 !important;
+  border: 1px solid var(--line) !important; background: var(--surface) !important;
+}}
+.st-key-cs_views [data-testid="stButtonGroup"] button[kind$="Active"],
+.st-key-cs_views [data-testid="stButtonGroup"] button[aria-checked="true"],
+.st-key-cs_views [data-testid="stButtonGroup"] button[aria-pressed="true"] {{
+  background: var(--clay) !important; border-color: var(--clay) !important;
+}}
+.st-key-cs_views [data-testid="stButtonGroup"] button[kind$="Active"] p,
+.st-key-cs_views [data-testid="stButtonGroup"] button[aria-checked="true"] p,
+.st-key-cs_views [data-testid="stButtonGroup"] button[aria-pressed="true"] p {{ color: #fff !important; }}
+
+/* The three input choices, stacked to fill the screen height. */
+.cs-choice-photo {{ height: max(110px, calc((100vh - 360px) / 3)); margin-bottom: 6px; }}
+.cs-choice-photo span {{ font-size: 1.6rem !important; }}
+.cs-choice-photo small {{ font-size: .9rem !important; }}
+[class*="st-key-cs_choice_"] {{ margin-bottom: 12px; }}
+
+/* Section headings in the tool and database carry a clay rule. */
+.main h3, section[data-testid="stMain"] h3 {{
+  border-left: 4px solid var(--clay); padding-left: 12px;
+}}
+/* Surfaces let the backdrop through a little. */
+.st-key-cs_drawer {{ background: color-mix(in srgb, var(--surface) 90%, transparent) !important; }}
+[data-testid="stExpander"] details {{ background: color-mix(in srgb, var(--paper) 80%, transparent); }}
 
 @media (prefers-reduced-motion: reduce) {{
   *, *::before, *::after {{ animation: none !important; transition: none !important; }}

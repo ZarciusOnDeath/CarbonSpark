@@ -9,7 +9,7 @@ from carbon_calc.model import Dataset
 
 from . import live
 from .state import go, toggle_dark
-from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, photo_style, spark_mark
+from .theme import AMBER, DEPARTMENT_ICONS, EMBER, STEEL, page_backdrop, photo_style, spark_mark
 
 def _nav() -> None:
     st.markdown(
@@ -238,6 +238,7 @@ def _database_door(dataset: Dataset) -> None:
 
 def render(dataset: Dataset) -> None:
     live.enable("landing")
+    st.markdown(page_backdrop("dept_hot", st.session_state.dark), unsafe_allow_html=True)
     _nav()
     _mode_toggle()
     _hero()

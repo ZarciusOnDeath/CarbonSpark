@@ -13,7 +13,7 @@ from carbon_calc.model import METRICS, METRIC_LABELS, MIX_VARIABLES, Dataset
 from . import live
 from .notes import parse as parse_note
 from .state import go, toggle_dark
-from .theme import spark_mark
+from .theme import page_backdrop, spark_mark
 
 
 #: The workbook the grid is extracted from, offered as a download.
@@ -30,6 +30,7 @@ def _variation(variation: str) -> str:
 
 def render(dataset: Dataset) -> None:
     live.enable("database")
+    st.markdown(page_backdrop("database", st.session_state.dark), unsafe_allow_html=True)
     bar = st.columns([4.0, 0.8, 1.5, 1.3])
     bar[0].markdown(
         f'<div style="display:flex;align-items:center;gap:10px;font-weight:800;'

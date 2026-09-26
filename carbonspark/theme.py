@@ -147,3 +147,28 @@ def photo_style(name: str, shade: float = 0.0) -> str:
     layers.append(f"url('{PHOTO_URL.format(name=name)}')")
     layers.append(PHOTOS.get(name, _FALLBACK))
     return f"background-image:{', '.join(layers)};background-size:cover;background-position:center;"
+
+
+def page_backdrop(photo: str, dark: bool = False) -> str:
+    """A photo washed behind the whole page, with a warm clay glow.
+
+    The page colour is laid over the photo at high opacity, so text keeps its
+    contrast in both modes; the photo reads as texture, and the clay glow in the
+    corners carries the accent. The dark mode uses the dark paper, so it stays
+    dark rather than turning grey.
+    """
+    t = tokens(dark)
+    wash = "rgba(26,26,25,{a})" if dark else "rgba(250,249,245,{a})"
+    glow = "rgba(209,103,60,{a})" if dark else "rgba(193,99,63,{a})"
+    url = PHOTO_URL.format(name=photo)
+    return (
+        "<style>.stApp {"
+        f"background-color: {t['paper']};"
+        "background-image:"
+        f" radial-gradient(60% 50% at 100% 0%, {glow.format(a=0.22 if dark else 0.16)} 0%, transparent 70%),"
+        f" radial-gradient(50% 45% at 0% 100%, {glow.format(a=0.16 if dark else 0.10)} 0%, transparent 70%),"
+        f" linear-gradient({wash.format(a=0.84 if dark else 0.86)}, {wash.format(a=0.93 if dark else 0.94)}),"
+        f" url('{url}');"
+        "background-size: cover; background-position: center; background-attachment: fixed;"
+        "}</style>"
+    )
