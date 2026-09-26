@@ -428,8 +428,27 @@ def build(source: Path = SOURCE, output: Path = OUTPUT) -> list:
         "unchanged from Grid 4."
     )
     _write_basis_sheet(workbook, log)
+    _rename_departments(workbook)
     workbook.save(output)
     return log
+
+
+#: Department names Grid 5 changes. "RMHS" (raw material handling system) is
+#: plant shorthand; the site calls the leg what it is.
+RENAMES = {"RMHS": "Inbound"}
+
+
+def _rename_departments(workbook) -> None:
+    """Apply RENAMES to every text cell, department column and notes alike."""
+    for sheet in workbook.worksheets:
+        for row in sheet.iter_rows():
+            for cell in row:
+                if isinstance(cell.value, str):
+                    text = cell.value
+                    for old, new in RENAMES.items():
+                        text = text.replace(old, new)
+                    if text != cell.value:
+                        cell.value = text
 
 
 BENCHMARKS = (

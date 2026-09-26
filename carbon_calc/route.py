@@ -121,14 +121,14 @@ NEUTRAL_INBOUND_SHARE = 0.5
 def transport_ids(dataset: Dataset) -> Tuple[Tuple[int, ...], Tuple[int, ...]]:
     """The inbound and outbound transport row ids.
 
-    The workbook marks exactly two rows as transport-mode dependent: RMHS
+    The workbook marks exactly two rows as transport-mode dependent: Inbound
     unloading (material arriving) and outbound despatch (product leaving).
     """
     inbound = tuple(
-        proc.id for proc in dataset.processes if proc.transport and proc.department == "RMHS"
+        proc.id for proc in dataset.processes if proc.transport and proc.department == "Inbound"
     )
     outbound = tuple(
-        proc.id for proc in dataset.processes if proc.transport and proc.department != "RMHS"
+        proc.id for proc in dataset.processes if proc.transport and proc.department != "Inbound"
     )
     return inbound, outbound
 

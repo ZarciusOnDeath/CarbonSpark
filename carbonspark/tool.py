@@ -72,7 +72,7 @@ from .state import (
     toggle_dark,
     train_share,
 )
-from .theme import DEPARTMENT_ICONS, photo_style, section_band, spark_mark
+from .theme import DEPARTMENT_ICONS, DEPARTMENT_PHOTOS, photo_style, spark_mark
 
 PANELS = [
     ("scrap", "Scrap vs virgin", "How much of the charge is recycled steel"),
@@ -118,7 +118,7 @@ def _open_panel(panel: str | None) -> None:
 def _open_transport() -> None:
     """Open the plant panel with the transport dropdown already unfolded."""
     _open_panel("plant")
-    st.session_state.open_department = "__transport__"
+    st.session_state.open_department = "Inbound"
 
 
 def _scenario_tiles(result: Result) -> None:
@@ -341,8 +341,8 @@ def _transport_controls(inbound: bool) -> None:
         else (TRAIN_OUT_W, on_train_out_change, st.session_state.train_out)
     )
     st.markdown(
-        "**Inbound** \u00b7 raw material arriving" if inbound
-        else "**Outbound** \u00b7 finished coil leaving"
+        "**Rail vs road** \u00b7 raw material arriving" if inbound
+        else "**Rail vs road** \u00b7 finished coil leaving"
     )
     share = st.slider(
         label,
@@ -392,7 +392,7 @@ def _stage_controls(stage: Stage, route) -> None:
             )
         set_stage_mix(stage, normalise_mix(raw) or even_mix(picked))
     if stage.options[0].transport:
-        st.caption("Rail vs road for this leg is set under **Transport** at the top.")
+        st.caption("Rail vs road for this leg is set at the top of this department.")
 
 
 def _panel_plant(dataset: Dataset, stages) -> None:
@@ -403,15 +403,10 @@ def _panel_plant(dataset: Dataset, stages) -> None:
     technique with real alternatives opens into its variations.
     """
     st.markdown("#### Plant customisation")
-    with st.expander(
-        "\U0001F686  Transport \u00b7 rail vs road, inbound and outbound",
-        expanded=st.session_state.get("open_department") == "__transport__",
-    ):
-        st.caption("Each leg is set separately. Road is the remainder. Applies straight away.")
-        _transport_controls(True)
-        st.divider()
-        _transport_controls(False)
-    st.caption("Tick what the plant runs. Untick to take it out of the route.")
+    st.caption(
+        "Open a department, then tick the processes it runs. Inbound and Outbound "
+        "also set how their tonnes travel, rail vs road."
+    )
     route = st.session_state.route_draft
 
     for department in dataset.departments:
@@ -419,15 +414,25 @@ def _panel_plant(dataset: Dataset, stages) -> None:
         running = [stage for stage in dept_stages if _stage_on(route, stage)]
         mark = ALL_ON if len(running) == len(dept_stages) else (SOME_ON if running else ALL_OFF)
         icon = DEPARTMENT_ICONS.get(department, BULLET)
-        title = f"{mark}  {icon}  {department}  {MIDDOT}  {len(running)}/{len(dept_stages)}"
+        title = (
+            f"{mark}  {icon}  {department}  {MIDDOT}  "
+            f"{len(running)} of {len(dept_stages)} running"
+        )
         with st.expander(
             title, expanded=department == st.session_state.get("open_department")
         ):
-            band = section_band(department, st.session_state.dark)
+            photo = DEPARTMENT_PHOTOS.get(department, "")
             st.markdown(
-                f'{band}<div class="cs-band-title">{icon} {department}</div>',
+                f'<div class="cs-dept-band" style="{photo_style(photo, 0.6)}">'
+                f"<span>{department}</span>"
+                f"<small>{len(running)} of {len(dept_stages)} processes running</small></div>",
                 unsafe_allow_html=True,
             )
+            # Each transport leg is set in its own department: raw material
+            # arriving under Inbound, finished coil leaving under Outbound.
+            if department in ("Inbound", "Outbound"):
+                with st.container(key=f"cs_haul_{department}"):
+                    _transport_controls(department == "Inbound")
             head = st.columns(2)
             head[0].button(
                 "Tick all",

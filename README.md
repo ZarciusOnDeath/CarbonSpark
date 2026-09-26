@@ -72,7 +72,7 @@ to be absent.
   Scope 3 upstream, the trace gases and specific energy.
 * **Grid-mix driven** — Scope 2 is
   `(x·kWh_virgin + y·kWh_scrap) × (a·EF_coal + … + g·EF_nuclear) / 1000`.
-* **Haulage-driven** — the two transport rows (RMHS unloading, outbound despatch) blend
+* **Haulage-driven** — the two transport rows (inbound unloading, outbound despatch) blend
   rail and road as `p` and `q = 1 − p`. Each leg carries its own `p`, set on the transport
   step itself, because a plant can rail its raw material in and truck its coil out. A
   further slider splits the tonne-movement between the two legs: both rows are stated per

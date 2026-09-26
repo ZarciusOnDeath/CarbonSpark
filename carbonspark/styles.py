@@ -556,6 +556,27 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
 .cs-panel-blurb {{ font-size: .78rem; color: var(--ink-soft); line-height: 1.4; min-height: 4.3em; margin: 0 0 6px 0; }}
 .cs-panel-photo small {{ color: rgba(255,255,255,.85); font-size: .82rem; }}
 
+/* ---------- plant customisation ---------- */
+.st-key-cs_drawer [data-testid="stExpander"] details {{
+  border-radius: 12px; border: 1px solid var(--line); background: var(--paper); margin-bottom: 8px;
+}}
+.st-key-cs_drawer [data-testid="stExpander"] details summary {{ padding: 10px 14px; font-weight: 600; }}
+.st-key-cs_drawer [data-testid="stExpander"] details[open] > summary {{ border-bottom: 1px solid var(--line); }}
+.st-key-cs_drawer [data-testid="stExpander"] [data-testid="stExpander"] details {{
+  background: var(--surface); border-radius: 10px; margin-bottom: 6px;
+}}
+.st-key-cs_drawer [data-testid="stExpander"] [data-testid="stExpander"] summary {{ font-weight: 500; padding: 8px 12px; }}
+.cs-dept-band {{
+  height: 92px; border-radius: 10px; padding: 12px 14px; margin: 4px 0 10px 0;
+  display:flex; flex-direction:column; justify-content:flex-end;
+}}
+.cs-dept-band span {{ color:#fff; font-family: var(--serif); font-size: 1.4rem; line-height:1.1; }}
+.cs-dept-band small {{ color: rgba(255,255,255,.85); font-size: .8rem; }}
+.st-key-cs_haul_Inbound, .st-key-cs_haul_Outbound {{
+  background: var(--surface); border: 1px solid var(--line); border-left: 4px solid var(--steel);
+  border-radius: 10px; padding: 10px 14px 4px 14px; margin-bottom: 10px;
+}}
+
 @media (prefers-reduced-motion: reduce) {{
   *, *::before, *::after {{ animation: none !important; transition: none !important; }}
 }}

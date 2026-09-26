@@ -230,35 +230,8 @@ def _database_door(dataset: Dataset) -> None:
         )
     with right:
         st.markdown(
-            """
-<div class="cs-shot"><svg viewBox="0 0 640 260" aria-label="Preview of the database view">
-  <rect width="640" height="260" fill="#0e1620"/>
-  <rect x="0" y="0" width="640" height="34" fill="#243447"/>
-  <g fill="#8ea3b8">
-    <rect x="20" y="12" width="70" height="10" rx="5"/><rect x="150" y="12" width="90" height="10" rx="5"/>
-    <rect x="300" y="12" width="70" height="10" rx="5"/><rect x="430" y="12" width="110" height="10" rx="5"/>
-  </g>
-  <g fill="#141d28">
-    <rect x="0" y="44" width="640" height="26"/><rect x="0" y="96" width="640" height="26"/>
-    <rect x="0" y="148" width="640" height="26"/><rect x="0" y="200" width="640" height="26"/>
-  </g>
-  <g fill="#3d4c5d">
-    <rect x="20" y="52" width="86" height="10" rx="5"/><rect x="150" y="52" width="150" height="10" rx="5"/>
-    <rect x="330" y="52" width="120" height="10" rx="5"/><rect x="480" y="52" width="60" height="10" rx="5"/>
-    <rect x="20" y="78" width="70" height="10" rx="5"/><rect x="150" y="78" width="190" height="10" rx="5"/>
-    <rect x="360" y="78" width="90" height="10" rx="5"/><rect x="480" y="78" width="80" height="10" rx="5"/>
-    <rect x="20" y="104" width="96" height="10" rx="5"/><rect x="150" y="104" width="130" height="10" rx="5"/>
-    <rect x="320" y="104" width="150" height="10" rx="5"/><rect x="490" y="104" width="60" height="10" rx="5"/>
-    <rect x="20" y="130" width="80" height="10" rx="5"/><rect x="150" y="130" width="170" height="10" rx="5"/>
-    <rect x="340" y="130" width="110" height="10" rx="5"/><rect x="470" y="130" width="90" height="10" rx="5"/>
-    <rect x="20" y="156" width="90" height="10" rx="5"/><rect x="150" y="156" width="140" height="10" rx="5"/>
-    <rect x="310" y="156" width="140" height="10" rx="5"/><rect x="480" y="156" width="70" height="10" rx="5"/>
-    <rect x="20" y="182" width="74" height="10" rx="5"/><rect x="150" y="182" width="160" height="10" rx="5"/>
-    <rect x="330" y="182" width="120" height="10" rx="5"/><rect x="475" y="182" width="85" height="10" rx="5"/>
-    <rect x="20" y="208" width="88" height="10" rx="5"/><rect x="150" y="208" width="120" height="10" rx="5"/>
-    <rect x="300" y="208" width="160" height="10" rx="5"/><rect x="486" y="208" width="64" height="10" rx="5"/>
-  </g>
-</svg></div>""",
+            f'<div class="cs-photo-card" style="{photo_style("database", 0.35)};height:240px">'
+            "<h3>67 formulas, 7 grid factors, every source</h3></div>",
             unsafe_allow_html=True,
         )
 

@@ -68,7 +68,7 @@ def test_train_share_defines_road_share():
 def test_only_the_two_transport_rows_depend_on_the_rail_split(dataset):
     transport = [proc for proc in dataset.processes if proc.transport]
     assert len(transport) == 2
-    assert {proc.department for proc in transport} == {"RMHS", "Outbound"}
+    assert {proc.department for proc in transport} == {"Inbound", "Outbound"}
     all_rail = calculate(0.4, INDIA_GRID_MIX, dataset, train_share=1.0)
     all_road = calculate(0.4, INDIA_GRID_MIX, dataset, train_share=0.0)
     # Rail is the lower-carbon mode in the workbook's coefficients.
@@ -336,7 +336,7 @@ def test_note_parser_keeps_transport_modes_apart():
     from carbonspark.notes import parse
 
     dataset = load_dataset()
-    inbound = next(p for p in dataset.processes if p.transport and p.department == "RMHS")
+    inbound = next(p for p in dataset.processes if p.transport and p.department == "Inbound")
     _, rows = parse(inbound.notes)
     by_name = {row["Coefficient"]: row for row in rows}
 
