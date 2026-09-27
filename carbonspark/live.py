@@ -281,13 +281,22 @@ _SCRIPT = """
   // nested inside a department are left alone. The other panel is closed by
   // clicking its own summary, so Streamlit's record of it stays in step.
   // 'toggle' does not bubble, but a capturing listener still sees it.
+  // The same holds one level down: opening a process inside a department
+  // closes the other open process in that department. And it holds in the
+  // Compare view's two input panels as well as in the drawer.
   doc.addEventListener('toggle', (event) => {
     const opened = event.target;
     if (!opened || opened.tagName !== 'DETAILS' || !opened.open) return;
-    const drawer = opened.closest('.st-key-cs_drawer');
-    if (!drawer || opened.parentElement.closest('details')) return;
-    drawer.querySelectorAll('details[open]').forEach((other) => {
-      if (other === opened || other.parentElement.closest('details')) return;
+    const panel = opened.closest(
+      '.st-key-cs_drawer, .st-key-cs_cmp_panel_A, .st-key-cs_cmp_panel_B'
+    );
+    if (!panel) return;
+    // Siblings share the same enclosing <details> (or none, at the top level).
+    const parent = opened.parentElement.closest('details');
+    panel.querySelectorAll('details[open]').forEach((other) => {
+      if (other === opened) return;
+      if (other.parentElement.closest('details') !== parent) return;
+      if (other.contains(opened)) return;
       const summary = other.querySelector(':scope > summary');
       if (summary) summary.click();
     });

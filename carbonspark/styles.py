@@ -748,6 +748,17 @@ button[kind="primary"], button[kind="primary"] p, button[kind="primary"] span {{
 .stApp a:not(.cs-nav a) {{ color: var(--clay); }}
 .stApp a:not(.cs-nav a):hover {{ text-decoration: underline; }}
 
+/* ---------- drawer box: one height on every panel, a little see-through ---------- */
+.st-key-cs_drawer {{
+  min-height: calc(100vh - 40px);
+  background: color-mix(in srgb, var(--surface) 78%, transparent) !important;
+  border: 1px solid var(--line) !important; border-radius: 16px !important;
+}}
+
+/* ---------- condensed readout: figures stay grouped, labels on one line ---------- */
+.cs-condensed .cs-readout {{ justify-content: flex-start !important; gap: 0 clamp(18px, 2.6vw, 48px) !important; align-items: flex-end; }}
+.cs-condensed .cs-metric-label {{ margin-bottom: 2px !important; }}
+
 /* ---------- wordmark ---------- */
 .cs-wordmark {{
   font-family: var(--serif); font-weight: 400; letter-spacing: -.03em; line-height: 1;

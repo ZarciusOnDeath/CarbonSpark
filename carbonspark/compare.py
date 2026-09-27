@@ -6,33 +6,31 @@ the middle narrows and tightens its type when both are open so everything still
 fits on one screen. Nothing has to be saved and loaded back: each side holds
 its own inputs for as long as the session lasts.
 
-Each side carries the levers that decide most of the footprint — the starting
-plant, scrap share, grid mix, rail share per leg, and the melting,
-decarburising and casting technology — rather than all 67 process tick-boxes,
-which stay in the main calculator.
+Each side carries every input the calculator has: the starting plant, scrap
+share, grid mix, rail share per leg, and the full department -> process route,
+with each process switched on or off or set to one of its variations.
 """
 
 from __future__ import annotations
 
 import html
-from typing import Dict, List
+from typing import Dict
 
 import pandas as pd
 import streamlit as st
 
 from carbon_calc.advice import Scenario, evaluate
-from carbon_calc.model import MIX_VARIABLES, SCOPES, Dataset, Result, mix_factor
-from carbon_calc.route import normalise_mix, substitutes
+from carbon_calc.model import MIX_VARIABLES, Dataset, Result, mix_factor
+from carbon_calc.route import normalise_mix
 
 from . import charts
 from .presets import GRID_PRESETS, PLANT_PROFILES, profile_route
+from .theme import DEPARTMENT_ICONS
 from .state import current_mix, inbound_rail, inbound_share, outbound_rail, scrap_ratio
 
 SIDES = ("A", "B")
 SIDE_NAMES = {"A": "Scenario A", "B": "Scenario B"}
 
-#: Stages with genuine technology alternatives, offered as one choice each.
-TECH_STAGES = ("Primary Melting", "Decarburization / Alloying", "Continuous Casting (CCM)")
 
 
 def _k(side: str, name: str) -> str:
@@ -42,10 +40,6 @@ def _k(side: str, name: str) -> str:
 # --------------------------------------------------------------------------- #
 # State
 # --------------------------------------------------------------------------- #
-def _tech_stages(stages):
-    return [stage for stage in stages if stage.process in TECH_STAGES]
-
-
 def _set_side(side: str, stages, scrap: float, mix: Dict[str, float], rail_in: float,
               rail_out: float, route, profile: str) -> None:
     """Write one side's inputs into its widgets' state."""
@@ -61,12 +55,36 @@ def _set_side(side: str, stages, scrap: float, mix: Dict[str, float], rail_in: f
     )
     for var in MIX_VARIABLES:
         st.session_state[_k(side, f"mix_{var}")] = int(round(mix.get(var, 0.0) * 100))
-    for stage in _tech_stages(stages):
+    _route_widgets(side, stages, route)
+
+
+OFF = "Off"
+
+
+def _route_widgets(side: str, stages, route) -> None:
+    """Point every process widget of a side at the given route."""
+    for stage in stages:
         running = normalise_mix(route.get(stage.key, {}))
-        choice = max(running, key=running.get) if running else None
-        st.session_state[_k(side, f"tech_{stage.key}")] = (
-            stage.option_by_id(choice).variation if choice else "Not running"
-        )
+        if len(stage.options) == 1:
+            st.session_state[_k(side, f"on_{stage.key}")] = bool(running)
+        else:
+            choice = max(running, key=running.get) if running else None
+            st.session_state[_k(side, f"var_{stage.key}")] = (
+                stage.option_by_id(choice).variation if choice else OFF
+            )
+
+
+def _set_on(side: str, stage) -> None:
+    route = st.session_state[_k(side, "route")]
+    on = st.session_state[_k(side, f"on_{stage.key}")]
+    route[stage.key] = {stage.default_id: 1.0} if on else {}
+
+
+def _set_variation(side: str, stage) -> None:
+    route = st.session_state[_k(side, "route")]
+    name = st.session_state[_k(side, f"var_{stage.key}")]
+    match = next((o for o in stage.options if o.variation == name), None)
+    route[stage.key] = {match.id: 1.0} if match else {}
 
 
 def _init(stages) -> None:
@@ -118,11 +136,6 @@ def scenario(side: str, stages) -> Scenario:
     total = sum(raw.values()) or 1.0
     mix = {var: value / total for var, value in raw.items()}
     route = {key: dict(value) for key, value in st.session_state[_k(side, "route")].items()}
-    for stage in _tech_stages(stages):
-        name = st.session_state.get(_k(side, f"tech_{stage.key}"))
-        match = next((o for o in stage.options if o.variation == name), None)
-        if match is not None and normalise_mix(route.get(stage.key, {})):
-            route[stage.key] = {match.id: 1.0}
     return Scenario(
         st.session_state[_k(side, "scrap")] / 100.0,
         mix,
@@ -166,14 +179,22 @@ def _panel(side: str, dataset: Dataset, stages) -> None:
         st.slider("Rail share, inbound", 0, 100, key=_k(side, "rail_in"), format="%d%%")
         st.slider("Rail share, outbound", 0, 100, key=_k(side, "rail_out"), format="%d%%")
 
+        st.markdown("**Plant route**")
         route = st.session_state[_k(side, "route")]
-        for stage in _tech_stages(stages):
-            if not normalise_mix(route.get(stage.key, {})):
-                continue
-            options = [o.variation for o in (substitutes(stage, route[stage.key]) or stage.options)]
-            if st.session_state.get(_k(side, f"tech_{stage.key}")) not in options:
-                st.session_state[_k(side, f"tech_{stage.key}")] = options[0]
-            st.selectbox(stage.process.split(" (")[0], options, key=_k(side, f"tech_{stage.key}"))
+        for department in dataset.departments:
+            dept_stages = [stage for stage in stages if stage.department == department]
+            running = sum(1 for stage in dept_stages if normalise_mix(route.get(stage.key, {})))
+            with st.expander(f"{department} \u00b7 {running} of {len(dept_stages)}",
+                             icon=DEPARTMENT_ICONS.get(department)):
+                for stage in dept_stages:
+                    if len(stage.options) == 1:
+                        st.checkbox(stage.process, key=_k(side, f"on_{stage.key}"),
+                                    on_change=_set_on, args=(side, stage))
+                    else:
+                        st.selectbox(stage.process,
+                                     [OFF] + [o.variation for o in stage.options],
+                                     key=_k(side, f"var_{stage.key}"),
+                                     on_change=_set_variation, args=(side, stage))
 
 
 # --------------------------------------------------------------------------- #
@@ -181,7 +202,7 @@ def _panel(side: str, dataset: Dataset, stages) -> None:
 # --------------------------------------------------------------------------- #
 def _delta(new: float, old: float) -> str:
     diff = new - old
-    pct = f" ({diff / old:+.0%})" if old else ""
+    pct = f" ({diff / old:+.1%})" if old else ""
     return f"{diff:+.3f}{pct}"
 
 
