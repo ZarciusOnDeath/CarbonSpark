@@ -217,7 +217,7 @@ def _panel_grid(dataset: Dataset) -> None:
     st.markdown("#### Grid energy mix")
     presets = list(GRID_PRESETS)
     st.selectbox(
-        "Preset",
+        "Start from a preset",
         options=presets,
         index=presets.index(st.session_state.grid_preset),
         key=PRESET_W,
@@ -243,17 +243,20 @@ def _panel_grid(dataset: Dataset) -> None:
 
     for var in MIX_VARIABLES:
         source = dataset.source_by_var[var]
-        st.slider(
-            f"{source.source}  \u00b7  {source.ef} kg CO\u2082e/kWh",
-            min_value=0.0,
-            max_value=100.0,
-            step=1.0,
-            value=float(st.session_state.mix_draft[var]),
-            key=mix_widget(var),
-            format="%.1f%%",
-            on_change=on_mix_change,
-            args=(var,),
-        )
+        # Each source carries a small photo in the space to the right of its
+        # slider (see .cs-src in the stylesheet).
+        with st.container(key=f"cs_src_{var}"):
+            st.slider(
+                f"{source.source}  \u00b7  {source.ef} kg CO\u2082e/kWh",
+                min_value=0.0,
+                max_value=100.0,
+                step=1.0,
+                value=float(st.session_state.mix_draft[var]),
+                key=mix_widget(var),
+                format="%.1f%%",
+                on_change=on_mix_change,
+                args=(var,),
+            )
 
     drafted = draft_mix()
     st.plotly_chart(

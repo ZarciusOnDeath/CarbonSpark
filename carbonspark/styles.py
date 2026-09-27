@@ -686,6 +686,30 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
   font-size: 1.1rem; margin-right: 6px;
 }}
 
+/* ---------- grid-mix sliders: a photo of each source in the space to the
+   right of its slider ---------- */
+[class*="st-key-cs_src_"] {{ position: relative; padding-right: 104px; min-height: 66px; }}
+[class*="st-key-cs_src_"]::after {{
+  content: ""; position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+  width: 90px; height: 60px; border-radius: 10px;
+  background-size: cover; background-position: center;
+  box-shadow: 0 6px 16px -10px rgba(0,0,0,.6); border: 1px solid var(--line);
+}}
+.st-key-cs_src_a::after {{ background-image: url("./app/static/photos/src_coal.jpg"); }}
+.st-key-cs_src_b::after {{ background-image: url("./app/static/photos/src_oil.jpg"); }}
+.st-key-cs_src_c::after {{ background-image: url("./app/static/photos/src_gas.jpg"); }}
+.st-key-cs_src_d::after {{ background-image: url("./app/static/photos/src_hydro.jpg"); }}
+.st-key-cs_src_e::after {{ background-image: url("./app/static/photos/src_wind.jpg"); }}
+.st-key-cs_src_f::after {{ background-image: url("./app/static/photos/src_solar.jpg"); }}
+.st-key-cs_src_g::after {{ background-image: url("./app/static/photos/src_nuclear.jpg"); }}
+
+/* The preset picker reads as a control, not as text on the panel. */
+.st-key-cs_drawer [data-testid="stSelectbox"] label p {{ font-weight: 600; color: var(--ink); }}
+.st-key-cs_drawer [data-testid="stSelectbox"] [role="group"] {{
+  background: var(--paper) !important; border: 1.5px solid var(--clay) !important;
+  border-radius: 10px !important; min-height: 46px;
+}}
+
 /* ---------- wordmark ---------- */
 .cs-wordmark {{
   font-family: var(--serif); font-weight: 400; letter-spacing: -.03em; line-height: 1;

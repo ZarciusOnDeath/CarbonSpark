@@ -26,3 +26,12 @@ dept_pickle   photo-1581093450021 (chemistry lab)
 dept_cold     photo-1567789884554 (factory line)
 dept_outbound photo-1606185540834 (container ship)
 database      photo-1581091226825 (engineer at an industrial workstation)
+
+Grid-mix source thumbnails (240x160 crops of Unsplash photos):
+src_coal    photo-1611273426858 (smokestacks, cropped to the chimneys)
+src_oil     photo-1611273426858 (same photo, cropped to the tanker and refinery)
+src_gas     photo-1513828583688 (industrial pipework)
+src_hydro   photo-1570051008600 (water)
+src_wind    photo-1466611653911 (wind turbines)
+src_solar   photo-1509391366360 (solar array)
+src_nuclear photo-1473341304170 (transmission lines; stand-in, no nuclear plant photo found)
