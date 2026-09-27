@@ -25,6 +25,13 @@ st.set_page_config(
 DATASET = load_dataset()
 STAGES = init_state(DATASET)
 
+# The landing nav's mode switch is a link (?mode=dark / ?mode=light). It must
+# be read before the stylesheet is drawn: read after, the page came up with the
+# light stylesheet over the dark backdrop, and its text went dark-on-dark.
+if st.query_params.get("mode") in ("dark", "light"):
+    st.session_state.dark = st.query_params.get("mode") == "dark"
+    st.query_params.clear()
+
 # The stylesheet is rendered for the active mode, after state exists to say
 # which mode that is.
 st.markdown(base_css(st.session_state.dark), unsafe_allow_html=True)
@@ -32,11 +39,6 @@ st.markdown(base_css(st.session_state.dark), unsafe_allow_html=True)
 # The landing nav's "Open the calculator" is a plain link (?go=tool), so it
 # works from anywhere on the page; it lands on the welcome screen like the
 # buttons do.
-# The landing nav's mode switch is a link too (?mode=dark / ?mode=light).
-if st.query_params.get("mode") in ("dark", "light"):
-    st.session_state.dark = st.query_params.get("mode") == "dark"
-    st.query_params.clear()
-
 if st.query_params.get("go") == "tool":
     st.query_params.clear()
     st.session_state.page = "loading"

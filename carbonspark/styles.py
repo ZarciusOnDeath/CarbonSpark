@@ -710,6 +710,44 @@ div[data-testid="stLayoutWrapper"]:has(> .st-key-cs_dock) {{ display: contents; 
   border-radius: 10px !important; min-height: 46px;
 }}
 
+/* ---------- compare: two panels that slide in from their own sides ---------- */
+@keyframes csFromLeft {{ from {{ opacity:0; transform: translateX(-40px); }} to {{ opacity:1; transform:none; }} }}
+@keyframes csFromRight {{ from {{ opacity:0; transform: translateX(40px); }} to {{ opacity:1; transform:none; }} }}
+.st-key-cs_cmp_panel_A, .st-key-cs_cmp_panel_B {{
+  background: color-mix(in srgb, var(--surface) 90%, transparent) !important;
+  border-radius: 16px !important; padding: 12px 14px !important;
+}}
+.st-key-cs_cmp_panel_A {{ animation: csFromLeft .35s cubic-bezier(.22,.61,.36,1) both; border-left: 4px solid var(--steel) !important; }}
+.st-key-cs_cmp_panel_B {{ animation: csFromRight .35s cubic-bezier(.22,.61,.36,1) both; border-right: 4px solid var(--clay) !important; }}
+.cs-cmp-title {{ font-family: var(--serif); font-size: 1.5rem; line-height: 1.2; padding-top: 4px; }}
+.cs-cmp-title.cs-cmp-A {{ color: var(--steel); }}
+.cs-cmp-title.cs-cmp-B {{ color: var(--clay); }}
+.cs-cmp-card {{
+  border-radius: 14px; padding: 12px 14px; text-align: center; border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--surface) 85%, transparent);
+}}
+.cs-cmp-card span {{ display:block; font-size:.72rem; letter-spacing:.14em; text-transform:uppercase; color: var(--ink-soft); font-weight:600; }}
+.cs-cmp-card b {{ display:block; font-family: var(--serif); font-weight:400; font-size: 2.4rem; line-height:1.1; color: var(--ink); }}
+.cs-cmp-card small {{ color: var(--ink-soft); }}
+.cs-cmp-card.cs-cmp-A {{ border-top: 4px solid var(--steel); }}
+.cs-cmp-card.cs-cmp-B {{ border-top: 4px solid var(--clay); }}
+.cs-cmp-card.cs-cmp-diff b {{ color: var(--clay); }}
+/* Both panels open: tighten everything so the three columns fit. */
+.st-key-cs_cmp_mid_compact .cs-cmp-card b {{ font-size: 1.6rem; }}
+.st-key-cs_cmp_mid_compact .cs-cmp-card {{ padding: 8px 8px; }}
+.st-key-cs_cmp_mid_compact .cs-cmp-card span {{ font-size: .6rem; letter-spacing: .08em; }}
+.st-key-cs_cmp_mid_compact p, .st-key-cs_cmp_mid_compact small {{ font-size: .82rem; }}
+.st-key-cs_cmp_panel_A label p, .st-key-cs_cmp_panel_B label p {{ font-size: .85rem; }}
+
+/* ---------- contrast in both modes ---------- */
+/* Primary (clay) buttons always carry white text; Streamlit's theme gave them
+   the page ink, which is near-black in dark mode. */
+button[kind="primary"], button[kind="primary"] p, button[kind="primary"] span {{ color: #fff !important; }}
+/* Links take the accent rather than the browser's default blue, which is
+   unreadable on the dark page. */
+.stApp a:not(.cs-nav a) {{ color: var(--clay); }}
+.stApp a:not(.cs-nav a):hover {{ text-decoration: underline; }}
+
 /* ---------- wordmark ---------- */
 .cs-wordmark {{
   font-family: var(--serif); font-weight: 400; letter-spacing: -.03em; line-height: 1;

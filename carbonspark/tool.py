@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import html
 import math
-from typing import Dict, List
+from typing import Dict
 
 import pandas as pd
 import streamlit as st
@@ -26,20 +26,16 @@ from carbon_calc.route import (
     apply_haulage,
     coefficient_model,
     rail_shares,
-    default_route,
     even_mix,
     normalise_mix,
     route_weights,
 )
 
-from . import ai_review, charts, live
+from . import ai_review, charts, compare, live
 from .presets import AMBITIONS, GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
 from .state import (
-    load_scenario,
-    COMPARE_RIGHT_W,
     PRESET_W,
     PROFILE_W,
-    SAVE_NAME_W,
     SCRAP_W,
     TRAIN_IN_W,
     TRAIN_OUT_W,
@@ -48,7 +44,6 @@ from .state import (
     apply_mix,
     apply_route,
     current_mix,
-    delete_scenario,
     draft_mix,
     go,
     inbound_rail,
@@ -67,10 +62,8 @@ from .state import (
     revert_route,
     route_dirty,
     route_key,
-    save_scenario,
     scrap_ratio,
     set_stage_mix,
-    snapshot,
     toggle_dark,
     train_share,
 )
@@ -775,182 +768,6 @@ def _inputs_nudge() -> None:
     )
 
 
-#: The reference scenario every comparison can fall back on.
-DEFAULT_BASELINE = "Default baseline"
-CURRENT = "Current scenario"
-
-
-def _evaluate_scenario(scenario, dataset: Dataset) -> Result:
-    """Run the model over a frozen scenario."""
-    return calculate(
-        scenario["scrap"],
-        scenario["mix"],
-        dataset,
-        apply_haulage(route_weights(scenario["route"]), dataset, scenario.get("inbound", 0.5)),
-        scenario["train"],
-        rail_shares(
-            dataset,
-            scenario.get("rail_in", scenario["train"]),
-            scenario.get("rail_out", scenario["train"]),
-        ),
-    )
-
-
-def _default_baseline(stages) -> dict:
-    return {
-        "label": DEFAULT_BASELINE,
-        "scrap": 0.70,
-        "mix": GRID_PRESETS["India grid today"],
-        "route": default_route(stages),
-        "train": 0.50,
-        "inbound": 0.50,
-        "rail_in": 0.50,
-        "rail_out": 0.50,
-    }
-
-
-def _describe(scenario) -> str:
-    """A one-line summary of what a saved scenario holds."""
-    live = sum(1 for mix in scenario["route"].values() if normalise_mix(mix))
-    return (
-        f"scrap {scenario['scrap']:.0%} \u00b7 rail {scenario['train']:.0%} \u00b7 "
-        f"{live} stages"
-    )
-
-
-def _comparison(result: Result, dataset: Dataset, stages) -> None:
-    """Two scenarios side by side — either of them the one on screen or a saved one."""
-    st.markdown("### Compare two scenarios")
-    st.caption("Save two scenarios, then name one on each side. **Load into inputs** reopens a saved one for editing.")
-
-    saved = st.session_state.scenarios
-    options = [CURRENT, DEFAULT_BASELINE, *saved]
-
-    def resolve(name: str):
-        if name == CURRENT:
-            return {**snapshot(CURRENT), "label": CURRENT}, result
-        scenario = saved.get(name) or _default_baseline(stages)
-        return scenario, _evaluate_scenario(scenario, dataset)
-
-    # Each side carries its own controls: the scenario on screen is edited
-    # through Inputs and saved from under its own picker, a saved one is deleted
-    # from under its. Nothing about a comparison lives anywhere else on the page.
-    picker = st.columns(2, gap="large")
-
-    # Both sides may name the scenario on screen. Editing it is offered under
-    # either — the buttons carry per-side keys — but the Save-as name box is
-    # read back by name from session state, so it has one fixed key and can
-    # only be drawn once; the second side gets Edit inputs alone.
-    saving_drawn = []
-
-    def side(column, key: str, index: int, caption: str) -> str:
-        with column:
-            name = st.selectbox(caption, options, index=index, key=key)
-            if name == CURRENT:
-                first = not saving_drawn
-                saving_drawn.append(key)
-                actions = st.columns([1, 1]) if first else [st.container()]
-                actions[0].button(
-                     ":material/tune:  Edit inputs",
-                    on_click=_toggle_drawer,
-                    use_container_width=True,
-                    key=f"edit_{key}",
-                )
-                if first:
-                    actions[1].button(
-                        "Save as\u2026",
-                        on_click=save_scenario,
-                        use_container_width=True,
-                        key=f"save_{key}",
-                    )
-                    st.text_input(
-                        "Name for the saved scenario",
-                        placeholder="e.g. 60% scrap on a renewable grid",
-                        key=SAVE_NAME_W,
-                        label_visibility="collapsed",
-                    )
-            elif name in saved:
-                actions = st.columns([1, 1])
-                actions[0].button(
-                    "\u21a9  Load into inputs",
-                    on_click=load_scenario,
-                    args=(name,),
-                    use_container_width=True,
-                    key=f"load_{key}",
-                )
-                actions[1].button(
-                    "Delete",
-                    on_click=delete_scenario,
-                    args=(name,),
-                    use_container_width=True,
-                    key=f"del_{key}",
-                )
-            else:
-                st.caption(
-                    "70% scrap, today's Indian grid, and the workbook's first-listed "
-                    "technology at every stage."
-                )
-        return name
-
-    left_name = side(picker[0], "cmp_left", 1, "Compare")
-    right_name = side(picker[1], COMPARE_RIGHT_W, 0, "against")
-
-    left, left_result = resolve(left_name)
-    right, right_result = resolve(right_name)
-    if left_name == right_name:
-        st.info("Pick two different scenarios to see a difference.")
-    st.caption(f"**{left_name}** \u2014 {_describe(left)}    |    **{right_name}** \u2014 {_describe(right)}")
-
-    def delta(new: float, old: float) -> str:
-        return "n/a" if old == 0 else f"{(new - old) / old:+.1%}"
-
-    pairs = [
-        ("Total CO\u2082e", right_result.total_co2e, left_result.total_co2e, "{:.3f} t/t"),
-        ("Scope 1", right_result.totals["scope1"], left_result.totals["scope1"], "{:.3f} t/t"),
-        ("Scope 2", right_result.totals["scope2"], left_result.totals["scope2"], "{:.3f} t/t"),
-        ("Scope 3", right_result.totals["scope3"], left_result.totals["scope3"], "{:.3f} t/t"),
-        ("Energy", right_result.energy_gj, left_result.energy_gj, "{:.1f} GJ/t"),
-    ]
-    for column, (label, new, old, fmt) in zip(st.columns(5), pairs):
-        column.metric(label, fmt.format(new), delta(new, old), delta_color="inverse")
-
-    saving = left_result.total_co2e - right_result.total_co2e
-    if saving > 1e-9:
-        st.success(
-            f"**{right_name} is {saving:.3f} tCO\u2082e/t lower** than {left_name} "
-            f"({saving / left_result.total_co2e:.1%}) \u2014 "
-            f"{saving * 1000:,.0f} kt CO\u2082e a year at 1 Mt of output."
-        )
-    elif saving < -1e-9:
-        st.warning(
-            f"**{right_name} is {-saving:.3f} tCO\u2082e/t higher** than {left_name} "
-            f"({-saving / left_result.total_co2e:.1%})."
-        )
-    else:
-        st.info("The two scenarios come out the same.")
-
-    st.plotly_chart(
-        charts.comparison_bars([left_name, right_name], [left_result, right_result]),
-        use_container_width=True,
-        config=charts.PLOT_CONFIG,
-    )
-
-    rows = []
-    for department in dataset.departments:
-        old = left_result.by_department.get(department, {}).get("total_co2e", 0.0)
-        new = right_result.by_department.get(department, {}).get("total_co2e", 0.0)
-        rows.append(
-            {"Department": department, left_name: old, right_name: new, "Change": new - old}
-        )
-    st.dataframe(
-        pd.DataFrame(rows).style.format(
-            {left_name: "{:.4f}", right_name: "{:.4f}", "Change": "{:+.4f}"}
-        ),
-        use_container_width=True,
-        hide_index=True,
-    )
-
-
 def _optimiser_constraints(level) -> Constraints:
     return Constraints(
         scrap_min=0.0,
@@ -1208,7 +1025,10 @@ def render(dataset: Dataset, stages) -> None:
 
     # The drawer mutates the route as it renders, so the result is computed
     # afterwards — otherwise every reading would lag one interaction behind.
-    if st.session_state.drawer_open:
+    # Compare has two input panels of its own, so the calculator's drawer and
+    # readout step aside there and the view gets the full width.
+    comparing = st.session_state.get("tool_view") == "Compare"
+    if st.session_state.drawer_open and not comparing:
         drawer, main = st.columns([4.5, 5.5], gap="large")
         with drawer:
             # A keyed container gets its own CSS class, so the drawer's raised
@@ -1218,6 +1038,18 @@ def render(dataset: Dataset, stages) -> None:
                 _drawer(dataset, stages)
     else:
         main = st.container()
+
+    if comparing:
+        with main:
+            with st.container(key="cs_views"):
+                st.segmented_control(
+                    "View", VIEWS, key="tool_view", label_visibility="collapsed",
+                    width="stretch", default=VIEWS[0],
+                )
+            st.markdown(page_backdrop(VIEW_PHOTOS["Compare"], st.session_state.dark),
+                        unsafe_allow_html=True)
+        compare.render(dataset, stages)
+        return
 
     weights = apply_haulage(route_weights(st.session_state.route), dataset, inbound_share())
     if not weights:
@@ -1249,8 +1081,6 @@ def render(dataset: Dataset, stages) -> None:
         _headline(result, dataset)
         if view == "Dashboard":
             _dashboard(result, dataset, stages)
-        elif view == "Compare":
-            _comparison(result, dataset, stages)
         elif view == "Optimiser":
             _optimiser(result, dataset, stages)
         else:

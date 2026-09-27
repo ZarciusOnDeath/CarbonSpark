@@ -192,8 +192,11 @@ def comparison_bars(
     figure.update_layout(
         barmode="stack",
         yaxis_title="tCO2e per tonne",
-        legend=dict(orientation="h", yanchor="bottom", y=-0.22, x=0),
+        # Anchored by its top below the axis labels, with room kept for it,
+        # so it never sits on the scenario names in a short chart.
+        legend=dict(orientation="h", yanchor="top", y=-0.16, x=0),
         legend_title_text="",
+        margin=dict(l=10, r=10, t=10, b=110),
     )
     return _lock(figure, height)
 
