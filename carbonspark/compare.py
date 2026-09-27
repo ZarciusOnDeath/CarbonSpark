@@ -26,6 +26,7 @@ import json
 from carbon_calc.route import coefficient_model, normalise_mix, route_weights
 
 from . import charts
+from .tables import table
 from .live import html_escape
 from .presets import GRID_PRESETS, PLANT_PROFILES, profile_route
 from .theme import DEPARTMENT_ICONS
@@ -269,7 +270,7 @@ def _middle(results: Dict[str, Result], scenarios: Dict[str, Scenario], dataset:
             ("Scope 3", a.totals["scope3"], b.totals["scope3"]),
             ("Energy (GJ/t)", a.energy_gj, b.energy_gj),
         ]
-        st.dataframe(
+        table(
             pd.DataFrame(
                 [{"": label, "A": f"{va:.3f}", "B": f"{vb:.3f}", "B − A": _delta(vb, va)}
                  for label, va, vb in rows]
@@ -295,7 +296,7 @@ def _middle(results: Dict[str, Result], scenarios: Dict[str, Scenario], dataset:
                              key=lambda d: -max(a.by_department.get(d, {}).get("total_co2e", 0),
                                                 b.by_department.get(d, {}).get("total_co2e", 0)))
         with st.expander("By department", expanded=not compact):
-            st.dataframe(
+            table(
                 pd.DataFrame([
                     {
                         "Department": d,

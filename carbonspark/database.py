@@ -11,6 +11,7 @@ import streamlit as st
 from carbon_calc.model import METRICS, METRIC_LABELS, MIX_VARIABLES, Dataset
 
 from . import live
+from .tables import table
 from .notes import parse as parse_note
 from .state import go, toggle_dark
 from .theme import page_backdrop, wordmark
@@ -92,7 +93,7 @@ def render(dataset: Dataset) -> None:
             )
             view = view[haystack.str.contains(search, regex=False)]
         st.caption(f"{len(view)} of {len(frame)} rows")
-        st.dataframe(view, use_container_width=True, hide_index=True, height=460)
+        table(view, use_container_width=True, hide_index=True, height=460)
         st.download_button(
             "Download the formula grid as CSV",
             frame.to_csv(index=False).encode("utf-8"),
@@ -117,7 +118,7 @@ def render(dataset: Dataset) -> None:
             key="db_row",
         )
         proc = next(p for p in dataset.processes if p.id == chosen)
-        st.dataframe(
+        table(
             pd.DataFrame(
                 [
                     {"Metric": METRIC_LABELS[metric], "Formula": proc.formulas[metric]}
@@ -133,7 +134,7 @@ def render(dataset: Dataset) -> None:
         paragraphs, coefficients = parse_note(proc.notes)
         if coefficients:
             st.markdown("**Coefficients behind these formulas**")
-            st.dataframe(
+            table(
                 pd.DataFrame(coefficients),
                 use_container_width=True,
                 hide_index=True,
@@ -151,7 +152,7 @@ def render(dataset: Dataset) -> None:
             st.caption("No notes recorded for this row.")
 
     with factors:
-        st.dataframe(
+        table(
             pd.DataFrame(
                 [
                     {
@@ -176,7 +177,7 @@ def render(dataset: Dataset) -> None:
             "varies by process, and it is already carried in the outbound transport row; "
             "the rest are qualitative framing and are not quantified in the tool's total."
         )
-        st.dataframe(
+        table(
             pd.DataFrame(list(dataset.downstream)).rename(
                 columns={
                     "category": "Category",
@@ -199,13 +200,13 @@ def render(dataset: Dataset) -> None:
                 unsafe_allow_html=True,
             )
             st.markdown("**Published benchmarks the coefficients were checked against**")
-            st.dataframe(
+            table(
                 pd.DataFrame(list(basis.get("benchmarks", ()))),
                 use_container_width=True,
                 hide_index=True,
             )
             st.markdown("**What changed, row by row (virgin / scrap)**")
-            st.dataframe(
+            table(
                 pd.DataFrame(list(basis.get("changes", ()))).astype(str),
                 use_container_width=True,
                 hide_index=True,

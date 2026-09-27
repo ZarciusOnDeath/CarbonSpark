@@ -759,6 +759,30 @@ button[kind="primary"], button[kind="primary"] p, button[kind="primary"] span {{
 .cs-condensed .cs-readout {{ justify-content: flex-start !important; gap: 0 clamp(18px, 2.6vw, 48px) !important; align-items: flex-end; }}
 .cs-condensed .cs-metric-label {{ margin-bottom: 2px !important; }}
 
+/* ---------- tables in the page's colours (see tables.py) ---------- */
+.cs-table-wrap {{
+  overflow: auto; border: 1px solid var(--line); border-radius: 12px; margin: 4px 0 14px 0;
+  background: color-mix(in srgb, var(--surface) 88%, transparent);
+}}
+table.cs-table {{ width: 100%; border-collapse: collapse; font-size: .88rem; color: var(--ink); }}
+table.cs-table th {{
+  position: sticky; top: 0; z-index: 1; text-align: left; font-weight: 600;
+  color: var(--ink-soft); background: var(--surface-hi); padding: 9px 12px;
+  border-bottom: 1px solid var(--line); white-space: nowrap;
+}}
+table.cs-table td {{ padding: 8px 12px; border-bottom: 1px solid var(--line); vertical-align: top; }}
+table.cs-table tr:last-child td {{ border-bottom: none; }}
+table.cs-table tbody tr:hover td {{ background: color-mix(in srgb, var(--clay) 8%, transparent); }}
+
+/* ---------- compare: the comparison stays put while the panels scroll ---------- */
+div[data-testid="stColumn"]:has(> div > div > .st-key-cs_cmp_mid),
+div[data-testid="stColumn"]:has(> div > div > .st-key-cs_cmp_mid_compact),
+div[data-testid="stColumn"]:has(.st-key-cs_cmp_mid):not(:has(.st-key-cs_cmp_panel_A)):not(:has(.st-key-cs_cmp_panel_B)),
+div[data-testid="stColumn"]:has(.st-key-cs_cmp_mid_compact):not(:has(.st-key-cs_cmp_panel_A)):not(:has(.st-key-cs_cmp_panel_B)) {{
+  position: sticky; top: 8px; align-self: flex-start;
+  max-height: calc(100vh - 16px); overflow-y: auto; scrollbar-width: thin;
+}}
+
 /* ---------- wordmark ---------- */
 .cs-wordmark {{
   font-family: var(--serif); font-weight: 400; letter-spacing: -.03em; line-height: 1;

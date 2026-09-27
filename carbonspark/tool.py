@@ -32,6 +32,7 @@ from carbon_calc.route import (
 )
 
 from . import ai_review, charts, compare, live
+from .tables import table
 from .presets import AMBITIONS, GRID_PRESET_NOTES, GRID_PRESETS, PLANT_PROFILES
 from .state import (
     PRESET_W,
@@ -738,7 +739,7 @@ def _dashboard(result: Result, dataset: Dataset, stages) -> None:
     gases = pd.DataFrame(
         [{"Gas": METRIC_LABELS[gas], "tCO₂e/t": result.totals[gas]} for gas in TRACE_GASES]
     )
-    st.dataframe(
+    table(
         gases.style.format({"tCO₂e/t": "{:.5f}"}),
         use_container_width=True,
         hide_index=True,
@@ -863,14 +864,14 @@ def _optimiser(result: Result, dataset: Dataset, stages) -> None:
     ]
     for key, before, after in optimum.stage_changes:
         rows.append((key.split(" :: ")[1], before.replace(" 100%", ""), after.replace(" 100%", "")))
-    st.dataframe(
+    table(
         pd.DataFrame(rows, columns=["Lever", "Yours", "Optimum"]),
         use_container_width=True, hide_index=True,
     )
     if not optimum.stage_changes:
         st.caption("No technology change: every running stage already uses its best allowed option.")
     with st.expander("Grid mix the optimum buys", expanded=False):
-        st.dataframe(
+        table(
             pd.DataFrame([
                 {
                     "Source": dataset.source_by_var[var].source,
@@ -968,7 +969,7 @@ All eight corners are evaluated below, each with its best technology. The lowest
 the optimum; nothing inside the box can beat it.
             """
         )
-        st.dataframe(
+        table(
             pd.DataFrame([
                 {
                     "Scrap": f"{corner.scrap_ratio:.0%}",
@@ -998,7 +999,7 @@ def _process_grid(result: Result, dataset: Dataset) -> None:
     )
     view = frame[frame["Department"].isin(departments)] if departments else frame
     numeric = [column for column in view.columns if view[column].dtype.kind == "f"]
-    st.dataframe(
+    table(
         view.style.format({column: "{:.5f}" for column in numeric}),
         use_container_width=True,
         hide_index=True,
