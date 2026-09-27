@@ -21,9 +21,12 @@ import streamlit as st
 
 from carbon_calc.advice import Scenario, evaluate
 from carbon_calc.model import MIX_VARIABLES, Dataset, Result, mix_factor
-from carbon_calc.route import normalise_mix
+import json
+
+from carbon_calc.route import coefficient_model, normalise_mix, route_weights
 
 from . import charts
+from .live import html_escape
 from .presets import GRID_PRESETS, PLANT_PROFILES, profile_route
 from .theme import DEPARTMENT_ICONS
 from .state import current_mix, inbound_rail, inbound_share, outbound_rail, scrap_ratio
@@ -58,8 +61,6 @@ def _set_side(side: str, stages, scrap: float, mix: Dict[str, float], rail_in: f
     _route_widgets(side, stages, route)
 
 
-OFF = "Off"
-
 
 def _route_widgets(side: str, stages, route) -> None:
     """Point every process widget of a side at the given route."""
@@ -67,11 +68,12 @@ def _route_widgets(side: str, stages, route) -> None:
         running = normalise_mix(route.get(stage.key, {}))
         if len(stage.options) == 1:
             st.session_state[_k(side, f"on_{stage.key}")] = bool(running)
-        else:
-            choice = max(running, key=running.get) if running else None
-            st.session_state[_k(side, f"var_{stage.key}")] = (
-                stage.option_by_id(choice).variation if choice else OFF
-            )
+            continue
+        st.session_state[_k(side, f"ms_{stage.key}")] = [
+            stage.option_by_id(pid).variation for pid in running
+        ]
+        for pid, share in running.items():
+            st.session_state[_k(side, f"sh_{stage.key}_{pid}")] = int(round(share * 100))
 
 
 def _set_on(side: str, stage) -> None:
@@ -80,11 +82,28 @@ def _set_on(side: str, stage) -> None:
     route[stage.key] = {stage.default_id: 1.0} if on else {}
 
 
-def _set_variation(side: str, stage) -> None:
+def _set_variations(side: str, stage) -> None:
+    """Technologies picked for a stage: an even split to start, kept shares kept."""
     route = st.session_state[_k(side, "route")]
-    name = st.session_state[_k(side, f"var_{stage.key}")]
-    match = next((o for o in stage.options if o.variation == name), None)
-    route[stage.key] = {match.id: 1.0} if match else {}
+    names = st.session_state[_k(side, f"ms_{stage.key}")]
+    ids = [o.id for o in stage.options if o.variation in names]
+    if not ids:
+        route[stage.key] = {}
+        return
+    current = normalise_mix(route.get(stage.key, {}))
+    kept = {pid: current[pid] for pid in ids if pid in current}
+    if len(kept) != len(ids):
+        kept = {pid: 1.0 / len(ids) for pid in ids}
+    route[stage.key] = normalise_mix(kept)
+    for pid, share in route[stage.key].items():
+        st.session_state[_k(side, f"sh_{stage.key}_{pid}")] = int(round(share * 100))
+
+
+def _set_shares(side: str, stage) -> None:
+    route = st.session_state[_k(side, "route")]
+    ids = list(normalise_mix(route.get(stage.key, {})))
+    raw = {pid: float(st.session_state.get(_k(side, f"sh_{stage.key}_{pid}"), 0)) for pid in ids}
+    route[stage.key] = normalise_mix(raw) or {pid: 1.0 / len(ids) for pid in ids}
 
 
 def _init(stages) -> None:
@@ -191,10 +210,20 @@ def _panel(side: str, dataset: Dataset, stages) -> None:
                         st.checkbox(stage.process, key=_k(side, f"on_{stage.key}"),
                                     on_change=_set_on, args=(side, stage))
                     else:
-                        st.selectbox(stage.process,
-                                     [OFF] + [o.variation for o in stage.options],
-                                     key=_k(side, f"var_{stage.key}"),
-                                     on_change=_set_variation, args=(side, stage))
+                        st.multiselect(
+                            stage.process, [o.variation for o in stage.options],
+                            key=_k(side, f"ms_{stage.key}"), placeholder="Off",
+                            on_change=_set_variations, args=(side, stage),
+                        )
+                        picked = normalise_mix(route.get(stage.key, {}))
+                        # Two or more technologies split the stage's tonne.
+                        if len(picked) > 1:
+                            for pid in picked:
+                                st.slider(
+                                    f"{stage.option_by_id(pid).variation} share", 0, 100,
+                                    key=_k(side, f"sh_{stage.key}_{pid}"), format="%d%%",
+                                    on_change=_set_shares, args=(side, stage),
+                                )
 
 
 # --------------------------------------------------------------------------- #
@@ -315,6 +344,23 @@ def render(dataset: Dataset, stages) -> None:
             _panel("B", dataset, stages)
 
     scenarios = {side: scenario(side, stages) for side in SIDES}
+    # Each side's coefficient model, so the page can follow a slider drag for
+    # that side (see the Compare block in live.py).
+    for side in SIDES:
+        sc = scenarios[side]
+        model = coefficient_model(dataset, route_weights(sc.route))
+        model.pop("departments", None)
+        model["sourceLabels"] = {var: dataset.source_by_var[var].source for var in MIX_VARIABLES}
+        model["values"] = {
+            "scrap": sc.scrap, "railIn": sc.rail_in, "railOut": sc.rail_out,
+            "share": sc.inbound_share,
+            "mix": {var: st.session_state[_k(side, f"mix_{var}")] / 100.0 for var in MIX_VARIABLES},
+        }
+        st.markdown(
+            f'<div data-cs-cmp="{side}" data-model="{html_escape(json.dumps(model))}" '
+            'style="display:none"></div>',
+            unsafe_allow_html=True,
+        )
     results: Dict[str, Result] = {}
     for side in SIDES:
         try:

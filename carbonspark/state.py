@@ -66,7 +66,14 @@ def mix_dirty() -> bool:
 
 
 def apply_mix() -> None:
-    """Hand the drafted mix to the model."""
+    """Hand the drafted mix to the model, normalised to 100% first.
+
+    A failsafe: shares that add to 60% or 180% would otherwise reach the model
+    as they stand. Rescaling here also moves the sliders, so what is shown is
+    what was applied.
+    """
+    if abs(mix_total() - 100.0) > 0.05:
+        rescale_mix()
     st.session_state.mix = dict(st.session_state.mix_draft)
 
 

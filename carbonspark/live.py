@@ -173,6 +173,56 @@ _SCRIPT = """
     });
   };
 
+  // --- Compare: each side's total follows its own sliders ----------------
+  // Each side ships its coefficient model; sliders are read inside that side's
+  // panel only, since both panels use the same labels.
+  const cmpRecompute = () => {
+    const totals = {};
+    ['A', 'B'].forEach((side) => {
+      const node = doc.querySelector('[data-cs-cmp="' + side + '"]');
+      if (!node) return;
+      let m;
+      try { m = JSON.parse(node.getAttribute('data-model')); } catch (e) { return; }
+      const panel = doc.querySelector('.st-key-cs_cmp_panel_' + side);
+      const read = (label, fallback) => {
+        if (!panel) return fallback;
+        for (const slider of panel.querySelectorAll('div[data-testid="stSlider"]')) {
+          if (labelOf(slider) === label) {
+            const value = valueOf(slider);
+            if (!Number.isNaN(value)) return value / 100;
+          }
+        }
+        return fallback;
+      };
+      const y = read('Scrap in the charge', m.values.scrap);
+      const railIn = read('Rail share, inbound', m.values.railIn);
+      const railOut = read('Rail share, outbound', m.values.railOut);
+      let shareSum = 0, weighted = 0;
+      Object.keys(m.factors).forEach((v) => {
+        const share = read(m.sourceLabels[v], m.values.mix[v]);
+        shareSum += share; weighted += m.factors[v] * share;
+      });
+      const gridFactor = shareSum > 0 ? weighted / shareSum : 0;
+      const at = { x: 1 - y, y: y, share: m.values.share, railIn: railIn, railOut: railOut };
+      const s = scopesOf(m, { gridFactor: gridFactor }, at);
+      totals[side] = s.scope1 + s.scope2 + s.scope3;
+      const card = doc.querySelector('.cs-cmp-card.cs-cmp-' + side + ' b');
+      const text = totals[side].toFixed(3);
+      if (card && card.textContent !== text) card.textContent = text;
+    });
+    if (totals.A !== undefined && totals.B !== undefined) {
+      const diff = totals.B - totals.A;
+      const b = doc.querySelector('.cs-cmp-card.cs-cmp-diff b');
+      const small = doc.querySelector('.cs-cmp-card.cs-cmp-diff small');
+      const text = (diff >= 0 ? '+' : '') + diff.toFixed(3);
+      if (b && b.textContent !== text) b.textContent = text;
+      if (small && totals.A) {
+        const word = diff < 0 ? 'lower' : diff > 0 ? 'higher' : 'the same';
+        small.textContent = (Math.abs(diff) / totals.A * 100).toFixed(1) + '% ' + word;
+      }
+    }
+  };
+
   const paint = () => {
     const sliders = [...doc.querySelectorAll('div[data-testid="stSlider"]')];
     const byLabel = new Map();
@@ -220,6 +270,7 @@ _SCRIPT = """
       lastSignature = now;
       paint();
       recompute();
+      cmpRecompute();
     });
   };
   let dragging = false;

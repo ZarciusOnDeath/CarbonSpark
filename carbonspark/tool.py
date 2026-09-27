@@ -227,12 +227,6 @@ def _panel_grid(dataset: Dataset) -> None:
         f'<span class="cs-chip {tone}">shares total {total:.1f}%</span>',
         unsafe_allow_html=True,
     )
-    st.button(
-        "Normalise to 100%",
-        on_click=rescale_mix,
-        use_container_width=True,
-        disabled=off_by <= 0.05,
-    )
 
     for var in MIX_VARIABLES:
         source = dataset.source_by_var[var]
@@ -251,6 +245,14 @@ def _panel_grid(dataset: Dataset) -> None:
                 args=(var,),
             )
 
+    # Below the sliders, next to what it acts on.
+    st.button(
+        "Normalise to 100%",
+        on_click=rescale_mix,
+        use_container_width=True,
+        disabled=off_by <= 0.05,
+    )
+
     drafted = draft_mix()
     st.plotly_chart(
         charts.mix_donut(drafted, dataset.source_by_var),
@@ -265,8 +267,7 @@ def _panel_grid(dataset: Dataset) -> None:
         "Apply mix",
         apply_mix,
         revert_mix,
-        "Set every share you want, normalise, then apply \u2014 nothing reaches the model "
-        "until you do.",
+        "Set every share you want, then apply \u2014 Apply normalises to 100% for you.",
     )
 
 
@@ -389,6 +390,11 @@ def _stage_controls(stage: Stage, route) -> None:
                 step=1.0,
                 format="%.0f%%",
                 key=route_key("share", f"{stage.key}_{pid}"),
+                # Moving a share changes the stage's label, and Streamlit then
+                # redraws it as a new, closed expander; remembering the stage
+                # keeps it open under the user's hand.
+                on_change=_remember_open,
+                args=(stage,),
             )
         set_stage_mix(stage, normalise_mix(raw) or even_mix(picked))
     # The transport step carries its own leg's rail/road split, right under it:
